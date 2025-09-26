@@ -5,12 +5,13 @@ plugins {
 
 android {
     namespace = "com.example.rouneboundmagic"
-    compileSdkPreview = "Baklava"
+    compileSdk = 35
+    ndkVersion = "27.2.12479014"
 
     defaultConfig {
         applicationId = "com.example.rouneboundmagic"
-        minSdkPreview = "Baklava"
-        targetSdkPreview = "Baklava"
+        minSdk = 24
+        targetSdk = 35
         versionCode = 1
         versionName = "1.0"
 
