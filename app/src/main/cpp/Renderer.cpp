@@ -2,6 +2,7 @@
 
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 #include <GLES3/gl3.h>
+#include <algorithm>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -280,38 +281,42 @@ void Renderer::createModels() {
         spGemTexture = TextureAsset::createSolidColorTexture(200, 40, 60, 255);
     }
 
+    const auto boardPixelWidth = static_cast<float>(std::max(spBoardTexture->getWidth(), 1));
+    const auto boardPixelHeight = static_cast<float>(std::max(spBoardTexture->getHeight(), 1));
     const float boardHeight = kProjectionHalfHeight * 2.0f;
-    const float cellSize = boardHeight / static_cast<float>(kBoardRows);
-    const float boardWidth = cellSize * static_cast<float>(kBoardColumns);
+    const float boardAspect = boardPixelWidth / boardPixelHeight;
+    const float boardWidth = boardHeight * boardAspect;
+    const float cellWidth = boardWidth / static_cast<float>(kBoardColumns);
+    const float cellHeight = boardHeight / static_cast<float>(kBoardRows);
     const float halfWidth = boardWidth * 0.5f;
     const float halfHeight = boardHeight * 0.5f;
 
     std::vector<Vertex> boardVertices = {
             Vertex(Vector3{halfWidth, halfHeight, -0.1f},
-                   Vector2{static_cast<float>(kBoardColumns), 0.f}),
+                   Vector2{1.f, 0.f}),
             Vertex(Vector3{-halfWidth, halfHeight, -0.1f}, Vector2{0.f, 0.f}),
             Vertex(Vector3{-halfWidth, -halfHeight, -0.1f},
-                   Vector2{0.f, static_cast<float>(kBoardRows)}),
-            Vertex(Vector3{halfWidth, -halfHeight, -0.1f},
-                   Vector2{static_cast<float>(kBoardColumns), static_cast<float>(kBoardRows)})
+                   Vector2{0.f, 1.f}),
+            Vertex(Vector3{halfWidth, -halfHeight, -0.1f}, Vector2{1.f, 1.f})
     };
     std::vector<Index> boardIndices = {0, 1, 2, 0, 2, 3};
     models_.emplace_back(boardVertices, boardIndices, std::move(spBoardTexture));
 
     const float originX = -halfWidth;
     const float originY = halfHeight;
-    const float gemCenterX = originX + cellSize * (static_cast<float>(kTestGemColumn) + 0.5f);
-    const float gemCenterY = originY - cellSize * (static_cast<float>(kTestGemRow) + 0.5f);
-    const float gemHalfSize = (cellSize * kGemVisualScale) * 0.5f;
+    const float gemCenterX = originX + cellWidth * (static_cast<float>(kTestGemColumn) + 0.5f);
+    const float gemCenterY = originY - cellHeight * (static_cast<float>(kTestGemRow) + 0.5f);
+    const float gemHalfWidth = (cellWidth * kGemVisualScale) * 0.5f;
+    const float gemHalfHeight = (cellHeight * kGemVisualScale) * 0.5f;
 
     std::vector<Vertex> gemVertices = {
-            Vertex(Vector3{gemCenterX + gemHalfSize, gemCenterY + gemHalfSize, 0.0f},
+            Vertex(Vector3{gemCenterX + gemHalfWidth, gemCenterY + gemHalfHeight, 0.0f},
                    Vector2{1.f, 0.f}),
-            Vertex(Vector3{gemCenterX - gemHalfSize, gemCenterY + gemHalfSize, 0.0f},
+            Vertex(Vector3{gemCenterX - gemHalfWidth, gemCenterY + gemHalfHeight, 0.0f},
                    Vector2{0.f, 0.f}),
-            Vertex(Vector3{gemCenterX - gemHalfSize, gemCenterY - gemHalfSize, 0.0f},
+            Vertex(Vector3{gemCenterX - gemHalfWidth, gemCenterY - gemHalfHeight, 0.0f},
                    Vector2{0.f, 1.f}),
-            Vertex(Vector3{gemCenterX + gemHalfSize, gemCenterY - gemHalfSize, 0.0f},
+            Vertex(Vector3{gemCenterX + gemHalfWidth, gemCenterY - gemHalfHeight, 0.0f},
                    Vector2{1.f, 1.f})
     };
     std::vector<Index> gemIndices = {0, 1, 2, 0, 2, 3};

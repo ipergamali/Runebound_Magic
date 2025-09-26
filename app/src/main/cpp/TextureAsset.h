@@ -37,10 +37,17 @@ public:
      */
     constexpr GLuint getTextureID() const { return textureID_; }
 
+    constexpr int getWidth() const { return width_; }
+
+    constexpr int getHeight() const { return height_; }
+
 private:
-    inline TextureAsset(GLuint textureId) : textureID_(textureId) {}
+    inline TextureAsset(GLuint textureId, int width, int height)
+            : textureID_(textureId), width_(width), height_(height) {}
 
     GLuint textureID_;
+    int width_;
+    int height_;
 };
 
 #endif //ANDROIDGLINVESTIGATIONS_TEXTUREASSET_H
