@@ -3,6 +3,7 @@
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 #include <GLES3/gl3.h>
 #include <memory>
+#include <utility>
 #include <vector>
 #include <android/imagedecoder.h>
 
@@ -83,6 +84,12 @@ static constexpr float kProjectionNearPlane = -1.f;
  * matrix, it's convenient to have the far plane equidistant from 0 as the near plane.
  */
 static constexpr float kProjectionFarPlane = 1.f;
+
+static constexpr int kBoardRows = 8;
+static constexpr int kBoardColumns = 8;
+static constexpr int kTestGemColumn = 3;
+static constexpr int kTestGemRow = 3;
+static constexpr float kGemVisualScale = 0.8f;
 
 Renderer::~Renderer() {
     if (display_ != EGL_NO_DISPLAY) {
@@ -260,33 +267,55 @@ void Renderer::updateRenderArea() {
  * @brief Create any demo models we want for this demo.
  */
 void Renderer::createModels() {
-    /*
-     * This is a square:
-     * 0 --- 1
-     * | \   |
-     * |  \  |
-     * |   \ |
-     * 3 --- 2
-     */
-    std::vector<Vertex> vertices = {
-            Vertex(Vector3{1, 1, 0}, Vector2{0, 0}), // 0
-            Vertex(Vector3{-1, 1, 0}, Vector2{1, 0}), // 1
-            Vertex(Vector3{-1, -1, 0}, Vector2{1, 1}), // 2
-            Vertex(Vector3{1, -1, 0}, Vector2{0, 1}) // 3
-    };
-    std::vector<Index> indices = {
-            0, 1, 2, 0, 2, 3
-    };
+    models_.clear();
 
-    // loads an image and assigns it to the square.
-    //
-    // Note: there is no texture management in this sample, so if you reuse an image be careful not
-    // to load it repeatedly. Since you get a shared_ptr you can safely reuse it in many models.
     auto assetManager = app_->activity->assetManager;
-    auto spAndroidRobotTexture = TextureAsset::loadAsset(assetManager, "android_robot.png");
+    auto spBoardTexture = TextureAsset::loadAsset(assetManager, "puzzle/board.png");
+    if (!spBoardTexture) {
+        spBoardTexture = TextureAsset::createSolidColorTexture(40, 40, 52, 255);
+    }
 
-    // Create a model and put it in the back of the render list.
-    models_.emplace_back(vertices, indices, spAndroidRobotTexture);
+    auto spGemTexture = TextureAsset::loadAsset(assetManager, "puzzle/red_gem.png");
+    if (!spGemTexture) {
+        spGemTexture = TextureAsset::createSolidColorTexture(200, 40, 60, 255);
+    }
+
+    const float boardHeight = kProjectionHalfHeight * 2.0f;
+    const float cellSize = boardHeight / static_cast<float>(kBoardRows);
+    const float boardWidth = cellSize * static_cast<float>(kBoardColumns);
+    const float halfWidth = boardWidth * 0.5f;
+    const float halfHeight = boardHeight * 0.5f;
+
+    std::vector<Vertex> boardVertices = {
+            Vertex(Vector3{halfWidth, halfHeight, -0.1f},
+                   Vector2{static_cast<float>(kBoardColumns), 0.f}),
+            Vertex(Vector3{-halfWidth, halfHeight, -0.1f}, Vector2{0.f, 0.f}),
+            Vertex(Vector3{-halfWidth, -halfHeight, -0.1f},
+                   Vector2{0.f, static_cast<float>(kBoardRows)}),
+            Vertex(Vector3{halfWidth, -halfHeight, -0.1f},
+                   Vector2{static_cast<float>(kBoardColumns), static_cast<float>(kBoardRows)})
+    };
+    std::vector<Index> boardIndices = {0, 1, 2, 0, 2, 3};
+    models_.emplace_back(boardVertices, boardIndices, std::move(spBoardTexture));
+
+    const float originX = -halfWidth;
+    const float originY = halfHeight;
+    const float gemCenterX = originX + cellSize * (static_cast<float>(kTestGemColumn) + 0.5f);
+    const float gemCenterY = originY - cellSize * (static_cast<float>(kTestGemRow) + 0.5f);
+    const float gemHalfSize = (cellSize * kGemVisualScale) * 0.5f;
+
+    std::vector<Vertex> gemVertices = {
+            Vertex(Vector3{gemCenterX + gemHalfSize, gemCenterY + gemHalfSize, 0.0f},
+                   Vector2{1.f, 0.f}),
+            Vertex(Vector3{gemCenterX - gemHalfSize, gemCenterY + gemHalfSize, 0.0f},
+                   Vector2{0.f, 0.f}),
+            Vertex(Vector3{gemCenterX - gemHalfSize, gemCenterY - gemHalfSize, 0.0f},
+                   Vector2{0.f, 1.f}),
+            Vertex(Vector3{gemCenterX + gemHalfSize, gemCenterY - gemHalfSize, 0.0f},
+                   Vector2{1.f, 1.f})
+    };
+    std::vector<Index> gemIndices = {0, 1, 2, 0, 2, 3};
+    models_.emplace_back(gemVertices, gemIndices, std::move(spGemTexture));
 }
 
 void Renderer::handleInput() {
