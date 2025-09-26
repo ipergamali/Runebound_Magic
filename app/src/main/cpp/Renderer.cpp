@@ -87,10 +87,14 @@ static constexpr float kProjectionNearPlane = -1.f;
 static constexpr float kProjectionFarPlane = 1.f;
 
 static constexpr int kBoardRows = 8;
-static constexpr int kBoardColumns = 8;
+static constexpr int kBoardColumns = 7;
 static constexpr int kTestGemColumn = 3;
 static constexpr int kTestGemRow = 3;
-static constexpr float kGemVisualScale = 0.8f;
+static constexpr float kGemVisualScale = 0.9f;
+static constexpr float kBoardPixelWidth = 768.f;
+static constexpr float kBoardPixelHeight = 1152.f;
+static constexpr float kCellPixelWidth = 110.f;
+static constexpr float kCellPixelHeight = 144.f;
 
 Renderer::~Renderer() {
     if (display_ != EGL_NO_DISPLAY) {
@@ -281,15 +285,15 @@ void Renderer::createModels() {
         spGemTexture = TextureAsset::createSolidColorTexture(200, 40, 60, 255);
     }
 
-    const auto boardPixelWidth = static_cast<float>(std::max(spBoardTexture->getWidth(), 1));
-    const auto boardPixelHeight = static_cast<float>(std::max(spBoardTexture->getHeight(), 1));
     const float boardHeight = kProjectionHalfHeight * 2.0f;
-    const float boardAspect = boardPixelWidth / boardPixelHeight;
+    const float boardAspect = kBoardPixelWidth / kBoardPixelHeight;
     const float boardWidth = boardHeight * boardAspect;
-    const float cellWidth = boardWidth / static_cast<float>(kBoardColumns);
-    const float cellHeight = boardHeight / static_cast<float>(kBoardRows);
+    const float pixelToWorldX = boardWidth / kBoardPixelWidth;
+    const float pixelToWorldY = boardHeight / kBoardPixelHeight;
     const float halfWidth = boardWidth * 0.5f;
     const float halfHeight = boardHeight * 0.5f;
+    const float boardOriginX = -halfWidth;
+    const float boardOriginY = halfHeight;
 
     std::vector<Vertex> boardVertices = {
             Vertex(Vector3{halfWidth, halfHeight, -0.1f},
@@ -302,12 +306,14 @@ void Renderer::createModels() {
     std::vector<Index> boardIndices = {0, 1, 2, 0, 2, 3};
     models_.emplace_back(boardVertices, boardIndices, std::move(spBoardTexture));
 
-    const float originX = -halfWidth;
-    const float originY = halfHeight;
-    const float gemCenterX = originX + cellWidth * (static_cast<float>(kTestGemColumn) + 0.5f);
-    const float gemCenterY = originY - cellHeight * (static_cast<float>(kTestGemRow) + 0.5f);
-    const float gemHalfWidth = (cellWidth * kGemVisualScale) * 0.5f;
-    const float gemHalfHeight = (cellHeight * kGemVisualScale) * 0.5f;
+    const float gemCenterPixelX = static_cast<float>(kTestGemColumn) * kCellPixelWidth
+                                  + kCellPixelWidth * 0.5f;
+    const float gemCenterPixelY = static_cast<float>(kTestGemRow) * kCellPixelHeight
+                                  + kCellPixelHeight * 0.5f;
+    const float gemCenterX = boardOriginX + gemCenterPixelX * pixelToWorldX;
+    const float gemCenterY = boardOriginY - gemCenterPixelY * pixelToWorldY;
+    const float gemHalfWidth = (kCellPixelWidth * kGemVisualScale * pixelToWorldX) * 0.5f;
+    const float gemHalfHeight = (kCellPixelHeight * kGemVisualScale * pixelToWorldY) * 0.5f;
 
     std::vector<Vertex> gemVertices = {
             Vertex(Vector3{gemCenterX + gemHalfWidth, gemCenterY + gemHalfHeight, 0.0f},
