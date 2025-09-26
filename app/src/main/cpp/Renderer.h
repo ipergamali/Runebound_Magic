@@ -7,6 +7,8 @@
 #include "Model.h"
 #include "Shader.h"
 
+class TextureAsset;
+
 struct android_app;
 
 class Renderer {
@@ -69,6 +71,8 @@ private:
 
     std::unique_ptr<Shader> shader_;
     std::vector<Model> models_;
+    std::shared_ptr<TextureAsset> spBoardTexture_;
+    std::shared_ptr<TextureAsset> spGemTexture_;
 };
 
 #endif //ANDROIDGLINVESTIGATIONS_RENDERER_H

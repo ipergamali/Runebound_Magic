@@ -95,6 +95,7 @@ static constexpr float kBoardPixelWidth = 768.f;
 static constexpr float kBoardPixelHeight = 1152.f;
 static constexpr float kCellPixelWidth = 110.f;
 static constexpr float kCellPixelHeight = 144.f;
+static constexpr float kBoardMarginScale = 0.85f;
 
 Renderer::~Renderer() {
     if (display_ != EGL_NO_DISPLAY) {
@@ -247,8 +248,6 @@ void Renderer::initRenderer() {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
-    // get some demo models into memory
-    createModels();
 }
 
 void Renderer::updateRenderArea() {
@@ -265,6 +264,9 @@ void Renderer::updateRenderArea() {
 
         // make sure that we lazily recreate the projection matrix before we render
         shaderNeedsNewProjectionMatrix_ = true;
+
+        // Regenerate the scene so the board stays centered when the viewport changes
+        createModels();
     }
 }
 
@@ -272,24 +274,37 @@ void Renderer::updateRenderArea() {
  * @brief Create any demo models we want for this demo.
  */
 void Renderer::createModels() {
+    if (width_ <= 0 || height_ <= 0) {
+        return;
+    }
+
     models_.clear();
 
     auto assetManager = app_->activity->assetManager;
-    auto spBoardTexture = TextureAsset::loadAsset(assetManager, "puzzle/board.png");
-    if (!spBoardTexture) {
-        spBoardTexture = TextureAsset::createSolidColorTexture(40, 40, 52, 255);
+    if (!spBoardTexture_) {
+        spBoardTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/board.png");
+        if (!spBoardTexture_) {
+            spBoardTexture_ = TextureAsset::createSolidColorTexture(40, 40, 52, 255);
+        }
     }
 
-    auto spGemTexture = TextureAsset::loadAsset(assetManager, "puzzle/red_gem.png");
-    if (!spGemTexture) {
-        spGemTexture = TextureAsset::createSolidColorTexture(200, 40, 60, 255);
+    if (!spGemTexture_) {
+        spGemTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/red_gem.png");
+        if (!spGemTexture_) {
+            spGemTexture_ = TextureAsset::createSolidColorTexture(200, 40, 60, 255);
+        }
     }
 
-    const float boardHeight = kProjectionHalfHeight * 2.0f;
-    const float boardAspect = kBoardPixelWidth / kBoardPixelHeight;
-    const float boardWidth = boardHeight * boardAspect;
-    const float pixelToWorldX = boardWidth / kBoardPixelWidth;
-    const float pixelToWorldY = boardHeight / kBoardPixelHeight;
+    const float worldHeight = kProjectionHalfHeight * 2.0f;
+    const float worldWidth = worldHeight * (static_cast<float>(width_) / static_cast<float>(height_));
+    const float maxBoardWidth = worldWidth * kBoardMarginScale;
+    const float maxBoardHeight = worldHeight * kBoardMarginScale;
+    const float pixelToWorld = std::min(maxBoardWidth / kBoardPixelWidth,
+                                        maxBoardHeight / kBoardPixelHeight);
+    const float boardWidth = kBoardPixelWidth * pixelToWorld;
+    const float boardHeight = kBoardPixelHeight * pixelToWorld;
+    const float pixelToWorldX = pixelToWorld;
+    const float pixelToWorldY = pixelToWorld;
     const float halfWidth = boardWidth * 0.5f;
     const float halfHeight = boardHeight * 0.5f;
     const float boardOriginX = -halfWidth;
@@ -304,7 +319,7 @@ void Renderer::createModels() {
             Vertex(Vector3{halfWidth, -halfHeight, -0.1f}, Vector2{1.f, 1.f})
     };
     std::vector<Index> boardIndices = {0, 1, 2, 0, 2, 3};
-    models_.emplace_back(boardVertices, boardIndices, std::move(spBoardTexture));
+    models_.emplace_back(boardVertices, boardIndices, spBoardTexture_);
 
     const float gemCenterPixelX = static_cast<float>(kTestGemColumn) * kCellPixelWidth
                                   + kCellPixelWidth * 0.5f;
@@ -326,7 +341,7 @@ void Renderer::createModels() {
                    Vector2{1.f, 1.f})
     };
     std::vector<Index> gemIndices = {0, 1, 2, 0, 2, 3};
-    models_.emplace_back(gemVertices, gemIndices, std::move(spGemTexture));
+    models_.emplace_back(gemVertices, gemIndices, spGemTexture_);
 }
 
 void Renderer::handleInput() {
