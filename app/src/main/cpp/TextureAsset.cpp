@@ -11,10 +11,19 @@ TextureAsset::loadAsset(AAssetManager *assetManager, const std::string &assetPat
             assetPath.c_str(),
             AASSET_MODE_BUFFER);
 
+    if (!pAndroidRobotPng) {
+        aout << "Unable to open asset: " << assetPath << std::endl;
+        return nullptr;
+    }
+
     // Make a decoder to turn it into a texture
     AImageDecoder *pAndroidDecoder = nullptr;
     auto result = AImageDecoder_createFromAAsset(pAndroidRobotPng, &pAndroidDecoder);
-    assert(result == ANDROID_IMAGE_DECODER_SUCCESS);
+    if (result != ANDROID_IMAGE_DECODER_SUCCESS) {
+        aout << "Unable to decode asset: " << assetPath << std::endl;
+        AAsset_close(pAndroidRobotPng);
+        return nullptr;
+    }
 
     // make sure we get 8 bits per channel out. RGBA order.
     AImageDecoder_setAndroidBitmapFormat(pAndroidDecoder, ANDROID_BITMAP_FORMAT_RGBA_8888);
@@ -22,6 +31,13 @@ TextureAsset::loadAsset(AAssetManager *assetManager, const std::string &assetPat
     // Get the image header, to help set everything up
     const AImageDecoderHeaderInfo *pAndroidHeader = nullptr;
     pAndroidHeader = AImageDecoder_getHeaderInfo(pAndroidDecoder);
+
+    if (!pAndroidHeader) {
+        aout << "Failed to obtain header for asset: " << assetPath << std::endl;
+        AImageDecoder_delete(pAndroidDecoder);
+        AAsset_close(pAndroidRobotPng);
+        return nullptr;
+    }
 
     // important metrics for sending to GL
     auto width = AImageDecoderHeaderInfo_getWidth(pAndroidHeader);
@@ -35,16 +51,21 @@ TextureAsset::loadAsset(AAssetManager *assetManager, const std::string &assetPat
             upAndroidImageData->data(),
             stride,
             upAndroidImageData->size());
-    assert(decodeResult == ANDROID_IMAGE_DECODER_SUCCESS);
+    if (decodeResult != ANDROID_IMAGE_DECODER_SUCCESS) {
+        aout << "Failed to decode image data for asset: " << assetPath << std::endl;
+        AImageDecoder_delete(pAndroidDecoder);
+        AAsset_close(pAndroidRobotPng);
+        return nullptr;
+    }
 
     // Get an opengl texture
     GLuint textureId;
     glGenTextures(1, &textureId);
     glBindTexture(GL_TEXTURE_2D, textureId);
 
-    // Clamp to the edge, you'll get odd results alpha blending if you don't
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+    // Repeat textures so the board background can be tiled.
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
 
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR_MIPMAP_LINEAR);
     glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
@@ -70,6 +91,35 @@ TextureAsset::loadAsset(AAssetManager *assetManager, const std::string &assetPat
     AAsset_close(pAndroidRobotPng);
 
     // Create a shared pointer so it can be cleaned up easily/automatically
+    return std::shared_ptr<TextureAsset>(new TextureAsset(textureId));
+}
+
+std::shared_ptr<TextureAsset> TextureAsset::createSolidColorTexture(
+        uint8_t red,
+        uint8_t green,
+        uint8_t blue,
+        uint8_t alpha) {
+    GLuint textureId = 0;
+    glGenTextures(1, &textureId);
+    glBindTexture(GL_TEXTURE_2D, textureId);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+
+    const uint8_t pixel[] = {red, green, blue, alpha};
+    glTexImage2D(
+            GL_TEXTURE_2D,
+            0,
+            GL_RGBA,
+            1,
+            1,
+            0,
+            GL_RGBA,
+            GL_UNSIGNED_BYTE,
+            pixel);
+
     return std::shared_ptr<TextureAsset>(new TextureAsset(textureId));
 }
 

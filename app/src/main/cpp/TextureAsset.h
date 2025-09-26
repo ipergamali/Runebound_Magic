@@ -6,6 +6,7 @@
 #include <GLES3/gl3.h>
 #include <string>
 #include <vector>
+#include <cstdint>
 
 class TextureAsset {
 public:
@@ -17,6 +18,17 @@ public:
      */
     static std::shared_ptr<TextureAsset>
     loadAsset(AAssetManager *assetManager, const std::string &assetPath);
+
+    /*!
+     * Creates a tiny 1x1 texture filled with the requested color. Handy as a
+     * graceful fallback when an asset is missing while keeping the renderer
+     * alive.
+     */
+    static std::shared_ptr<TextureAsset> createSolidColorTexture(
+            uint8_t red,
+            uint8_t green,
+            uint8_t blue,
+            uint8_t alpha = 255);
 
     ~TextureAsset();
 
