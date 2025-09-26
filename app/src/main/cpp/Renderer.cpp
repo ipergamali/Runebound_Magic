@@ -334,10 +334,12 @@ void Renderer::createModels() {
     const float worldWidth = worldHeight * (static_cast<float>(width_) / static_cast<float>(height_));
     const float maxBoardWidth = worldWidth * kBoardMarginScale;
     const float maxBoardHeight = worldHeight * kBoardMarginScale;
-    const float pixelToWorld = std::min(maxBoardWidth / kBoardPixelWidth,
-                                        maxBoardHeight / kBoardPixelHeight);
-    const float boardWidth = kBoardPixelWidth * pixelToWorld;
-    const float boardHeight = kBoardPixelHeight * pixelToWorld;
+    const float boardPixelWidth = static_cast<float>(spBoardTexture_->getWidth());
+    const float boardPixelHeight = static_cast<float>(spBoardTexture_->getHeight());
+    const float pixelToWorld = std::min(maxBoardWidth / boardPixelWidth,
+                                        maxBoardHeight / boardPixelHeight);
+    const float boardWidth = boardPixelWidth * pixelToWorld;
+    const float boardHeight = boardPixelHeight * pixelToWorld;
     const float halfWidth = boardWidth * 0.5f;
     const float halfHeight = boardHeight * 0.5f;
     const float boardOriginX = -halfWidth;
