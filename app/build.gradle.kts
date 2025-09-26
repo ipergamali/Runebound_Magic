@@ -7,12 +7,12 @@ android {
     namespace = "com.example.rouneboundmagic"
 
     compileSdk = 35
-    ndkVersion = "27.2.12479014"
+    ndkVersion = "27.0.12077973"
 
 
     defaultConfig {
         applicationId = "com.example.rouneboundmagic"
-        minSdk = 24
+        minSdk = 26
         targetSdk = 35
         versionCode = 1
         versionName = "1.0"
