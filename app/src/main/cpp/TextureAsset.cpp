@@ -1,7 +1,8 @@
-#include <android/imagedecoder.h>
 #include "TextureAsset.h"
 #include "AndroidOut.h"
 #include "Utility.h"
+#define STB_IMAGE_IMPLEMENTATION
+#include "stb_image.h"
 
 std::shared_ptr<TextureAsset>
 TextureAsset::loadAsset(AAssetManager *assetManager, const std::string &assetPath) {
@@ -16,44 +17,29 @@ TextureAsset::loadAsset(AAssetManager *assetManager, const std::string &assetPat
         return nullptr;
     }
 
-    // Make a decoder to turn it into a texture
-    AImageDecoder *pAndroidDecoder = nullptr;
-    auto result = AImageDecoder_createFromAAsset(pAndroidRobotPng, &pAndroidDecoder);
-    if (result != ANDROID_IMAGE_DECODER_SUCCESS) {
-        aout << "Unable to decode asset: " << assetPath << std::endl;
+    // Load the entire asset into memory for decoding.
+    const auto assetLength = static_cast<size_t>(AAsset_getLength(pAndroidRobotPng));
+    std::vector<uint8_t> assetBuffer(assetLength);
+    const auto bytesRead = AAsset_read(pAndroidRobotPng, assetBuffer.data(), assetLength);
+    if (bytesRead <= 0 || static_cast<size_t>(bytesRead) != assetLength) {
+        aout << "Failed to read asset: " << assetPath << std::endl;
         AAsset_close(pAndroidRobotPng);
         return nullptr;
     }
 
-    // make sure we get 8 bits per channel out. RGBA order.
-    AImageDecoder_setAndroidBitmapFormat(pAndroidDecoder, ANDROID_BITMAP_FORMAT_RGBA_8888);
+    int width = 0;
+    int height = 0;
+    int channels = 0;
+    stbi_uc *decodedData = stbi_load_from_memory(
+            assetBuffer.data(),
+            static_cast<int>(bytesRead),
+            &width,
+            &height,
+            &channels,
+            STBI_rgb_alpha);
 
-    // Get the image header, to help set everything up
-    const AImageDecoderHeaderInfo *pAndroidHeader = nullptr;
-    pAndroidHeader = AImageDecoder_getHeaderInfo(pAndroidDecoder);
-
-    if (!pAndroidHeader) {
-        aout << "Failed to obtain header for asset: " << assetPath << std::endl;
-        AImageDecoder_delete(pAndroidDecoder);
-        AAsset_close(pAndroidRobotPng);
-        return nullptr;
-    }
-
-    // important metrics for sending to GL
-    auto width = AImageDecoderHeaderInfo_getWidth(pAndroidHeader);
-    auto height = AImageDecoderHeaderInfo_getHeight(pAndroidHeader);
-    auto stride = AImageDecoder_getMinimumStride(pAndroidDecoder);
-
-    // Get the bitmap data of the image
-    auto upAndroidImageData = std::make_unique<std::vector<uint8_t>>(height * stride);
-    auto decodeResult = AImageDecoder_decodeImage(
-            pAndroidDecoder,
-            upAndroidImageData->data(),
-            stride,
-            upAndroidImageData->size());
-    if (decodeResult != ANDROID_IMAGE_DECODER_SUCCESS) {
+    if (!decodedData) {
         aout << "Failed to decode image data for asset: " << assetPath << std::endl;
-        AImageDecoder_delete(pAndroidDecoder);
         AAsset_close(pAndroidRobotPng);
         return nullptr;
     }
@@ -80,14 +66,14 @@ TextureAsset::loadAsset(AAssetManager *assetManager, const std::string &assetPat
             0, // border (always 0)
             GL_RGBA, // format
             GL_UNSIGNED_BYTE, // type
-            upAndroidImageData->data() // Data to upload
+            decodedData // Data to upload
     );
 
     // generate mip levels. Not really needed for 2D, but good to do
     glGenerateMipmap(GL_TEXTURE_2D);
 
     // cleanup helpers
-    AImageDecoder_delete(pAndroidDecoder);
+    stbi_image_free(decodedData);
     AAsset_close(pAndroidRobotPng);
 
     // Create a shared pointer so it can be cleaned up easily/automatically
