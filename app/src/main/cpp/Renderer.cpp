@@ -88,14 +88,14 @@ static constexpr float kProjectionFarPlane = 1.f;
 
 static constexpr int kBoardRows = 8;
 static constexpr int kBoardColumns = 7;
-static constexpr int kTestGemColumn = 3;
-static constexpr int kTestGemRow = 3;
-static constexpr float kGemVisualScale = 0.9f;
+static constexpr float kGemVisualScale = 0.8f;
 static constexpr float kBoardPixelWidth = 768.f;
 static constexpr float kBoardPixelHeight = 1152.f;
 static constexpr float kCellPixelWidth = 110.f;
 static constexpr float kCellPixelHeight = 144.f;
 static constexpr float kBoardMarginScale = 0.85f;
+static constexpr float kPortraitHeightScale = 0.6f;
+static constexpr float kPortraitMarginScale = 0.05f;
 
 Renderer::~Renderer() {
     if (display_ != EGL_NO_DISPLAY) {
@@ -119,6 +119,11 @@ void Renderer::render() {
     // changed.
     updateRenderArea();
 
+    ensureBoardInitialized();
+    if (updateBoardState()) {
+        sceneDirty_ = true;
+    }
+
     // When the renderable area changes, the projection matrix has to also be updated. This is true
     // even if you change from the sample orthographic projection matrix as your aspect ratio has
     // likely changed.
@@ -141,6 +146,10 @@ void Renderer::render() {
 
         // make sure the matrix isn't generated every frame
         shaderNeedsNewProjectionMatrix_ = false;
+    }
+
+    if (sceneDirty_) {
+        createModels();
     }
 
     // clear the color buffer
@@ -266,7 +275,7 @@ void Renderer::updateRenderArea() {
         shaderNeedsNewProjectionMatrix_ = true;
 
         // Regenerate the scene so the board stays centered when the viewport changes
-        createModels();
+        sceneDirty_ = true;
     }
 }
 
@@ -274,11 +283,9 @@ void Renderer::updateRenderArea() {
  * @brief Create any demo models we want for this demo.
  */
 void Renderer::createModels() {
-    if (width_ <= 0 || height_ <= 0) {
+    if (width_ <= 0 || height_ <= 0 || !boardReady_) {
         return;
     }
-
-    models_.clear();
 
     auto assetManager = app_->activity->assetManager;
     if (!spBoardTexture_) {
@@ -288,12 +295,42 @@ void Renderer::createModels() {
         }
     }
 
-    if (!spGemTexture_) {
-        spGemTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/red_gem.png");
-        if (!spGemTexture_) {
-            spGemTexture_ = TextureAsset::createSolidColorTexture(200, 40, 60, 255);
+    if (!spRedGemTexture_) {
+        spRedGemTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/red_gem.png");
+        if (!spRedGemTexture_) {
+            spRedGemTexture_ = TextureAsset::createSolidColorTexture(200, 40, 60, 255);
         }
     }
+
+    if (!spGreenGemTexture_) {
+        spGreenGemTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/green_gem.png");
+        if (!spGreenGemTexture_) {
+            spGreenGemTexture_ = TextureAsset::createSolidColorTexture(60, 200, 100, 255);
+        }
+    }
+
+    if (!spBlueGemTexture_) {
+        spBlueGemTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/blue_gem.png");
+        if (!spBlueGemTexture_) {
+            spBlueGemTexture_ = TextureAsset::createSolidColorTexture(60, 120, 200, 255);
+        }
+    }
+
+    if (!spHeroTexture_) {
+        spHeroTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/elf.png");
+        if (!spHeroTexture_) {
+            spHeroTexture_ = TextureAsset::createSolidColorTexture(120, 200, 120, 255);
+        }
+    }
+
+    if (!spEnemyTexture_) {
+        spEnemyTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/black_wizard.png");
+        if (!spEnemyTexture_) {
+            spEnemyTexture_ = TextureAsset::createSolidColorTexture(40, 40, 40, 255);
+        }
+    }
+
+    models_.clear();
 
     const float worldHeight = kProjectionHalfHeight * 2.0f;
     const float worldWidth = worldHeight * (static_cast<float>(width_) / static_cast<float>(height_));
@@ -309,39 +346,273 @@ void Renderer::createModels() {
     const float halfHeight = boardHeight * 0.5f;
     const float boardOriginX = -halfWidth;
     const float boardOriginY = halfHeight;
+    const float boardLeft = boardOriginX;
+    const float boardRight = boardOriginX + boardWidth;
+    const float boardTop = boardOriginY;
+    const float boardBottom = boardOriginY - boardHeight;
 
-    std::vector<Vertex> boardVertices = {
-            Vertex(Vector3{halfWidth, halfHeight, -0.1f},
-                   Vector2{1.f, 0.f}),
-            Vertex(Vector3{-halfWidth, halfHeight, -0.1f}, Vector2{0.f, 0.f}),
-            Vertex(Vector3{-halfWidth, -halfHeight, -0.1f},
-                   Vector2{0.f, 1.f}),
-            Vertex(Vector3{halfWidth, -halfHeight, -0.1f}, Vector2{1.f, 1.f})
-    };
-    std::vector<Index> boardIndices = {0, 1, 2, 0, 2, 3};
-    models_.emplace_back(boardVertices, boardIndices, spBoardTexture_);
+    models_.emplace_back(buildQuadModel(boardLeft,
+                                        boardTop,
+                                        boardRight,
+                                        boardBottom,
+                                        -0.2f,
+                                        spBoardTexture_));
 
-    const float gemCenterPixelX = static_cast<float>(kTestGemColumn) * kCellPixelWidth
-                                  + kCellPixelWidth * 0.5f;
-    const float gemCenterPixelY = static_cast<float>(kTestGemRow) * kCellPixelHeight
-                                  + kCellPixelHeight * 0.5f;
-    const float gemCenterX = boardOriginX + gemCenterPixelX * pixelToWorldX;
-    const float gemCenterY = boardOriginY - gemCenterPixelY * pixelToWorldY;
+    const float portraitHeight = boardHeight * kPortraitHeightScale;
+    const float portraitMargin = boardWidth * kPortraitMarginScale;
+    const float heroAspect = static_cast<float>(spHeroTexture_->getWidth()) /
+                             static_cast<float>(spHeroTexture_->getHeight());
+    const float heroHalfHeight = portraitHeight * 0.5f;
+    const float heroHalfWidth = portraitHeight * heroAspect * 0.5f;
+    const float heroCenterX = boardLeft - heroHalfWidth - portraitMargin;
+    const float heroCenterY = 0.0f;
+
+    models_.emplace_back(buildQuadModel(heroCenterX - heroHalfWidth,
+                                        heroCenterY + heroHalfHeight,
+                                        heroCenterX + heroHalfWidth,
+                                        heroCenterY - heroHalfHeight,
+                                        0.05f,
+                                        spHeroTexture_));
+
+    const float enemyAspect = static_cast<float>(spEnemyTexture_->getWidth()) /
+                              static_cast<float>(spEnemyTexture_->getHeight());
+    const float enemyHalfHeight = portraitHeight * 0.5f;
+    const float enemyHalfWidth = portraitHeight * enemyAspect * 0.5f;
+    const float enemyCenterX = boardRight + enemyHalfWidth + portraitMargin;
+    const float enemyCenterY = 0.0f;
+
+    models_.emplace_back(buildQuadModel(enemyCenterX - enemyHalfWidth,
+                                        enemyCenterY + enemyHalfHeight,
+                                        enemyCenterX + enemyHalfWidth,
+                                        enemyCenterY - enemyHalfHeight,
+                                        0.05f,
+                                        spEnemyTexture_));
+
     const float gemHalfWidth = (kCellPixelWidth * kGemVisualScale * pixelToWorldX) * 0.5f;
     const float gemHalfHeight = (kCellPixelHeight * kGemVisualScale * pixelToWorldY) * 0.5f;
 
-    std::vector<Vertex> gemVertices = {
-            Vertex(Vector3{gemCenterX + gemHalfWidth, gemCenterY + gemHalfHeight, 0.0f},
-                   Vector2{1.f, 0.f}),
-            Vertex(Vector3{gemCenterX - gemHalfWidth, gemCenterY + gemHalfHeight, 0.0f},
-                   Vector2{0.f, 0.f}),
-            Vertex(Vector3{gemCenterX - gemHalfWidth, gemCenterY - gemHalfHeight, 0.0f},
-                   Vector2{0.f, 1.f}),
-            Vertex(Vector3{gemCenterX + gemHalfWidth, gemCenterY - gemHalfHeight, 0.0f},
-                   Vector2{1.f, 1.f})
+    for (int row = 0; row < kBoardRows; ++row) {
+        for (int col = 0; col < kBoardColumns; ++col) {
+            GemType type = getGem(row, col);
+            if (type == GemType::None) {
+                continue;
+            }
+
+            auto texture = textureForGem(type);
+            if (!texture) {
+                continue;
+            }
+
+            const float gemCenterPixelX = (static_cast<float>(col) + 0.5f) * kCellPixelWidth;
+            const float gemCenterPixelY = (static_cast<float>(row) + 0.5f) * kCellPixelHeight;
+            const float gemCenterX = boardOriginX + gemCenterPixelX * pixelToWorldX;
+            const float gemCenterY = boardOriginY - gemCenterPixelY * pixelToWorldY;
+
+            models_.emplace_back(buildQuadModel(gemCenterX - gemHalfWidth,
+                                                gemCenterY + gemHalfHeight,
+                                                gemCenterX + gemHalfWidth,
+                                                gemCenterY - gemHalfHeight,
+                                                0.0f,
+                                                texture));
+        }
+    }
+
+    sceneDirty_ = false;
+}
+
+void Renderer::ensureBoardInitialized() {
+    if (boardReady_) {
+        return;
+    }
+
+    board_.assign(kBoardRows * kBoardColumns, GemType::None);
+    for (int row = 0; row < kBoardRows; ++row) {
+        for (int col = 0; col < kBoardColumns; ++col) {
+            setGem(row, col, randomGem());
+        }
+    }
+
+    boardReady_ = true;
+    sceneDirty_ = true;
+}
+
+Renderer::GemType Renderer::randomGem() {
+    int value = gemDistribution_(rng_);
+    switch (value) {
+        case 0:
+            return GemType::Red;
+        case 1:
+            return GemType::Green;
+        default:
+            return GemType::Blue;
+    }
+}
+
+Renderer::GemType Renderer::getGem(int row, int col) const {
+    if (row < 0 || row >= kBoardRows || col < 0 || col >= kBoardColumns) {
+        return GemType::None;
+    }
+    return board_[row * kBoardColumns + col];
+}
+
+void Renderer::setGem(int row, int col, GemType type) {
+    if (row < 0 || row >= kBoardRows || col < 0 || col >= kBoardColumns) {
+        return;
+    }
+    board_[row * kBoardColumns + col] = type;
+}
+
+std::vector<std::pair<int, int>> Renderer::findMatches() const {
+    std::vector<std::pair<int, int>> matches;
+    if (!boardReady_) {
+        return matches;
+    }
+
+    std::vector<bool> marked(board_.size(), false);
+
+    for (int row = 0; row < kBoardRows; ++row) {
+        GemType current = GemType::None;
+        int runStart = 0;
+        int count = 0;
+        for (int col = 0; col < kBoardColumns; ++col) {
+            GemType type = getGem(row, col);
+            if (type != GemType::None && type == current) {
+                count++;
+            } else {
+                if (count >= 3 && current != GemType::None) {
+                    for (int c = runStart; c < runStart + count; ++c) {
+                        marked[row * kBoardColumns + c] = true;
+                    }
+                }
+                if (type == GemType::None) {
+                    current = GemType::None;
+                    count = 0;
+                } else {
+                    current = type;
+                    count = 1;
+                    runStart = col;
+                }
+            }
+        }
+        if (count >= 3 && current != GemType::None) {
+            for (int c = runStart; c < runStart + count; ++c) {
+                marked[row * kBoardColumns + c] = true;
+            }
+        }
+    }
+
+    for (int col = 0; col < kBoardColumns; ++col) {
+        GemType current = GemType::None;
+        int runStart = 0;
+        int count = 0;
+        for (int row = 0; row < kBoardRows; ++row) {
+            GemType type = getGem(row, col);
+            if (type != GemType::None && type == current) {
+                count++;
+            } else {
+                if (count >= 3 && current != GemType::None) {
+                    for (int r = runStart; r < runStart + count; ++r) {
+                        marked[r * kBoardColumns + col] = true;
+                    }
+                }
+                if (type == GemType::None) {
+                    current = GemType::None;
+                    count = 0;
+                } else {
+                    current = type;
+                    count = 1;
+                    runStart = row;
+                }
+            }
+        }
+        if (count >= 3 && current != GemType::None) {
+            for (int r = runStart; r < runStart + count; ++r) {
+                marked[r * kBoardColumns + col] = true;
+            }
+        }
+    }
+
+    for (int row = 0; row < kBoardRows; ++row) {
+        for (int col = 0; col < kBoardColumns; ++col) {
+            if (marked[row * kBoardColumns + col]) {
+                matches.emplace_back(row, col);
+            }
+        }
+    }
+
+    return matches;
+}
+
+void Renderer::removeMatches(const std::vector<std::pair<int, int>> &matches) {
+    for (const auto &match: matches) {
+        setGem(match.first, match.second, GemType::None);
+    }
+}
+
+void Renderer::applyGravityAndFill() {
+    for (int col = 0; col < kBoardColumns; ++col) {
+        int writeRow = kBoardRows - 1;
+        for (int row = kBoardRows - 1; row >= 0; --row) {
+            GemType type = getGem(row, col);
+            if (type != GemType::None) {
+                setGem(writeRow, col, type);
+                if (writeRow != row) {
+                    setGem(row, col, GemType::None);
+                }
+                --writeRow;
+            }
+        }
+        for (int row = writeRow; row >= 0; --row) {
+            setGem(row, col, randomGem());
+        }
+    }
+}
+
+bool Renderer::updateBoardState() {
+    if (!boardReady_) {
+        return false;
+    }
+
+    bool changed = false;
+    while (true) {
+        auto matches = findMatches();
+        if (matches.empty()) {
+            break;
+        }
+        removeMatches(matches);
+        applyGravityAndFill();
+        changed = true;
+    }
+    return changed;
+}
+
+Model Renderer::buildQuadModel(float left,
+                               float top,
+                               float right,
+                               float bottom,
+                               float z,
+                               const std::shared_ptr<TextureAsset> &texture) const {
+    std::vector<Vertex> vertices = {
+            Vertex(Vector3{right, top, z}, Vector2{1.f, 0.f}),
+            Vertex(Vector3{left, top, z}, Vector2{0.f, 0.f}),
+            Vertex(Vector3{left, bottom, z}, Vector2{0.f, 1.f}),
+            Vertex(Vector3{right, bottom, z}, Vector2{1.f, 1.f})
     };
-    std::vector<Index> gemIndices = {0, 1, 2, 0, 2, 3};
-    models_.emplace_back(gemVertices, gemIndices, spGemTexture_);
+    std::vector<Index> indices = {0, 1, 2, 0, 2, 3};
+    return Model(std::move(vertices), std::move(indices), texture);
+}
+
+std::shared_ptr<TextureAsset> Renderer::textureForGem(GemType type) const {
+    switch (type) {
+        case GemType::Red:
+            return spRedGemTexture_;
+        case GemType::Green:
+            return spGreenGemTexture_;
+        case GemType::Blue:
+            return spBlueGemTexture_;
+        default:
+            return nullptr;
+    }
 }
 
 void Renderer::handleInput() {
