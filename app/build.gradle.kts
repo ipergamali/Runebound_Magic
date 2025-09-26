@@ -5,8 +5,10 @@ plugins {
 
 android {
     namespace = "com.example.rouneboundmagic"
+
     compileSdk = 35
     ndkVersion = "27.2.12479014"
+
 
     defaultConfig {
         applicationId = "com.example.rouneboundmagic"
