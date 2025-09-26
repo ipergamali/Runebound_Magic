@@ -338,16 +338,18 @@ void Renderer::createModels() {
     const float boardPixelHeight = static_cast<float>(spBoardTexture_->getHeight());
     const float pixelToWorld = std::min(maxBoardWidth / boardPixelWidth,
                                         maxBoardHeight / boardPixelHeight);
-    const float boardWidth = boardPixelWidth * pixelToWorld;
-    const float boardHeight = boardPixelHeight * pixelToWorld;
-    const float halfWidth = boardWidth * 0.5f;
-    const float halfHeight = boardHeight * 0.5f;
-    const float boardOriginX = -halfWidth;
-    const float boardOriginY = halfHeight;
-    const float boardLeft = boardOriginX;
-    const float boardRight = boardOriginX + boardWidth;
-    const float boardTop = boardOriginY;
-    const float boardBottom = boardOriginY - boardHeight;
+    const float boardDrawWidth = boardPixelWidth * pixelToWorld;
+    const float boardDrawHeight = boardPixelHeight * pixelToWorld;
+    const float boardCenterX = 0.0f;
+    const float boardCenterY = 0.0f;
+    const float originX = boardCenterX - boardDrawWidth * 0.5f;
+    const float originY = boardCenterY + boardDrawHeight * 0.5f;
+    const float boardLeft = originX;
+    const float boardRight = originX + boardDrawWidth;
+    const float boardTop = originY;
+    const float boardBottom = originY - boardDrawHeight;
+    const float boardWidth = boardDrawWidth;
+    const float boardHeight = boardDrawHeight;
 
     models_.emplace_back(buildQuadModel(boardLeft,
                                         boardTop,
@@ -386,8 +388,8 @@ void Renderer::createModels() {
                                         0.05f,
                                         spEnemyTexture_));
 
-    const float cellWidth = boardWidth / static_cast<float>(kBoardColumns);
-    const float cellHeight = boardHeight / static_cast<float>(kBoardRows);
+    const float cellWidth = boardDrawWidth / static_cast<float>(kBoardColumns);
+    const float cellHeight = boardDrawHeight / static_cast<float>(kBoardRows);
     const float gemSize = std::min(cellWidth, cellHeight) * kGemVisualScale;
     const float gemHalfWidth = gemSize * 0.5f;
     const float gemHalfHeight = gemSize * 0.5f;
@@ -404,9 +406,9 @@ void Renderer::createModels() {
                 continue;
             }
 
-            const float gemCenterX = boardOriginX +
+            const float gemCenterX = originX +
                                      (static_cast<float>(col) + 0.5f) * cellWidth;
-            const float gemCenterY = boardOriginY -
+            const float gemCenterY = originY -
                                      (static_cast<float>(row) + 0.5f) * cellHeight;
 
             models_.emplace_back(buildQuadModel(gemCenterX - gemHalfWidth,
