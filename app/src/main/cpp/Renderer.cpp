@@ -105,6 +105,8 @@ static constexpr float kResultBannerWidthScale = 0.6f;
 static constexpr int kRedMatchDamage = 10;
 static constexpr int kBlueMatchHeal = 5;
 static constexpr int kGreenMatchMana = 10;
+static constexpr int kSkullMatchDamage = 10;
+static constexpr float kSkullSpawnChance = 0.1f;
 
 Renderer::~Renderer() {
     if (display_ != EGL_NO_DISPLAY) {
@@ -335,6 +337,13 @@ void Renderer::createModels() {
         spBlueGemTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/blue_gem.png");
         if (!spBlueGemTexture_) {
             spBlueGemTexture_ = TextureAsset::createSolidColorTexture(60, 120, 200, 255);
+        }
+    }
+
+    if (!spSkullGemTexture_) {
+        spSkullGemTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/skull.png");
+        if (!spSkullGemTexture_) {
+            spSkullGemTexture_ = TextureAsset::createSolidColorTexture(220, 220, 220, 255);
         }
     }
 
@@ -578,6 +587,10 @@ void Renderer::ensureBoardInitialized() {
 }
 
 Renderer::GemType Renderer::randomGem() {
+    if (skullChanceDistribution_(rng_) < kSkullSpawnChance) {
+        return GemType::Skull;
+    }
+
     int value = gemDistribution_(rng_);
     switch (value) {
         case 0:
@@ -715,7 +728,7 @@ void Renderer::applyMatchEffects(const std::vector<MatchGroup> &matches) {
         return;
     }
 
-    std::array<int, 3> gemCounts = {0, 0, 0};
+    std::array<int, 4> gemCounts = {0, 0, 0, 0};
     std::vector<bool> counted(board_.size(), false);
     for (const auto &group: matches) {
         const int typeIndex = static_cast<int>(group.type);
@@ -763,6 +776,15 @@ void Renderer::applyMatchEffects(const std::vector<MatchGroup> &matches) {
         const int newMana = std::min(heroMaxMana_, heroMana_ + kGreenMatchMana * greenCount);
         if (newMana != heroMana_) {
             heroMana_ = newMana;
+            statsChanged = true;
+        }
+    }
+
+    const int skullCount = gemCounts[static_cast<int>(GemType::Skull)];
+    if (skullCount > 0) {
+        const int newHeroHP = std::max(0, heroHP_ - kSkullMatchDamage * skullCount);
+        if (newHeroHP != heroHP_) {
+            heroHP_ = newHeroHP;
             statsChanged = true;
         }
     }
@@ -994,6 +1016,8 @@ std::shared_ptr<TextureAsset> Renderer::textureForGem(GemType type) const {
             return spGreenGemTexture_;
         case GemType::Blue:
             return spBlueGemTexture_;
+        case GemType::Skull:
+            return spSkullGemTexture_;
         default:
             return nullptr;
     }

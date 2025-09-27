@@ -33,6 +33,7 @@ public:
             shaderNeedsNewProjectionMatrix_(true),
             rng_(std::random_device{}()),
             gemDistribution_(0, 2),
+            skullChanceDistribution_(0.0f, 1.0f),
             sceneDirty_(true),
             boardReady_(false),
             heroHP_(heroMaxHP_),
@@ -80,6 +81,7 @@ private:
         Red = 0,
         Green = 1,
         Blue = 2,
+        Skull = 3,
     };
 
     struct MatchGroup {
@@ -172,6 +174,7 @@ private:
     std::shared_ptr<TextureAsset> spRedGemTexture_;
     std::shared_ptr<TextureAsset> spGreenGemTexture_;
     std::shared_ptr<TextureAsset> spBlueGemTexture_;
+    std::shared_ptr<TextureAsset> spSkullGemTexture_;
     std::shared_ptr<TextureAsset> spHeroTexture_;
     std::shared_ptr<TextureAsset> spEnemyTexture_;
     std::shared_ptr<TextureAsset> spWhiteTexture_;
@@ -182,6 +185,7 @@ private:
     std::vector<Rune> board_;
     std::mt19937 rng_;
     std::uniform_int_distribution<int> gemDistribution_;
+    std::uniform_real_distribution<float> skullChanceDistribution_;
     bool sceneDirty_;
     bool boardReady_;
     int heroHP_;
