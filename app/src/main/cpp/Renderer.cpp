@@ -133,10 +133,22 @@ void Renderer::render() {
     // changed.
     updateRenderArea();
 
+    auto now = std::chrono::steady_clock::now();
+    float deltaTime = std::chrono::duration<float>(now - lastFrameTime_).count();
+    lastFrameTime_ = now;
+    if (deltaTime < 0.0f) {
+        deltaTime = 0.0f;
+    }
+    if (deltaTime > 0.1f) {
+        deltaTime = 0.1f;
+    }
+
     ensureBoardInitialized();
     if (updateBoardState()) {
         sceneDirty_ = true;
     }
+
+    updateRuneAnimation(deltaTime);
 
     // When the renderable area changes, the projection matrix has to also be updated. This is true
     // even if you change from the sample orthographic projection matrix as your aspect ratio has
@@ -371,6 +383,7 @@ void Renderer::createModels() {
     const float boardPixelHeight = static_cast<float>(spBoardTexture_->getHeight());
     const float pixelToWorld = std::min(maxBoardWidth / boardPixelWidth,
                                         maxBoardHeight / boardPixelHeight);
+    boardPixelToWorld_ = pixelToWorld;
     const float boardDrawWidth = boardPixelWidth * pixelToWorld;
     const float boardDrawHeight = boardPixelHeight * pixelToWorld;
     const float boardCenterX = 0.0f;
@@ -509,6 +522,7 @@ void Renderer::createModels() {
     const float marginBottom = kBoardMarginBottomPx * boardScale;
     const float innerWidth = boardDrawWidth - marginLeft - marginRight;
     const float innerHeight = boardDrawHeight - marginTop - marginBottom;
+    const bool geometryPreviouslyValid = boardGeometryValid_;
     const float cellWidth = innerWidth / static_cast<float>(kBoardColumns);
     const float cellHeight = innerHeight / static_cast<float>(kBoardRows);
 
@@ -524,20 +538,28 @@ void Renderer::createModels() {
     const float gemHalfWidth = gemSize * 0.5f;
     const float gemHalfHeight = gemSize * 0.5f;
 
+    updateAllRuneTargets(!geometryPreviouslyValid);
+
     for (int row = 0; row < kBoardRows; ++row) {
         for (int col = 0; col < kBoardColumns; ++col) {
-            GemType type = getGem(row, col);
-            if (type == GemType::None) {
+            const Rune &rune = runeAt(row, col);
+            if (rune.type == GemType::None) {
                 continue;
             }
 
-            auto texture = textureForGem(type);
+            auto texture = textureForGem(rune.type);
             if (!texture) {
                 continue;
             }
 
-            const float gemCenterX = gridLeft_ + (static_cast<float>(col) + 0.5f) * cellWidth_;
-            const float gemCenterY = gridTop_ - (static_cast<float>(row) + 0.5f) * cellHeight_;
+            float gemCenterX = rune.currentX;
+            float gemCenterY = rune.currentY;
+
+            if (!rune.positionInitialized) {
+                const auto center = cellCenter(row, col);
+                gemCenterX = center.first;
+                gemCenterY = center.second;
+            }
 
             models_.emplace_back(buildQuadModel(gemCenterX - gemHalfWidth,
                                                 gemCenterY + gemHalfHeight,
@@ -590,7 +612,7 @@ void Renderer::ensureBoardInitialized() {
         return;
     }
 
-    board_.assign(kBoardRows * kBoardColumns, GemType::None);
+    board_.assign(kBoardRows * kBoardColumns, Rune{});
     boardReady_ = true;
 
     do {
@@ -624,14 +646,23 @@ Renderer::GemType Renderer::getGem(int row, int col) const {
     if (row < 0 || row >= kBoardRows || col < 0 || col >= kBoardColumns) {
         return GemType::None;
     }
-    return board_[row * kBoardColumns + col];
+    const size_t index = static_cast<size_t>(row * kBoardColumns + col);
+    return board_[index].type;
 }
 
 void Renderer::setGem(int row, int col, GemType type) {
     if (row < 0 || row >= kBoardRows || col < 0 || col >= kBoardColumns) {
         return;
     }
-    board_[row * kBoardColumns + col] = type;
+    Rune &rune = board_[static_cast<size_t>(row * kBoardColumns + col)];
+    if (type == GemType::None) {
+        rune = Rune{};
+        return;
+    }
+
+    rune.type = type;
+    rune.positionInitialized = false;
+    updateRuneTarget(row, col, rune);
 }
 
 std::vector<Renderer::MatchGroup> Renderer::findMatches() const {
@@ -808,17 +839,38 @@ void Renderer::applyGravityAndFill() {
     for (int col = 0; col < kBoardColumns; ++col) {
         int writeRow = kBoardRows - 1;
         for (int row = kBoardRows - 1; row >= 0; --row) {
-            GemType type = getGem(row, col);
-            if (type != GemType::None) {
-                setGem(writeRow, col, type);
-                if (writeRow != row) {
-                    setGem(row, col, GemType::None);
-                }
-                --writeRow;
+            Rune &currentRune = runeAt(row, col);
+            if (currentRune.type == GemType::None) {
+                continue;
             }
+
+            if (writeRow != row) {
+                Rune movedRune = currentRune;
+                currentRune = Rune{};
+                Rune &destinationRune = runeAt(writeRow, col);
+                destinationRune = movedRune;
+                updateRuneTarget(writeRow, col, destinationRune);
+            } else {
+                updateRuneTarget(row, col, currentRune);
+            }
+
+            --writeRow;
         }
         for (int row = writeRow; row >= 0; --row) {
-            setGem(row, col, randomGem());
+            Rune &rune = runeAt(row, col);
+            rune = Rune{};
+            rune.type = randomGem();
+            if (boardGeometryValid_) {
+                const auto center = cellCenter(row, col);
+                rune.currentX = center.first;
+                rune.currentY = gridTop_ + cellHeight_ * 0.5f;
+                rune.positionInitialized = true;
+                rune.targetX = center.first;
+                rune.targetY = center.second;
+            } else {
+                rune.positionInitialized = false;
+            }
+            updateRuneTarget(row, col, rune);
         }
     }
 }
@@ -883,6 +935,94 @@ std::shared_ptr<TextureAsset> Renderer::textureForGem(GemType type) const {
         default:
             return nullptr;
     }
+}
+
+Renderer::Rune &Renderer::runeAt(int row, int col) {
+    const size_t index = static_cast<size_t>(row * kBoardColumns + col);
+    return board_[index];
+}
+
+const Renderer::Rune &Renderer::runeAt(int row, int col) const {
+    const size_t index = static_cast<size_t>(row * kBoardColumns + col);
+    return board_[index];
+}
+
+void Renderer::updateRuneTarget(int row, int col, Rune &rune) {
+    if (rune.type == GemType::None || !boardGeometryValid_) {
+        return;
+    }
+
+    const auto center = cellCenter(row, col);
+    rune.targetX = center.first;
+    rune.targetY = center.second;
+    if (!rune.positionInitialized) {
+        rune.currentX = rune.targetX;
+        rune.currentY = rune.targetY;
+        rune.positionInitialized = true;
+    }
+}
+
+void Renderer::updateAllRuneTargets(bool snapToTarget) {
+    if (!boardReady_ || !boardGeometryValid_) {
+        return;
+    }
+
+    for (int row = 0; row < kBoardRows; ++row) {
+        for (int col = 0; col < kBoardColumns; ++col) {
+            Rune &rune = runeAt(row, col);
+            if (rune.type == GemType::None) {
+                continue;
+            }
+
+            updateRuneTarget(row, col, rune);
+            if (snapToTarget) {
+                rune.currentX = rune.targetX;
+                rune.currentY = rune.targetY;
+                rune.positionInitialized = true;
+            }
+        }
+    }
+}
+
+void Renderer::updateRuneAnimation(float deltaTimeSeconds) {
+    if (!boardReady_ || deltaTimeSeconds <= 0.0f) {
+        return;
+    }
+
+    const float safePixelScale = boardPixelToWorld_ <= 0.0f ? 1.0f : boardPixelToWorld_;
+    bool anyMovement = false;
+
+    for (auto &rune: board_) {
+        if (rune.type == GemType::None) {
+            continue;
+        }
+
+        const float deltaX = rune.targetX - rune.currentX;
+        const float deltaY = rune.targetY - rune.currentY;
+        if (std::fabs(deltaX) > 0.0001f || std::fabs(deltaY) > 0.0001f) {
+            anyMovement = true;
+        }
+        rune.currentX += deltaX * 10.0f * deltaTimeSeconds;
+        rune.currentY += deltaY * 10.0f * deltaTimeSeconds;
+
+        const float diffX = std::fabs(rune.currentX - rune.targetX) / safePixelScale;
+        const float diffY = std::fabs(rune.currentY - rune.targetY) / safePixelScale;
+        if (diffX < 1.0f && diffY < 1.0f) {
+            rune.currentX = rune.targetX;
+            rune.currentY = rune.targetY;
+            rune.positionInitialized = true;
+        }
+    }
+
+    if (anyMovement) {
+        sceneDirty_ = true;
+    }
+}
+
+std::pair<float, float> Renderer::cellCenter(int row, int col) const {
+    const float gemCenterX = gridLeft_ + (static_cast<float>(col) + 0.5f) * cellWidth_;
+    const float gemCenterY = gridTop_ - (static_cast<float>(row) + 0.5f) * cellHeight_;
+    return {gemCenterX, gemCenterY};
 }
 
 void Renderer::handleInput() {
@@ -969,19 +1109,21 @@ bool Renderer::attemptSwap(int startRow, int startCol, int endRow, int endCol) {
         return false;
     }
 
-    GemType first = getGem(startRow, startCol);
-    GemType second = getGem(endRow, endCol);
-    if (first == GemType::None || second == GemType::None) {
+    Rune &firstRune = runeAt(startRow, startCol);
+    Rune &secondRune = runeAt(endRow, endCol);
+    if (firstRune.type == GemType::None || secondRune.type == GemType::None) {
         return false;
     }
 
-    setGem(startRow, startCol, second);
-    setGem(endRow, endCol, first);
+    std::swap(firstRune, secondRune);
+    updateRuneTarget(startRow, startCol, firstRune);
+    updateRuneTarget(endRow, endCol, secondRune);
 
     auto matches = findMatches();
     if (matches.empty()) {
-        setGem(startRow, startCol, first);
-        setGem(endRow, endCol, second);
+        std::swap(firstRune, secondRune);
+        updateRuneTarget(startRow, startCol, firstRune);
+        updateRuneTarget(endRow, endCol, secondRune);
         return false;
     }
 
