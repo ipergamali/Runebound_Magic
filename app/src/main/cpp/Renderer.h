@@ -7,6 +7,7 @@
 #include <cstdint>
 #include <memory>
 #include <random>
+#include <unordered_map>
 #include <utility>
 #include <vector>
 
@@ -123,6 +124,31 @@ private:
                          float bottom,
                          float z,
                          const std::shared_ptr<TextureAsset> &texture) const;
+    void renderTexture(const std::shared_ptr<TextureAsset> &texture,
+                       float left,
+                       float bottom,
+                       float width,
+                       float height,
+                       float z = 0.05f);
+    void renderQuad(float left,
+                    float bottom,
+                    float width,
+                    float height,
+                    float r,
+                    float g,
+                    float b,
+                    float a,
+                    float z);
+    void drawHPBar(int hp,
+                   int hpMax,
+                   float left,
+                   float bottom,
+                   float width,
+                   float height);
+    std::shared_ptr<TextureAsset> getSolidColorTexture(float r,
+                                                       float g,
+                                                       float b,
+                                                       float a);
     std::shared_ptr<TextureAsset> textureForGem(GemType type) const;
     Rune &runeAt(int row, int col);
     const Rune &runeAt(int row, int col) const;
@@ -148,12 +174,10 @@ private:
     std::shared_ptr<TextureAsset> spBlueGemTexture_;
     std::shared_ptr<TextureAsset> spHeroTexture_;
     std::shared_ptr<TextureAsset> spEnemyTexture_;
-    std::shared_ptr<TextureAsset> spHPBackgroundTexture_;
-    std::shared_ptr<TextureAsset> spHeroHPTexture_;
-    std::shared_ptr<TextureAsset> spEnemyHPTexture_;
-    std::shared_ptr<TextureAsset> spManaTexture_;
+    std::shared_ptr<TextureAsset> spWhiteTexture_;
     std::shared_ptr<TextureAsset> spVictoryTexture_;
     std::shared_ptr<TextureAsset> spDefeatTexture_;
+    std::unordered_map<uint32_t, std::shared_ptr<TextureAsset>> solidColorTextures_;
 
     std::vector<Rune> board_;
     std::mt19937 rng_;
