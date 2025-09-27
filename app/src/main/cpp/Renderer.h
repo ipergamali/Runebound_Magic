@@ -4,6 +4,8 @@
 #include <EGL/egl.h>
 #include <memory>
 #include <random>
+#include <utility>
+#include <vector>
 
 #include "Model.h"
 #include "Shader.h"
@@ -28,7 +30,11 @@ public:
             rng_(std::random_device{}()),
             gemDistribution_(0, 2),
             sceneDirty_(true),
-            boardReady_(false) {
+            boardReady_(false),
+            heroHP_(heroMaxHP_),
+            enemyHP_(enemyMaxHP_),
+            heroMana_(0),
+            battleOutcome_(BattleOutcome::None) {
         initRenderer();
     }
 
@@ -72,13 +78,25 @@ private:
         Blue = 2,
     };
 
+    struct MatchGroup {
+        GemType type;
+        std::vector<std::pair<int, int>> cells;
+    };
+
+    enum class BattleOutcome {
+        None,
+        Victory,
+        Defeat,
+    };
+
     void ensureBoardInitialized();
     GemType randomGem();
     GemType getGem(int row, int col) const;
     void setGem(int row, int col, GemType type);
-    std::vector<std::pair<int, int>> findMatches() const;
-    void removeMatches(const std::vector<std::pair<int, int>> &matches);
+    std::vector<MatchGroup> findMatches() const;
+    void removeMatches(const std::vector<MatchGroup> &matches);
     void applyGravityAndFill();
+    void applyMatchEffects(const std::vector<MatchGroup> &matches);
     bool updateBoardState();
     Model buildQuadModel(float left,
                          float top,
@@ -105,12 +123,25 @@ private:
     std::shared_ptr<TextureAsset> spBlueGemTexture_;
     std::shared_ptr<TextureAsset> spHeroTexture_;
     std::shared_ptr<TextureAsset> spEnemyTexture_;
+    std::shared_ptr<TextureAsset> spHPBackgroundTexture_;
+    std::shared_ptr<TextureAsset> spHeroHPTexture_;
+    std::shared_ptr<TextureAsset> spEnemyHPTexture_;
+    std::shared_ptr<TextureAsset> spManaTexture_;
+    std::shared_ptr<TextureAsset> spVictoryTexture_;
+    std::shared_ptr<TextureAsset> spDefeatTexture_;
 
     std::vector<GemType> board_;
     std::mt19937 rng_;
     std::uniform_int_distribution<int> gemDistribution_;
     bool sceneDirty_;
     bool boardReady_;
+    int heroHP_;
+    int enemyHP_;
+    int heroMana_;
+    const int heroMaxHP_ = 100;
+    const int enemyMaxHP_ = 100;
+    const int heroMaxMana_ = 100;
+    BattleOutcome battleOutcome_;
 };
 
 #endif //ANDROIDGLINVESTIGATIONS_RENDERER_H
