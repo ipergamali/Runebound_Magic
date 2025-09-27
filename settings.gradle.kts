@@ -19,6 +19,6 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "Rounebound Magic"
+rootProject.name = "Runebound Magic"
 include(":app")
  
