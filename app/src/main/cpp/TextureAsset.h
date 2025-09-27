@@ -30,6 +30,17 @@ public:
             uint8_t blue,
             uint8_t alpha = 255);
 
+    /*!
+     * Δημιουργεί μια υφή με απλό μονόχρωμο κείμενο βασισμένο σε πλέγμα 5x7.
+     * Χρήσιμο για ελαφριά overlays χωρίς εξωτερικά assets.
+     */
+    static std::shared_ptr<TextureAsset> createTextTexture(
+            const std::string &text,
+            uint8_t red,
+            uint8_t green,
+            uint8_t blue,
+            uint8_t alpha = 255);
+
     ~TextureAsset();
 
     /*!

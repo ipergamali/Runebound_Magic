@@ -100,6 +100,15 @@ static constexpr float kBoardMarginBottomPx = 80.f;
 static constexpr float kBoardMarginScale = 0.85f;
 static constexpr float kPortraitHeightScale = 0.6f;
 static constexpr float kPortraitMarginScale = 0.05f;
+static constexpr float kHealthBarHeightScale = 0.1f;
+static constexpr float kHealthBarMarginScale = 0.05f;
+static constexpr float kManaBarHeightScale = 0.06f;
+static constexpr float kManaBarSpacingScale = 0.02f;
+static constexpr float kResultBannerWidthScale = 0.6f;
+
+static constexpr int kRedMatchDamage = 10;
+static constexpr int kBlueMatchHeal = 5;
+static constexpr int kGreenMatchMana = 10;
 
 Renderer::~Renderer() {
     if (display_ != EGL_NO_DISPLAY) {
@@ -334,6 +343,22 @@ void Renderer::createModels() {
         }
     }
 
+    if (!spHPBackgroundTexture_) {
+        spHPBackgroundTexture_ = TextureAsset::createSolidColorTexture(30, 30, 40, 200);
+    }
+
+    if (!spHeroHPTexture_) {
+        spHeroHPTexture_ = TextureAsset::createSolidColorTexture(120, 220, 120, 255);
+    }
+
+    if (!spEnemyHPTexture_) {
+        spEnemyHPTexture_ = TextureAsset::createSolidColorTexture(220, 80, 80, 255);
+    }
+
+    if (!spManaTexture_) {
+        spManaTexture_ = TextureAsset::createSolidColorTexture(90, 140, 220, 255);
+    }
+
     models_.clear();
 
     const float worldHeight = kProjectionHalfHeight * 2.0f;
@@ -394,6 +419,87 @@ void Renderer::createModels() {
                                         0.05f,
                                         spEnemyTexture_));
 
+    const float healthBarHeight = portraitHeight * kHealthBarHeightScale;
+    const float healthBarMargin = portraitHeight * kHealthBarMarginScale;
+    const float manaBarHeight = portraitHeight * kManaBarHeightScale;
+    const float manaSpacing = portraitHeight * kManaBarSpacingScale;
+
+    const float heroBarLeft = heroCenterX - heroHalfWidth;
+    const float heroBarRight = heroCenterX + heroHalfWidth;
+    const float heroBarTop = heroCenterY - heroHalfHeight - healthBarMargin;
+    const float heroBarBottom = heroBarTop - healthBarHeight;
+
+    models_.emplace_back(buildQuadModel(heroBarLeft,
+                                        heroBarTop,
+                                        heroBarRight,
+                                        heroBarBottom,
+                                        0.06f,
+                                        spHPBackgroundTexture_));
+
+    const float heroHPFraction = std::max(0.0f,
+                                          std::min(1.0f,
+                                                   static_cast<float>(heroHP_) /
+                                                   static_cast<float>(heroMaxHP_)));
+    if (heroHPFraction > 0.0f) {
+        const float heroFillRight = heroBarLeft + (heroBarRight - heroBarLeft) * heroHPFraction;
+        models_.emplace_back(buildQuadModel(heroBarLeft,
+                                            heroBarTop,
+                                            heroFillRight,
+                                            heroBarBottom,
+                                            0.05f,
+                                            spHeroHPTexture_));
+    }
+
+    const float manaBarTop = heroBarBottom - manaSpacing;
+    const float manaBarBottom = manaBarTop - manaBarHeight;
+
+    models_.emplace_back(buildQuadModel(heroBarLeft,
+                                        manaBarTop,
+                                        heroBarRight,
+                                        manaBarBottom,
+                                        0.06f,
+                                        spHPBackgroundTexture_));
+
+    const float heroManaFraction = std::max(0.0f,
+                                            std::min(1.0f,
+                                                     static_cast<float>(heroMana_) /
+                                                     static_cast<float>(heroMaxMana_)));
+    if (heroManaFraction > 0.0f) {
+        const float manaFillRight = heroBarLeft + (heroBarRight - heroBarLeft) * heroManaFraction;
+        models_.emplace_back(buildQuadModel(heroBarLeft,
+                                            manaBarTop,
+                                            manaFillRight,
+                                            manaBarBottom,
+                                            0.05f,
+                                            spManaTexture_));
+    }
+
+    const float enemyBarLeft = enemyCenterX - enemyHalfWidth;
+    const float enemyBarRight = enemyCenterX + enemyHalfWidth;
+    const float enemyBarTop = enemyCenterY - enemyHalfHeight - healthBarMargin;
+    const float enemyBarBottom = enemyBarTop - healthBarHeight;
+
+    models_.emplace_back(buildQuadModel(enemyBarLeft,
+                                        enemyBarTop,
+                                        enemyBarRight,
+                                        enemyBarBottom,
+                                        0.06f,
+                                        spHPBackgroundTexture_));
+
+    const float enemyHPFraction = std::max(0.0f,
+                                           std::min(1.0f,
+                                                    static_cast<float>(enemyHP_) /
+                                                    static_cast<float>(enemyMaxHP_)));
+    if (enemyHPFraction > 0.0f) {
+        const float enemyFillRight = enemyBarLeft + (enemyBarRight - enemyBarLeft) * enemyHPFraction;
+        models_.emplace_back(buildQuadModel(enemyBarLeft,
+                                            enemyBarTop,
+                                            enemyFillRight,
+                                            enemyBarBottom,
+                                            0.05f,
+                                            spEnemyHPTexture_));
+    }
+
     const float boardScale = pixelToWorld;
     const float marginLeft = kBoardMarginLeftPx * boardScale;
     const float marginRight = kBoardMarginRightPx * boardScale;
@@ -432,6 +538,40 @@ void Renderer::createModels() {
                                                 gemCenterY - gemHalfHeight,
                                                 0.0f,
                                                 texture));
+        }
+    }
+
+    if (battleOutcome_ != BattleOutcome::None) {
+        std::shared_ptr<TextureAsset> spTextTexture;
+        if (battleOutcome_ == BattleOutcome::Victory) {
+            if (!spVictoryTexture_) {
+                spVictoryTexture_ = TextureAsset::createTextTexture("Victory", 255, 255, 255, 255);
+            }
+            spTextTexture = spVictoryTexture_;
+        } else if (battleOutcome_ == BattleOutcome::Defeat) {
+            if (!spDefeatTexture_) {
+                spDefeatTexture_ = TextureAsset::createTextTexture("Defeat", 255, 100, 100, 255);
+            }
+            spTextTexture = spDefeatTexture_;
+        }
+
+        if (spTextTexture) {
+            const float desiredWidth = boardWidth * kResultBannerWidthScale;
+            const float textureAspect = static_cast<float>(spTextTexture->getWidth()) /
+                                        static_cast<float>(spTextTexture->getHeight());
+            const float safeAspect = textureAspect <= 0.0f ? 1.0f : textureAspect;
+            const float desiredHeight = desiredWidth / safeAspect;
+            const float bannerCenterX = boardCenterX;
+            const float bannerCenterY = boardCenterY + boardHeight * 0.35f;
+            const float halfWidth = desiredWidth * 0.5f;
+            const float halfHeight = desiredHeight * 0.5f;
+
+            models_.emplace_back(buildQuadModel(bannerCenterX - halfWidth,
+                                                bannerCenterY + halfHeight,
+                                                bannerCenterX + halfWidth,
+                                                bannerCenterY - halfHeight,
+                                                0.1f,
+                                                spTextTexture));
         }
     }
 
@@ -480,13 +620,23 @@ void Renderer::setGem(int row, int col, GemType type) {
     board_[row * kBoardColumns + col] = type;
 }
 
-std::vector<std::pair<int, int>> Renderer::findMatches() const {
-    std::vector<std::pair<int, int>> matches;
+std::vector<Renderer::MatchGroup> Renderer::findMatches() const {
+    std::vector<MatchGroup> matches;
     if (!boardReady_) {
         return matches;
     }
 
-    std::vector<bool> marked(board_.size(), false);
+    auto emitHorizontalRun = [&](GemType type, int row, int startCol, int count) {
+        if (count < 3 || type == GemType::None) {
+            return;
+        }
+        MatchGroup group{type, {}};
+        group.cells.reserve(static_cast<size_t>(count));
+        for (int c = startCol; c < startCol + count; ++c) {
+            group.cells.emplace_back(row, c);
+        }
+        matches.push_back(std::move(group));
+    };
 
     for (int row = 0; row < kBoardRows; ++row) {
         GemType current = GemType::None;
@@ -495,13 +645,9 @@ std::vector<std::pair<int, int>> Renderer::findMatches() const {
         for (int col = 0; col < kBoardColumns; ++col) {
             GemType type = getGem(row, col);
             if (type != GemType::None && type == current) {
-                count++;
+                ++count;
             } else {
-                if (count >= 3 && current != GemType::None) {
-                    for (int c = runStart; c < runStart + count; ++c) {
-                        marked[row * kBoardColumns + c] = true;
-                    }
-                }
+                emitHorizontalRun(current, row, runStart, count);
                 if (type == GemType::None) {
                     current = GemType::None;
                     count = 0;
@@ -512,12 +658,20 @@ std::vector<std::pair<int, int>> Renderer::findMatches() const {
                 }
             }
         }
-        if (count >= 3 && current != GemType::None) {
-            for (int c = runStart; c < runStart + count; ++c) {
-                marked[row * kBoardColumns + c] = true;
-            }
-        }
+        emitHorizontalRun(current, row, runStart, count);
     }
+
+    auto emitVerticalRun = [&](GemType type, int col, int startRow, int count) {
+        if (count < 3 || type == GemType::None) {
+            return;
+        }
+        MatchGroup group{type, {}};
+        group.cells.reserve(static_cast<size_t>(count));
+        for (int r = startRow; r < startRow + count; ++r) {
+            group.cells.emplace_back(r, col);
+        }
+        matches.push_back(std::move(group));
+    };
 
     for (int col = 0; col < kBoardColumns; ++col) {
         GemType current = GemType::None;
@@ -526,13 +680,9 @@ std::vector<std::pair<int, int>> Renderer::findMatches() const {
         for (int row = 0; row < kBoardRows; ++row) {
             GemType type = getGem(row, col);
             if (type != GemType::None && type == current) {
-                count++;
+                ++count;
             } else {
-                if (count >= 3 && current != GemType::None) {
-                    for (int r = runStart; r < runStart + count; ++r) {
-                        marked[r * kBoardColumns + col] = true;
-                    }
-                }
+                emitVerticalRun(current, col, runStart, count);
                 if (type == GemType::None) {
                     current = GemType::None;
                     count = 0;
@@ -543,27 +693,80 @@ std::vector<std::pair<int, int>> Renderer::findMatches() const {
                 }
             }
         }
-        if (count >= 3 && current != GemType::None) {
-            for (int r = runStart; r < runStart + count; ++r) {
-                marked[r * kBoardColumns + col] = true;
-            }
-        }
-    }
-
-    for (int row = 0; row < kBoardRows; ++row) {
-        for (int col = 0; col < kBoardColumns; ++col) {
-            if (marked[row * kBoardColumns + col]) {
-                matches.emplace_back(row, col);
-            }
-        }
+        emitVerticalRun(current, col, runStart, count);
     }
 
     return matches;
 }
 
-void Renderer::removeMatches(const std::vector<std::pair<int, int>> &matches) {
-    for (const auto &match: matches) {
-        setGem(match.first, match.second, GemType::None);
+void Renderer::removeMatches(const std::vector<MatchGroup> &matches) {
+    std::vector<bool> cleared(board_.size(), false);
+    for (const auto &group: matches) {
+        for (const auto &cell: group.cells) {
+            const int row = cell.first;
+            const int col = cell.second;
+            if (row < 0 || row >= kBoardRows || col < 0 || col >= kBoardColumns) {
+                continue;
+            }
+            const size_t index = static_cast<size_t>(row * kBoardColumns + col);
+            if (index >= cleared.size() || cleared[index]) {
+                continue;
+            }
+            setGem(row, col, GemType::None);
+            cleared[index] = true;
+        }
+    }
+}
+
+void Renderer::applyMatchEffects(const std::vector<MatchGroup> &matches) {
+    if (matches.empty()) {
+        return;
+    }
+
+    bool statsChanged = false;
+    for (const auto &group: matches) {
+        switch (group.type) {
+            case GemType::Red: {
+                const int newEnemyHP = std::max(0, enemyHP_ - kRedMatchDamage);
+                if (newEnemyHP != enemyHP_) {
+                    enemyHP_ = newEnemyHP;
+                    statsChanged = true;
+                }
+                break;
+            }
+            case GemType::Blue: {
+                const int newHeroHP = std::min(heroMaxHP_, heroHP_ + kBlueMatchHeal);
+                if (newHeroHP != heroHP_) {
+                    heroHP_ = newHeroHP;
+                    statsChanged = true;
+                }
+                break;
+            }
+            case GemType::Green: {
+                const int newMana = std::min(heroMaxMana_, heroMana_ + kGreenMatchMana);
+                if (newMana != heroMana_) {
+                    heroMana_ = newMana;
+                    statsChanged = true;
+                }
+                break;
+            }
+            default:
+                break;
+        }
+    }
+
+    if (statsChanged) {
+        sceneDirty_ = true;
+    }
+
+    if (battleOutcome_ == BattleOutcome::None) {
+        if (enemyHP_ <= 0) {
+            battleOutcome_ = BattleOutcome::Victory;
+            sceneDirty_ = true;
+        } else if (heroHP_ <= 0) {
+            battleOutcome_ = BattleOutcome::Defeat;
+            sceneDirty_ = true;
+        }
     }
 }
 
@@ -591,15 +794,23 @@ bool Renderer::updateBoardState() {
         return false;
     }
 
+    if (battleOutcome_ != BattleOutcome::None) {
+        return false;
+    }
+
     bool changed = false;
     while (true) {
         auto matches = findMatches();
         if (matches.empty()) {
             break;
         }
+        applyMatchEffects(matches);
         removeMatches(matches);
         applyGravityAndFill();
         changed = true;
+        if (battleOutcome_ != BattleOutcome::None) {
+            break;
+        }
     }
     return changed;
 }
