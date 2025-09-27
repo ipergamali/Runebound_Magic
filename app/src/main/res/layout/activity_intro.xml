@@ -5,18 +5,20 @@
     android:background="@android:color/black">
 
     <VideoView
-        android:id="@+id/introVideoView"
+        android:id="@+id/introVideo"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:keepScreenOn="true"
-        android:scaleType="fitXY" />
+        android:layout_gravity="center"
+        android:keepScreenOn="true" />
 
     <Button
-        android:id="@+id/startGameButton"
+        android:id="@+id/startButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        android:backgroundTint="@android:color/holo_purple"
         android:text="@string/start_game"
+        android:textColor="@android:color/white"
         android:visibility="gone" />
 
 </FrameLayout>
