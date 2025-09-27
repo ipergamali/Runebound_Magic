@@ -89,8 +89,12 @@ static constexpr float kProjectionFarPlane = 1.f;
 static constexpr int kBoardRows = 8;
 static constexpr int kBoardColumns = 5;
 static constexpr float kGemVisualScale = 0.8f;
-static constexpr float kBoardPixelWidth = 768.f;
-static constexpr float kBoardPixelHeight = 1152.f;
+static constexpr float kBoardPixelWidth = 1022.f;
+static constexpr float kBoardPixelHeight = 1535.f;
+static constexpr float kBoardMarginLeftPx = 55.f;
+static constexpr float kBoardMarginRightPx = 50.f;
+static constexpr float kBoardMarginTopPx = 80.f;
+static constexpr float kBoardMarginBottomPx = 80.f;
 static constexpr float kBoardMarginScale = 0.85f;
 static constexpr float kPortraitHeightScale = 0.6f;
 static constexpr float kPortraitMarginScale = 0.05f;
@@ -388,8 +392,15 @@ void Renderer::createModels() {
                                         0.05f,
                                         spEnemyTexture_));
 
-    const float cellWidth = boardDrawWidth / static_cast<float>(kBoardColumns);
-    const float cellHeight = boardDrawHeight / static_cast<float>(kBoardRows);
+    const float boardScale = pixelToWorld;
+    const float marginLeft = kBoardMarginLeftPx * boardScale;
+    const float marginRight = kBoardMarginRightPx * boardScale;
+    const float marginTop = kBoardMarginTopPx * boardScale;
+    const float marginBottom = kBoardMarginBottomPx * boardScale;
+    const float innerWidth = boardDrawWidth - marginLeft - marginRight;
+    const float innerHeight = boardDrawHeight - marginTop - marginBottom;
+    const float cellWidth = innerWidth / static_cast<float>(kBoardColumns);
+    const float cellHeight = innerHeight / static_cast<float>(kBoardRows);
     const float gemSize = std::min(cellWidth, cellHeight) * kGemVisualScale;
     const float gemHalfWidth = gemSize * 0.5f;
     const float gemHalfHeight = gemSize * 0.5f;
@@ -406,9 +417,9 @@ void Renderer::createModels() {
                 continue;
             }
 
-            const float gemCenterX = originX +
+            const float gemCenterX = originX + marginLeft +
                                      (static_cast<float>(col) + 0.5f) * cellWidth;
-            const float gemCenterY = originY -
+            const float gemCenterY = originY - marginTop -
                                      (static_cast<float>(row) + 0.5f) * cellHeight;
 
             models_.emplace_back(buildQuadModel(gemCenterX - gemHalfWidth,
