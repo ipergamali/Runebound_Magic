@@ -1371,7 +1371,7 @@ void Renderer::sendRuneSelectionToJava(float centerX, float centerY, float sizeP
         return;
     }
 
-    jclass activityClass = env->GetObjectClass(activity->clazz);
+    jclass activityClass = env->GetObjectClass(activity->javaGameActivity);
     if (!activityClass) {
         if (didAttach) {
             vm->DetachCurrentThread();
@@ -1381,7 +1381,7 @@ void Renderer::sendRuneSelectionToJava(float centerX, float centerY, float sizeP
 
     jmethodID methodId = env->GetMethodID(activityClass, "onRuneSelected", "(FFF)V");
     if (methodId) {
-        env->CallVoidMethod(activity->clazz,
+        env->CallVoidMethod(activity->javaGameActivity,
                             methodId,
                             static_cast<jfloat>(centerX),
                             static_cast<jfloat>(centerY),
