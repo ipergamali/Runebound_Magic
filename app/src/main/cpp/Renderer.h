@@ -2,6 +2,8 @@
 #define ANDROIDGLINVESTIGATIONS_RENDERER_H
 
 #include <EGL/egl.h>
+#include <array>
+#include <cstdint>
 #include <memory>
 #include <random>
 #include <utility>
@@ -98,6 +100,12 @@ private:
     void applyGravityAndFill();
     void applyMatchEffects(const std::vector<MatchGroup> &matches);
     bool updateBoardState();
+    bool processMatches();
+    bool attemptSwap(int startRow, int startCol, int endRow, int endCol);
+    bool screenToWorld(float screenX, float screenY, float &worldX, float &worldY) const;
+    bool worldToBoardCell(float worldX, float worldY, int &outRow, int &outCol) const;
+    void handlePointerDown(int32_t pointerId, float screenX, float screenY);
+    void handlePointerUp(int32_t pointerId, float screenX, float screenY);
     Model buildQuadModel(float left,
                          float top,
                          float right,
@@ -142,6 +150,21 @@ private:
     const int enemyMaxHP_ = 100;
     const int heroMaxMana_ = 100;
     BattleOutcome battleOutcome_;
+    bool boardGeometryValid_ = false;
+    float boardLeft_ = 0.0f;
+    float boardRight_ = 0.0f;
+    float boardTop_ = 0.0f;
+    float boardBottom_ = 0.0f;
+    float gridLeft_ = 0.0f;
+    float gridTop_ = 0.0f;
+    float gridRight_ = 0.0f;
+    float gridBottom_ = 0.0f;
+    float cellWidth_ = 0.0f;
+    float cellHeight_ = 0.0f;
+    bool hasSelectedCell_ = false;
+    int selectedRow_ = 0;
+    int selectedCol_ = 0;
+    int32_t activePointerId_ = -1;
 };
 
 #endif //ANDROIDGLINVESTIGATIONS_RENDERER_H

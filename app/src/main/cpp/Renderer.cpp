@@ -3,6 +3,7 @@
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 #include <GLES3/gl3.h>
 #include <algorithm>
+#include <cmath>
 #include <memory>
 #include <utility>
 #include <vector>
@@ -289,6 +290,7 @@ void Renderer::updateRenderArea() {
 
         // Regenerate the scene so the board stays centered when the viewport changes
         sceneDirty_ = true;
+        boardGeometryValid_ = false;
     }
 }
 
@@ -375,17 +377,17 @@ void Renderer::createModels() {
     const float boardCenterY = 0.0f;
     const float originX = boardCenterX - boardDrawWidth * 0.5f;
     const float originY = boardCenterY + boardDrawHeight * 0.5f;
-    const float boardLeft = originX;
-    const float boardRight = originX + boardDrawWidth;
-    const float boardTop = originY;
-    const float boardBottom = originY - boardDrawHeight;
+    boardLeft_ = originX;
+    boardRight_ = originX + boardDrawWidth;
+    boardTop_ = originY;
+    boardBottom_ = originY - boardDrawHeight;
     const float boardWidth = boardDrawWidth;
     const float boardHeight = boardDrawHeight;
 
-    models_.emplace_back(buildQuadModel(boardLeft,
-                                        boardTop,
-                                        boardRight,
-                                        boardBottom,
+    models_.emplace_back(buildQuadModel(boardLeft_,
+                                        boardTop_,
+                                        boardRight_,
+                                        boardBottom_,
                                         -0.2f,
                                         spBoardTexture_));
 
@@ -395,7 +397,7 @@ void Renderer::createModels() {
                              static_cast<float>(spHeroTexture_->getHeight());
     const float heroHalfHeight = portraitHeight * 0.5f;
     const float heroHalfWidth = portraitHeight * heroAspect * 0.5f;
-    const float heroCenterX = boardLeft - heroHalfWidth - portraitMargin;
+    const float heroCenterX = boardLeft_ - heroHalfWidth - portraitMargin;
     const float heroCenterY = 0.0f;
 
     models_.emplace_back(buildQuadModel(heroCenterX - heroHalfWidth,
@@ -409,7 +411,7 @@ void Renderer::createModels() {
                               static_cast<float>(spEnemyTexture_->getHeight());
     const float enemyHalfHeight = portraitHeight * 0.5f;
     const float enemyHalfWidth = portraitHeight * enemyAspect * 0.5f;
-    const float enemyCenterX = boardRight + enemyHalfWidth + portraitMargin;
+    const float enemyCenterX = boardRight_ + enemyHalfWidth + portraitMargin;
     const float enemyCenterY = 0.0f;
 
     models_.emplace_back(buildQuadModel(enemyCenterX - enemyHalfWidth,
@@ -510,6 +512,14 @@ void Renderer::createModels() {
     const float cellWidth = innerWidth / static_cast<float>(kBoardColumns);
     const float cellHeight = innerHeight / static_cast<float>(kBoardRows);
 
+    gridLeft_ = originX + marginLeft;
+    gridTop_ = originY - marginTop;
+    gridRight_ = gridLeft_ + innerWidth;
+    gridBottom_ = gridTop_ - innerHeight;
+    cellWidth_ = cellWidth;
+    cellHeight_ = cellHeight;
+    boardGeometryValid_ = true;
+
     const float gemSize = std::min(cellWidth, cellHeight) * kGemVisualScale;
     const float gemHalfWidth = gemSize * 0.5f;
     const float gemHalfHeight = gemSize * 0.5f;
@@ -526,11 +536,8 @@ void Renderer::createModels() {
                 continue;
             }
 
-            const float gemCenterX = originX + marginLeft +
-                                     (static_cast<float>(col) + 0.5f) * cellWidth;
-            const float gemCenterY = originY - marginTop -
-
-                                     (static_cast<float>(row) + 0.5f) * cellHeight;
+            const float gemCenterX = gridLeft_ + (static_cast<float>(col) + 0.5f) * cellWidth_;
+            const float gemCenterY = gridTop_ - (static_cast<float>(row) + 0.5f) * cellHeight_;
 
             models_.emplace_back(buildQuadModel(gemCenterX - gemHalfWidth,
                                                 gemCenterY + gemHalfHeight,
@@ -723,35 +730,55 @@ void Renderer::applyMatchEffects(const std::vector<MatchGroup> &matches) {
         return;
     }
 
-    bool statsChanged = false;
+    std::array<int, 3> gemCounts = {0, 0, 0};
+    std::vector<bool> counted(board_.size(), false);
     for (const auto &group: matches) {
-        switch (group.type) {
-            case GemType::Red: {
-                const int newEnemyHP = std::max(0, enemyHP_ - kRedMatchDamage);
-                if (newEnemyHP != enemyHP_) {
-                    enemyHP_ = newEnemyHP;
-                    statsChanged = true;
-                }
-                break;
+        const int typeIndex = static_cast<int>(group.type);
+        if (typeIndex < 0 || typeIndex >= static_cast<int>(gemCounts.size())) {
+            continue;
+        }
+
+        for (const auto &cell: group.cells) {
+            const int row = cell.first;
+            const int col = cell.second;
+            if (row < 0 || row >= kBoardRows || col < 0 || col >= kBoardColumns) {
+                continue;
             }
-            case GemType::Blue: {
-                const int newHeroHP = std::min(heroMaxHP_, heroHP_ + kBlueMatchHeal);
-                if (newHeroHP != heroHP_) {
-                    heroHP_ = newHeroHP;
-                    statsChanged = true;
-                }
-                break;
+            const size_t index = static_cast<size_t>(row * kBoardColumns + col);
+            if (index >= counted.size() || counted[index]) {
+                continue;
             }
-            case GemType::Green: {
-                const int newMana = std::min(heroMaxMana_, heroMana_ + kGreenMatchMana);
-                if (newMana != heroMana_) {
-                    heroMana_ = newMana;
-                    statsChanged = true;
-                }
-                break;
-            }
-            default:
-                break;
+            counted[index] = true;
+            ++gemCounts[typeIndex];
+        }
+    }
+
+    bool statsChanged = false;
+
+    const int redCount = gemCounts[static_cast<int>(GemType::Red)];
+    if (redCount > 0) {
+        const int newEnemyHP = std::max(0, enemyHP_ - kRedMatchDamage * redCount);
+        if (newEnemyHP != enemyHP_) {
+            enemyHP_ = newEnemyHP;
+            statsChanged = true;
+        }
+    }
+
+    const int blueCount = gemCounts[static_cast<int>(GemType::Blue)];
+    if (blueCount > 0) {
+        const int newHeroHP = std::min(heroMaxHP_, heroHP_ + kBlueMatchHeal * blueCount);
+        if (newHeroHP != heroHP_) {
+            heroHP_ = newHeroHP;
+            statsChanged = true;
+        }
+    }
+
+    const int greenCount = gemCounts[static_cast<int>(GemType::Green)];
+    if (greenCount > 0) {
+        const int newMana = std::min(heroMaxMana_, heroMana_ + kGreenMatchMana * greenCount);
+        if (newMana != heroMana_) {
+            heroMana_ = newMana;
+            statsChanged = true;
         }
     }
 
@@ -798,6 +825,10 @@ bool Renderer::updateBoardState() {
         return false;
     }
 
+    return processMatches();
+}
+
+bool Renderer::processMatches() {
     bool changed = false;
     while (true) {
         auto matches = findMatches();
@@ -811,6 +842,9 @@ bool Renderer::updateBoardState() {
         if (battleOutcome_ != BattleOutcome::None) {
             break;
         }
+    }
+    if (changed) {
+        sceneDirty_ = true;
     }
     return changed;
 }
@@ -857,12 +891,16 @@ void Renderer::handleInput() {
         auto &motionEvent = inputBuffer->motionEvents[i];
         auto action = motionEvent.action;
 
+        if (motionEvent.pointerCount <= 0) {
+            continue;
+        }
+
         // Find the pointer index, mask and bitshift to turn it into a readable value.
         auto pointerIndex = (action & AMOTION_EVENT_ACTION_POINTER_INDEX_MASK)
                 >> AMOTION_EVENT_ACTION_POINTER_INDEX_SHIFT;
-        aout << "Pointer(s): ";
-
-        // get the x and y position of this event if it is not ACTION_MOVE.
+        if (pointerIndex >= motionEvent.pointerCount) {
+            pointerIndex = motionEvent.pointerCount - 1;
+        }
         auto &pointer = motionEvent.pointers[pointerIndex];
         auto x = GameActivityPointerAxes_getX(&pointer);
         auto y = GameActivityPointerAxes_getY(&pointer);
@@ -871,8 +909,7 @@ void Renderer::handleInput() {
         switch (action & AMOTION_EVENT_ACTION_MASK) {
             case AMOTION_EVENT_ACTION_DOWN:
             case AMOTION_EVENT_ACTION_POINTER_DOWN:
-                aout << "(" << pointer.id << ", " << x << ", " << y << ") "
-                     << "Pointer Down";
+                handlePointerDown(pointer.id, x, y);
                 break;
 
             case AMOTION_EVENT_ACTION_CANCEL:
@@ -881,29 +918,14 @@ void Renderer::handleInput() {
                 // code pass through on purpose.
             case AMOTION_EVENT_ACTION_UP:
             case AMOTION_EVENT_ACTION_POINTER_UP:
-                aout << "(" << pointer.id << ", " << x << ", " << y << ") "
-                     << "Pointer Up";
+                handlePointerUp(pointer.id, x, y);
                 break;
 
             case AMOTION_EVENT_ACTION_MOVE:
-                // There is no pointer index for ACTION_MOVE, only a snapshot of
-                // all active pointers; app needs to cache previous active pointers
-                // to figure out which ones are actually moved.
-                for (auto index = 0; index < motionEvent.pointerCount; index++) {
-                    pointer = motionEvent.pointers[index];
-                    x = GameActivityPointerAxes_getX(&pointer);
-                    y = GameActivityPointerAxes_getY(&pointer);
-                    aout << "(" << pointer.id << ", " << x << ", " << y << ")";
-
-                    if (index != (motionEvent.pointerCount - 1)) aout << ",";
-                    aout << " ";
-                }
-                aout << "Pointer Move";
                 break;
             default:
-                aout << "Unknown MotionEvent Action: " << action;
+                break;
         }
-        aout << std::endl;
     }
     // clear the motion input count in this buffer for main thread to re-use.
     android_app_clear_motion_events(inputBuffer);
@@ -911,23 +933,130 @@ void Renderer::handleInput() {
     // handle input key events.
     for (auto i = 0; i < inputBuffer->keyEventsCount; i++) {
         auto &keyEvent = inputBuffer->keyEvents[i];
-        aout << "Key: " << keyEvent.keyCode <<" ";
-        switch (keyEvent.action) {
-            case AKEY_EVENT_ACTION_DOWN:
-                aout << "Key Down";
-                break;
-            case AKEY_EVENT_ACTION_UP:
-                aout << "Key Up";
-                break;
-            case AKEY_EVENT_ACTION_MULTIPLE:
-                // Deprecated since Android API level 29.
-                aout << "Multiple Key Actions";
-                break;
-            default:
-                aout << "Unknown KeyEvent Action: " << keyEvent.action;
-        }
-        aout << std::endl;
+        (void) keyEvent;
     }
     // clear the key input count too.
     android_app_clear_key_events(inputBuffer);
+}
+
+bool Renderer::attemptSwap(int startRow, int startCol, int endRow, int endCol) {
+    if (!boardReady_ || battleOutcome_ != BattleOutcome::None) {
+        return false;
+    }
+
+    if (startRow < 0 || startRow >= kBoardRows || startCol < 0 || startCol >= kBoardColumns) {
+        return false;
+    }
+
+    if (endRow < 0 || endRow >= kBoardRows || endCol < 0 || endCol >= kBoardColumns) {
+        return false;
+    }
+
+    if (startRow == endRow && startCol == endCol) {
+        return false;
+    }
+
+    const int rowDelta = std::abs(startRow - endRow);
+    const int colDelta = std::abs(startCol - endCol);
+    if (!((rowDelta == 1 && colDelta == 0) || (rowDelta == 0 && colDelta == 1))) {
+        return false;
+    }
+
+    GemType first = getGem(startRow, startCol);
+    GemType second = getGem(endRow, endCol);
+    if (first == GemType::None || second == GemType::None) {
+        return false;
+    }
+
+    setGem(startRow, startCol, second);
+    setGem(endRow, endCol, first);
+
+    auto matches = findMatches();
+    if (matches.empty()) {
+        setGem(startRow, startCol, first);
+        setGem(endRow, endCol, second);
+        return false;
+    }
+
+    processMatches();
+    return true;
+}
+
+bool Renderer::screenToWorld(float screenX, float screenY, float &worldX, float &worldY) const {
+    if (width_ <= 0 || height_ <= 0) {
+        return false;
+    }
+
+    const float worldHeight = kProjectionHalfHeight * 2.0f;
+    const float worldWidth = worldHeight * (static_cast<float>(width_) / static_cast<float>(height_));
+
+    worldX = (screenX / static_cast<float>(width_)) * worldWidth - worldWidth * 0.5f;
+    worldY = kProjectionHalfHeight - (screenY / static_cast<float>(height_)) * worldHeight;
+    return true;
+}
+
+bool Renderer::worldToBoardCell(float worldX, float worldY, int &outRow, int &outCol) const {
+    if (!boardGeometryValid_) {
+        return false;
+    }
+
+    if (worldX < gridLeft_ || worldX > gridRight_ || worldY > gridTop_ || worldY < gridBottom_) {
+        return false;
+    }
+
+    const float columnFloat = (worldX - gridLeft_) / cellWidth_;
+    const float rowFloat = (gridTop_ - worldY) / cellHeight_;
+
+    int col = static_cast<int>(std::floor(columnFloat));
+    int row = static_cast<int>(std::floor(rowFloat));
+
+    if (col < 0 || col >= kBoardColumns || row < 0 || row >= kBoardRows) {
+        return false;
+    }
+
+    outRow = row;
+    outCol = col;
+    return true;
+}
+
+void Renderer::handlePointerDown(int32_t pointerId, float screenX, float screenY) {
+    if (activePointerId_ != -1) {
+        return;
+    }
+
+    float worldX = 0.0f;
+    float worldY = 0.0f;
+    if (!screenToWorld(screenX, screenY, worldX, worldY)) {
+        return;
+    }
+
+    int row = 0;
+    int col = 0;
+    if (!worldToBoardCell(worldX, worldY, row, col)) {
+        return;
+    }
+
+    hasSelectedCell_ = true;
+    selectedRow_ = row;
+    selectedCol_ = col;
+    activePointerId_ = pointerId;
+}
+
+void Renderer::handlePointerUp(int32_t pointerId, float screenX, float screenY) {
+    if (pointerId != activePointerId_) {
+        return;
+    }
+
+    float worldX = 0.0f;
+    float worldY = 0.0f;
+    if (screenToWorld(screenX, screenY, worldX, worldY)) {
+        int row = 0;
+        int col = 0;
+        if (hasSelectedCell_ && worldToBoardCell(worldX, worldY, row, col)) {
+            attemptSwap(selectedRow_, selectedCol_, row, col);
+        }
+    }
+
+    hasSelectedCell_ = false;
+    activePointerId_ = -1;
 }
