@@ -136,7 +136,7 @@ class IntroActivity : AppCompatActivity() {
     private fun playSceneOne() {
         showSubtitle("The world was once bound by the elemental runes — Fire, Water, and Earth — that kept the balance of magic alive.")
         prepareGemsForScene()
-        playAudio(R.raw._1) {
+        playAudio(R.raw.a1) {
             startScene(1)
         }
         handler.postDelayed({ revealGem(redGem) }, 3000L)
@@ -155,7 +155,7 @@ class IntroActivity : AppCompatActivity() {
         showSubtitle("But balance is a chain meant to be broken… and I, the Black Wizard, will forge a new world from the ashes.")
         fadeInCharacter(blackWizard, wizardAura)
 
-        playAudio(R.raw._2) {
+        playAudio(R.raw.a2) {
             startScene(2)
         }
     }
@@ -165,7 +165,7 @@ class IntroActivity : AppCompatActivity() {
         showSubtitle("Yet hope remains. A lone guardian rises, chosen by the runes themselves, to stand against the growing darkness.")
         fadeInCharacter(elfGuardian, elfAura)
 
-        playAudio(R.raw._3) {
+        playAudio(R.raw.a3) {
             startScene(3)
         }
     }
@@ -183,7 +183,7 @@ class IntroActivity : AppCompatActivity() {
         revealGem(blueGem)
         revealGem(greenGem)
 
-        playAudio(R.raw._4) {
+        playAudio(R.raw.a4) {
             startButton.visibility = View.VISIBLE
             startButton.alpha = 0f
             startButton.animate().alpha(1f).setDuration(600L).start()
