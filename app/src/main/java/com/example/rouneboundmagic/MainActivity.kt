@@ -3,6 +3,7 @@ package com.example.rouneboundmagic
 import android.graphics.Color
 import android.media.MediaPlayer
 import android.net.Uri
+import android.util.Log
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
@@ -15,11 +16,11 @@ class MainActivity : GameActivity() {
     private lateinit var overlayContainer: FrameLayout
     private var overlayVideoPrepared = false
     private val overlaySizeFallbackPx = 120
-    private val circleVideoUri by lazy {
-        Uri.parse("android.resource://$packageName/${R.raw.circle}")
-    }
+    private val circleVideoUri: Uri? by lazy { resolveCircleVideoUri() }
 
     companion object {
+        private const val TAG = "MainActivity"
+
         init {
                 System.loadLibrary("rouneboundmagic")
         }
@@ -64,7 +65,10 @@ class MainActivity : GameActivity() {
                 true
             }
             setOnTouchListener { _, _ -> false }
-            setVideoURI(circleVideoUri)
+            circleVideoUri?.let(this::setVideoURI) ?: run {
+                overlayVideoPrepared = false
+                Log.w(TAG, "Missing circle selection overlay resource. Overlay animation disabled.")
+            }
         }
 
         overlayContainer.addView(selectionOverlay)
@@ -90,6 +94,10 @@ class MainActivity : GameActivity() {
     @Keep
     fun onRuneSelected(centerX: Float, centerY: Float, sizePx: Float) {
         runOnUiThread {
+            circleVideoUri ?: run {
+                selectionOverlay.visibility = View.GONE
+                return@runOnUiThread
+            }
             val targetSize = if (sizePx > 0f) sizePx.toInt() else overlaySizeFallbackPx
             val halfSize = targetSize / 2
             val params = FrameLayout.LayoutParams(targetSize, targetSize)
@@ -102,6 +110,16 @@ class MainActivity : GameActivity() {
                 selectionOverlay.seekTo(0)
             }
             selectionOverlay.start()
+        }
+    }
+
+    private fun resolveCircleVideoUri(): Uri? {
+        val resourceId = resources.getIdentifier("circle", "raw", packageName)
+        return if (resourceId != 0) {
+            Uri.parse("android.resource://$packageName/$resourceId")
+        } else {
+            Log.w(TAG, "Circle overlay video (res/raw/circle.*) not found. Selection overlay will be hidden.")
+            null
         }
     }
 
