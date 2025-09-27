@@ -3,6 +3,7 @@
 
 #include <EGL/egl.h>
 #include <array>
+#include <chrono>
 #include <cstdint>
 #include <memory>
 #include <random>
@@ -92,6 +93,15 @@ private:
         DEFEAT,
     };
 
+    struct Rune {
+        GemType type = GemType::None;
+        float currentX = 0.0f;
+        float currentY = 0.0f;
+        float targetX = 0.0f;
+        float targetY = 0.0f;
+        bool positionInitialized = false;
+    };
+
     void ensureBoardInitialized();
     GemType randomGem();
     GemType getGem(int row, int col) const;
@@ -114,6 +124,12 @@ private:
                          float z,
                          const std::shared_ptr<TextureAsset> &texture) const;
     std::shared_ptr<TextureAsset> textureForGem(GemType type) const;
+    Rune &runeAt(int row, int col);
+    const Rune &runeAt(int row, int col) const;
+    void updateRuneTarget(int row, int col, Rune &rune);
+    void updateAllRuneTargets(bool snapToTarget);
+    void updateRuneAnimation(float deltaTimeSeconds);
+    std::pair<float, float> cellCenter(int row, int col) const;
 
     android_app *app_;
     EGLDisplay display_;
@@ -139,7 +155,7 @@ private:
     std::shared_ptr<TextureAsset> spVictoryTexture_;
     std::shared_ptr<TextureAsset> spDefeatTexture_;
 
-    std::vector<GemType> board_;
+    std::vector<Rune> board_;
     std::mt19937 rng_;
     std::uniform_int_distribution<int> gemDistribution_;
     bool sceneDirty_;
@@ -162,10 +178,12 @@ private:
     float gridBottom_ = 0.0f;
     float cellWidth_ = 0.0f;
     float cellHeight_ = 0.0f;
+    float boardPixelToWorld_ = 1.0f;
     bool hasSelectedCell_ = false;
     int selectedRow_ = 0;
     int selectedCol_ = 0;
     int32_t activePointerId_ = -1;
+    std::chrono::steady_clock::time_point lastFrameTime_ = std::chrono::steady_clock::now();
 };
 
 #endif //ANDROIDGLINVESTIGATIONS_RENDERER_H
