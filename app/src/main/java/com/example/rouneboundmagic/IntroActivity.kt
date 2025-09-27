@@ -1,21 +1,27 @@
 package com.example.rouneboundmagic
 
 import android.content.Intent
+import android.media.MediaPlayer
 import android.net.Uri
 import android.os.Bundle
 import android.view.View
 import android.widget.Button
 import android.widget.VideoView
 import androidx.appcompat.app.AppCompatActivity
+import androidx.core.view.WindowCompat
+import androidx.core.view.WindowInsetsCompat
+import androidx.core.view.WindowInsetsControllerCompat
 
 class IntroActivity : AppCompatActivity() {
 
     private lateinit var videoView: VideoView
     private lateinit var startGameButton: Button
-    private var hasShownButton = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
+
+        hideSystemBars()
+
         setContentView(R.layout.activity_intro)
 
         videoView = findViewById(R.id.introVideoView)
@@ -25,18 +31,12 @@ class IntroActivity : AppCompatActivity() {
         videoView.setVideoURI(videoUri)
         videoView.setOnPreparedListener { mediaPlayer ->
             mediaPlayer.isLooping = false
+            mediaPlayer.setVideoScalingMode(MediaPlayer.VIDEO_SCALING_MODE_SCALE_TO_FIT_WITH_CROPPING)
             videoView.start()
         }
-        videoView.setOnCompletionListener { showStartButton() }
-        videoView.setOnErrorListener { _, _, _ ->
-            showStartButton()
-            true
-        }
-        videoView.setOnClickListener {
-            if (videoView.isPlaying) {
-                videoView.pause()
-            }
-            showStartButton()
+
+        videoView.setOnCompletionListener {
+            startGameButton.visibility = View.VISIBLE
         }
 
         startGameButton.setOnClickListener {
@@ -45,13 +45,19 @@ class IntroActivity : AppCompatActivity() {
         }
     }
 
-    private fun showStartButton() {
-        if (hasShownButton) return
+    private fun hideSystemBars() {
+        WindowCompat.setDecorFitsSystemWindows(window, false)
+        val controller = WindowInsetsControllerCompat(window, window.decorView)
+        controller.hide(WindowInsetsCompat.Type.statusBars() or WindowInsetsCompat.Type.navigationBars())
+        controller.systemBarsBehavior =
+            WindowInsetsControllerCompat.BEHAVIOR_SHOW_TRANSIENT_BARS_BY_SWIPE
+        supportActionBar?.hide()
+    }
 
-        hasShownButton = true
-        if (videoView.isPlaying) {
-            videoView.stopPlayback()
+    override fun onWindowFocusChanged(hasFocus: Boolean) {
+        super.onWindowFocusChanged(hasFocus)
+        if (hasFocus) {
+            hideSystemBars()
         }
-        startGameButton.visibility = View.VISIBLE
     }
 }
