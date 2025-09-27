@@ -99,12 +99,6 @@ static constexpr float kBoardMarginTopPx = 80.f;
 static constexpr float kBoardMarginBottomPx = 80.f;
 
 static constexpr float kBoardMarginScale = 0.85f;
-static constexpr float kPortraitHeightScale = 0.6f;
-static constexpr float kPortraitMarginScale = 0.05f;
-static constexpr float kHealthBarHeightScale = 0.1f;
-static constexpr float kHealthBarMarginScale = 0.05f;
-static constexpr float kManaBarHeightScale = 0.06f;
-static constexpr float kManaBarSpacingScale = 0.02f;
 static constexpr float kResultBannerWidthScale = 0.6f;
 
 static constexpr int kRedMatchDamage = 10;
@@ -345,20 +339,11 @@ void Renderer::createModels() {
         }
     }
 
-    if (!spHPBackgroundTexture_) {
-        spHPBackgroundTexture_ = TextureAsset::createSolidColorTexture(30, 30, 40, 200);
-    }
-
-    if (!spHeroHPTexture_) {
-        spHeroHPTexture_ = TextureAsset::createSolidColorTexture(120, 220, 120, 255);
-    }
-
-    if (!spEnemyHPTexture_) {
-        spEnemyHPTexture_ = TextureAsset::createSolidColorTexture(220, 80, 80, 255);
-    }
-
-    if (!spManaTexture_) {
-        spManaTexture_ = TextureAsset::createSolidColorTexture(90, 140, 220, 255);
+    if (!spWhiteTexture_) {
+        spWhiteTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/white.png");
+        if (!spWhiteTexture_) {
+            spWhiteTexture_ = TextureAsset::createSolidColorTexture(255, 255, 255, 255);
+        }
     }
 
     models_.clear();
@@ -391,116 +376,43 @@ void Renderer::createModels() {
                                         -0.2f,
                                         spBoardTexture_));
 
-    const float portraitHeight = boardHeight * kPortraitHeightScale;
-    const float portraitMargin = boardWidth * kPortraitMarginScale;
-    const float heroAspect = static_cast<float>(spHeroTexture_->getWidth()) /
-                             static_cast<float>(spHeroTexture_->getHeight());
-    const float heroHalfHeight = portraitHeight * 0.5f;
-    const float heroHalfWidth = portraitHeight * heroAspect * 0.5f;
-    const float heroCenterX = boardLeft_ - heroHalfWidth - portraitMargin;
-    const float heroCenterY = 0.0f;
+    const float boardBaseX = boardLeft_;
+    const float boardBaseY = boardBottom_;
+    const float boardMidY = boardBaseY + boardDrawHeight * 0.5f;
 
-    models_.emplace_back(buildQuadModel(heroCenterX - heroHalfWidth,
-                                        heroCenterY + heroHalfHeight,
-                                        heroCenterX + heroHalfWidth,
-                                        heroCenterY - heroHalfHeight,
-                                        0.05f,
-                                        spHeroTexture_));
+    const float heroWidth = 120.0f * pixelToWorld;
+    const float heroHeight = 240.0f * pixelToWorld;
+    const float heroLeft = boardBaseX - 150.0f * pixelToWorld;
+    const float heroBottom = boardMidY - 150.0f * pixelToWorld;
 
-    const float enemyAspect = static_cast<float>(spEnemyTexture_->getWidth()) /
-                              static_cast<float>(spEnemyTexture_->getHeight());
-    const float enemyHalfHeight = portraitHeight * 0.5f;
-    const float enemyHalfWidth = portraitHeight * enemyAspect * 0.5f;
-    const float enemyCenterX = boardRight_ + enemyHalfWidth + portraitMargin;
-    const float enemyCenterY = 0.0f;
+    renderTexture(spHeroTexture_,
+                  heroLeft,
+                  heroBottom,
+                  heroWidth,
+                  heroHeight,
+                  0.05f);
 
-    models_.emplace_back(buildQuadModel(enemyCenterX - enemyHalfWidth,
-                                        enemyCenterY + enemyHalfHeight,
-                                        enemyCenterX + enemyHalfWidth,
-                                        enemyCenterY - enemyHalfHeight,
-                                        0.05f,
-                                        spEnemyTexture_));
+    const float enemyWidth = 120.0f * pixelToWorld;
+    const float enemyHeight = 240.0f * pixelToWorld;
+    const float enemyLeft = boardRight_ + 30.0f * pixelToWorld;
+    const float enemyBottom = boardMidY - 150.0f * pixelToWorld;
 
-    const float healthBarHeight = portraitHeight * kHealthBarHeightScale;
-    const float healthBarMargin = portraitHeight * kHealthBarMarginScale;
-    const float manaBarHeight = portraitHeight * kManaBarHeightScale;
-    const float manaSpacing = portraitHeight * kManaBarSpacingScale;
+    renderTexture(spEnemyTexture_,
+                  enemyLeft,
+                  enemyBottom,
+                  enemyWidth,
+                  enemyHeight,
+                  0.05f);
 
-    const float heroBarLeft = heroCenterX - heroHalfWidth;
-    const float heroBarRight = heroCenterX + heroHalfWidth;
-    const float heroBarTop = heroCenterY - heroHalfHeight - healthBarMargin;
-    const float heroBarBottom = heroBarTop - healthBarHeight;
+    const float hpBarWidth = 120.0f * pixelToWorld;
+    const float hpBarHeight = 15.0f * pixelToWorld;
+    const float heroBarLeft = heroLeft;
+    const float heroBarBottom = boardMidY + 110.0f * pixelToWorld;
+    const float enemyBarLeft = enemyLeft;
+    const float enemyBarBottom = boardMidY + 110.0f * pixelToWorld;
 
-    models_.emplace_back(buildQuadModel(heroBarLeft,
-                                        heroBarTop,
-                                        heroBarRight,
-                                        heroBarBottom,
-                                        0.06f,
-                                        spHPBackgroundTexture_));
-
-    const float heroHPFraction = std::max(0.0f,
-                                          std::min(1.0f,
-                                                   static_cast<float>(heroHP_) /
-                                                   static_cast<float>(heroMaxHP_)));
-    if (heroHPFraction > 0.0f) {
-        const float heroFillRight = heroBarLeft + (heroBarRight - heroBarLeft) * heroHPFraction;
-        models_.emplace_back(buildQuadModel(heroBarLeft,
-                                            heroBarTop,
-                                            heroFillRight,
-                                            heroBarBottom,
-                                            0.05f,
-                                            spHeroHPTexture_));
-    }
-
-    const float manaBarTop = heroBarBottom - manaSpacing;
-    const float manaBarBottom = manaBarTop - manaBarHeight;
-
-    models_.emplace_back(buildQuadModel(heroBarLeft,
-                                        manaBarTop,
-                                        heroBarRight,
-                                        manaBarBottom,
-                                        0.06f,
-                                        spHPBackgroundTexture_));
-
-    const float heroManaFraction = std::max(0.0f,
-                                            std::min(1.0f,
-                                                     static_cast<float>(heroMana_) /
-                                                     static_cast<float>(heroMaxMana_)));
-    if (heroManaFraction > 0.0f) {
-        const float manaFillRight = heroBarLeft + (heroBarRight - heroBarLeft) * heroManaFraction;
-        models_.emplace_back(buildQuadModel(heroBarLeft,
-                                            manaBarTop,
-                                            manaFillRight,
-                                            manaBarBottom,
-                                            0.05f,
-                                            spManaTexture_));
-    }
-
-    const float enemyBarLeft = enemyCenterX - enemyHalfWidth;
-    const float enemyBarRight = enemyCenterX + enemyHalfWidth;
-    const float enemyBarTop = enemyCenterY - enemyHalfHeight - healthBarMargin;
-    const float enemyBarBottom = enemyBarTop - healthBarHeight;
-
-    models_.emplace_back(buildQuadModel(enemyBarLeft,
-                                        enemyBarTop,
-                                        enemyBarRight,
-                                        enemyBarBottom,
-                                        0.06f,
-                                        spHPBackgroundTexture_));
-
-    const float enemyHPFraction = std::max(0.0f,
-                                           std::min(1.0f,
-                                                    static_cast<float>(enemyHP_) /
-                                                    static_cast<float>(enemyMaxHP_)));
-    if (enemyHPFraction > 0.0f) {
-        const float enemyFillRight = enemyBarLeft + (enemyBarRight - enemyBarLeft) * enemyHPFraction;
-        models_.emplace_back(buildQuadModel(enemyBarLeft,
-                                            enemyBarTop,
-                                            enemyFillRight,
-                                            enemyBarBottom,
-                                            0.05f,
-                                            spEnemyHPTexture_));
-    }
+    drawHPBar(heroHP_, heroMaxHP_, heroBarLeft, heroBarBottom, hpBarWidth, hpBarHeight);
+    drawHPBar(enemyHP_, enemyMaxHP_, enemyBarLeft, enemyBarBottom, hpBarWidth, hpBarHeight);
 
     const float boardScale = pixelToWorld;
     const float marginLeft = kBoardMarginLeftPx * boardScale;
@@ -870,6 +782,121 @@ Model Renderer::buildQuadModel(float left,
     };
     std::vector<Index> indices = {0, 1, 2, 0, 2, 3};
     return Model(std::move(vertices), std::move(indices), texture);
+}
+
+void Renderer::renderTexture(const std::shared_ptr<TextureAsset> &texture,
+                             float left,
+                             float bottom,
+                             float width,
+                             float height,
+                             float z) {
+    if (!texture || width <= 0.0f || height <= 0.0f) {
+        return;
+    }
+
+    models_.emplace_back(buildQuadModel(left,
+                                        bottom + height,
+                                        left + width,
+                                        bottom,
+                                        z,
+                                        texture));
+}
+
+void Renderer::renderQuad(float left,
+                          float bottom,
+                          float width,
+                          float height,
+                          float r,
+                          float g,
+                          float b,
+                          float a,
+                          float z) {
+    if (width <= 0.0f || height <= 0.0f) {
+        return;
+    }
+
+    std::shared_ptr<TextureAsset> texture;
+    const bool isWhite = std::abs(r - 1.0f) < 1e-4f &&
+                         std::abs(g - 1.0f) < 1e-4f &&
+                         std::abs(b - 1.0f) < 1e-4f &&
+                         std::abs(a - 1.0f) < 1e-4f;
+    if (isWhite && spWhiteTexture_) {
+        texture = spWhiteTexture_;
+    } else {
+        texture = getSolidColorTexture(r, g, b, a);
+    }
+
+    if (!texture) {
+        return;
+    }
+
+    models_.emplace_back(buildQuadModel(left,
+                                        bottom + height,
+                                        left + width,
+                                        bottom,
+                                        z,
+                                        texture));
+}
+
+void Renderer::drawHPBar(int hp,
+                         int hpMax,
+                         float left,
+                         float bottom,
+                         float width,
+                         float height) {
+    if (hpMax <= 0) {
+        return;
+    }
+
+    renderQuad(left, bottom, width, height, 0.2f, 0.2f, 0.2f, 1.0f, 0.06f);
+
+    float ratio = static_cast<float>(hp) / static_cast<float>(hpMax);
+    ratio = std::clamp(ratio, 0.0f, 1.0f);
+    if (ratio <= 0.0f) {
+        return;
+    }
+
+    renderQuad(left,
+               bottom,
+               width * ratio,
+               height,
+               0.0f,
+               1.0f,
+               0.0f,
+               1.0f,
+               0.05f);
+}
+
+std::shared_ptr<TextureAsset> Renderer::getSolidColorTexture(float r,
+                                                             float g,
+                                                             float b,
+                                                             float a) {
+    auto clamp01 = [](float value) {
+        return std::max(0.0f, std::min(1.0f, value));
+    };
+
+    const auto toChannel = [&](float value) -> uint8_t {
+        return static_cast<uint8_t>(std::round(clamp01(value) * 255.0f));
+    };
+
+    const uint8_t red = toChannel(r);
+    const uint8_t green = toChannel(g);
+    const uint8_t blue = toChannel(b);
+    const uint8_t alpha = toChannel(a);
+
+    const uint32_t key = (static_cast<uint32_t>(red) << 24U) |
+                         (static_cast<uint32_t>(green) << 16U) |
+                         (static_cast<uint32_t>(blue) << 8U) |
+                         static_cast<uint32_t>(alpha);
+
+    auto it = solidColorTextures_.find(key);
+    if (it != solidColorTextures_.end()) {
+        return it->second;
+    }
+
+    auto texture = TextureAsset::createSolidColorTexture(red, green, blue, alpha);
+    solidColorTextures_[key] = texture;
+    return texture;
 }
 
 std::shared_ptr<TextureAsset> Renderer::textureForGem(GemType type) const {
