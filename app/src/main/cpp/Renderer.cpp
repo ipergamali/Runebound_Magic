@@ -2,6 +2,7 @@
 
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 #include <GLES3/gl3.h>
+#include <jni.h>
 #include <algorithm>
 #include <array>
 #include <cmath>
@@ -1230,6 +1231,19 @@ bool Renderer::screenToWorld(float screenX, float screenY, float &worldX, float 
     return true;
 }
 
+bool Renderer::worldToScreen(float worldX, float worldY, float &screenX, float &screenY) const {
+    if (width_ <= 0 || height_ <= 0) {
+        return false;
+    }
+
+    const float worldHeight = kProjectionHalfHeight * 2.0f;
+    const float worldWidth = worldHeight * (static_cast<float>(width_) / static_cast<float>(height_));
+
+    screenX = ((worldX + worldWidth * 0.5f) / worldWidth) * static_cast<float>(width_);
+    screenY = ((kProjectionHalfHeight - worldY) / worldHeight) * static_cast<float>(height_);
+    return true;
+}
+
 bool Renderer::worldToBoardCell(float worldX, float worldY, int &outRow, int &outCol) const {
     if (!boardGeometryValid_) {
         return false;
@@ -1271,6 +1285,8 @@ void Renderer::handlePointerDown(int32_t pointerId, float screenX, float screenY
         return;
     }
 
+    triggerRuneSelectionEffect(row, col);
+
     hasSelectedCell_ = true;
     selectedRow_ = row;
     selectedCol_ = col;
@@ -1294,4 +1310,90 @@ void Renderer::handlePointerUp(int32_t pointerId, float screenX, float screenY) 
 
     hasSelectedCell_ = false;
     activePointerId_ = -1;
+}
+
+void Renderer::triggerRuneSelectionEffect(int row, int col) {
+    if (!boardReady_ || !boardGeometryValid_) {
+        return;
+    }
+
+    if (row < 0 || row >= kBoardRows || col < 0 || col >= kBoardColumns) {
+        return;
+    }
+
+    const Rune &rune = runeAt(row, col);
+    if (rune.type == GemType::None) {
+        return;
+    }
+
+    float centerWorldX = rune.positionInitialized ? rune.currentX : 0.0f;
+    float centerWorldY = rune.positionInitialized ? rune.currentY : 0.0f;
+    if (!rune.positionInitialized) {
+        const auto center = cellCenter(row, col);
+        centerWorldX = center.first;
+        centerWorldY = center.second;
+    }
+
+    float centerScreenX = 0.0f;
+    float centerScreenY = 0.0f;
+    if (!worldToScreen(centerWorldX, centerWorldY, centerScreenX, centerScreenY)) {
+        return;
+    }
+
+    const float worldHeight = kProjectionHalfHeight * 2.0f;
+    const float pixelsPerWorldUnit = static_cast<float>(height_) / worldHeight;
+    const float gemWorldSize = std::min(cellWidth_, cellHeight_) * kGemVisualScale;
+    const float effectSizePx = gemWorldSize * pixelsPerWorldUnit;
+
+    sendRuneSelectionToJava(centerScreenX, centerScreenY, effectSizePx);
+}
+
+void Renderer::sendRuneSelectionToJava(float centerX, float centerY, float sizePx) {
+    if (!app_ || !app_->activity) {
+        return;
+    }
+
+    auto *activity = app_->activity;
+    JavaVM *vm = activity->vm;
+    if (!vm) {
+        return;
+    }
+
+    JNIEnv *env = nullptr;
+    const jint getEnvResult = vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
+    bool didAttach = false;
+    if (getEnvResult == JNI_EDETACHED) {
+        if (vm->AttachCurrentThread(&env, nullptr) != JNI_OK) {
+            return;
+        }
+        didAttach = true;
+    } else if (getEnvResult != JNI_OK) {
+        return;
+    }
+
+    jclass activityClass = env->GetObjectClass(activity->clazz);
+    if (!activityClass) {
+        if (didAttach) {
+            vm->DetachCurrentThread();
+        }
+        return;
+    }
+
+    jmethodID methodId = env->GetMethodID(activityClass, "onRuneSelected", "(FFF)V");
+    if (methodId) {
+        env->CallVoidMethod(activity->clazz,
+                            methodId,
+                            static_cast<jfloat>(centerX),
+                            static_cast<jfloat>(centerY),
+                            static_cast<jfloat>(sizePx));
+        if (env->ExceptionCheck()) {
+            env->ExceptionClear();
+        }
+    }
+
+    env->DeleteLocalRef(activityClass);
+
+    if (didAttach) {
+        vm->DetachCurrentThread();
+    }
 }

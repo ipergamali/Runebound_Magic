@@ -117,9 +117,12 @@ private:
     bool processMatches();
     bool attemptSwap(int startRow, int startCol, int endRow, int endCol);
     bool screenToWorld(float screenX, float screenY, float &worldX, float &worldY) const;
+    bool worldToScreen(float worldX, float worldY, float &screenX, float &screenY) const;
     bool worldToBoardCell(float worldX, float worldY, int &outRow, int &outCol) const;
     void handlePointerDown(int32_t pointerId, float screenX, float screenY);
     void handlePointerUp(int32_t pointerId, float screenX, float screenY);
+    void triggerRuneSelectionEffect(int row, int col);
+    void sendRuneSelectionToJava(float centerX, float centerY, float sizePx);
     Model buildQuadModel(float left,
                          float top,
                          float right,
