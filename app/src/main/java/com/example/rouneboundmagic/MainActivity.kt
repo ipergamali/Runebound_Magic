@@ -1,23 +1,23 @@
 package com.example.rouneboundmagic
 
+import android.animation.Animator
+import android.animation.AnimatorListenerAdapter
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.media.MediaPlayer
-import android.net.Uri
 import android.view.View
 import android.view.ViewGroup
 import android.widget.FrameLayout
-import android.widget.VideoView
+import android.widget.ImageView
 import androidx.annotation.Keep
 import com.google.androidgamesdk.GameActivity
 
 class MainActivity : GameActivity() {
-    private lateinit var selectionOverlay: VideoView
+    private lateinit var selectionOverlay: ImageView
     private lateinit var overlayContainer: FrameLayout
-    private var overlayVideoPrepared = false
     private val overlaySizeFallbackPx = 120
-    private val circleVideoUri by lazy {
-        Uri.parse("android.resource://$packageName/${R.raw.circle}")
-    }
+    private val overlayFadeDurationMs = 150L
+    private val selectionBitmap: Bitmap? by lazy { loadSelectionBitmap() }
 
     companion object {
         init {
@@ -46,25 +46,17 @@ class MainActivity : GameActivity() {
             setBackgroundColor(Color.TRANSPARENT)
             isClickable = false
             isFocusable = false
+            elevation = 10f
         }
 
-        selectionOverlay = VideoView(this).apply {
+        selectionOverlay = ImageView(this).apply {
             visibility = View.GONE
             setBackgroundColor(Color.TRANSPARENT)
-            setZOrderOnTop(true)
-            setOnPreparedListener { mediaPlayer ->
-                mediaPlayer.isLooping = false
-                overlayVideoPrepared = true
-            }
-            setOnCompletionListener {
-                visibility = View.GONE
-            }
-            setOnErrorListener { _: MediaPlayer?, _, _ ->
-                visibility = View.GONE
-                true
-            }
-            setOnTouchListener { _, _ -> false }
-            setVideoURI(circleVideoUri)
+            isClickable = false
+            isFocusable = false
+            alpha = 0f
+            scaleType = ImageView.ScaleType.FIT_XY
+            selectionBitmap?.let { setImageBitmap(it) }
         }
 
         overlayContainer.addView(selectionOverlay)
@@ -96,17 +88,52 @@ class MainActivity : GameActivity() {
             params.leftMargin = (centerX - halfSize).toInt()
             params.topMargin = (centerY - halfSize).toInt()
             selectionOverlay.layoutParams = params
-            selectionOverlay.visibility = View.VISIBLE
-            if (overlayVideoPrepared) {
-                selectionOverlay.pause()
-                selectionOverlay.seekTo(0)
+            if (selectionOverlay.visibility != View.VISIBLE) {
+                selectionOverlay.alpha = 0f
+                selectionOverlay.visibility = View.VISIBLE
             }
-            selectionOverlay.start()
+            selectionOverlay.animate().cancel()
+            selectionOverlay.animate()
+                .alpha(1f)
+                .setDuration(overlayFadeDurationMs)
+                .setListener(null)
+                .start()
         }
     }
 
-    override fun onDestroy() {
-        super.onDestroy()
-        selectionOverlay.stopPlayback()
+    @Keep
+    fun onRuneDeselected() {
+        runOnUiThread {
+            if (selectionOverlay.visibility != View.VISIBLE) {
+                selectionOverlay.visibility = View.GONE
+                selectionOverlay.alpha = 0f
+                return@runOnUiThread
+            }
+
+            selectionOverlay.animate().cancel()
+            selectionOverlay.animate()
+                .alpha(0f)
+                .setDuration(overlayFadeDurationMs)
+                .setListener(object : AnimatorListenerAdapter() {
+                    private var cancelled = false
+
+                    override fun onAnimationCancel(animation: Animator) {
+                        cancelled = true
+                    }
+
+                    override fun onAnimationEnd(animation: Animator) {
+                        if (!cancelled) {
+                            selectionOverlay.visibility = View.GONE
+                        }
+                    }
+                })
+                .start()
+        }
     }
+
+    private fun loadSelectionBitmap(): Bitmap? = runCatching {
+        assets.open("puzzle/circle.png").use { input ->
+            BitmapFactory.decodeStream(input)
+        }
+    }.getOrNull()
 }
