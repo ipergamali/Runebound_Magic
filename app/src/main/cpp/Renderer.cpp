@@ -1310,6 +1310,7 @@ void Renderer::handlePointerUp(int32_t pointerId, float screenX, float screenY) 
 
     hasSelectedCell_ = false;
     activePointerId_ = -1;
+    sendRuneDeselectionToJava();
 }
 
 void Renderer::triggerRuneSelectionEffect(int row, int col) {
@@ -1386,6 +1387,52 @@ void Renderer::sendRuneSelectionToJava(float centerX, float centerY, float sizeP
                             static_cast<jfloat>(centerX),
                             static_cast<jfloat>(centerY),
                             static_cast<jfloat>(sizePx));
+        if (env->ExceptionCheck()) {
+            env->ExceptionClear();
+        }
+    }
+
+    env->DeleteLocalRef(activityClass);
+
+    if (didAttach) {
+        vm->DetachCurrentThread();
+    }
+}
+
+void Renderer::sendRuneDeselectionToJava() {
+    if (!app_ || !app_->activity) {
+        return;
+    }
+
+    auto *activity = app_->activity;
+    JavaVM *vm = activity->vm;
+    if (!vm) {
+        return;
+    }
+
+    JNIEnv *env = nullptr;
+    const jint getEnvResult = vm->GetEnv(reinterpret_cast<void **>(&env), JNI_VERSION_1_6);
+    bool didAttach = false;
+    if (getEnvResult == JNI_EDETACHED) {
+        if (vm->AttachCurrentThread(&env, nullptr) != JNI_OK) {
+            return;
+        }
+        didAttach = true;
+    } else if (getEnvResult != JNI_OK) {
+        return;
+    }
+
+    jclass activityClass = env->GetObjectClass(activity->javaGameActivity);
+    if (!activityClass) {
+        if (didAttach) {
+            vm->DetachCurrentThread();
+        }
+        return;
+    }
+
+    jmethodID methodId = env->GetMethodID(activityClass, "onRuneDeselected", "()V");
+    if (methodId) {
+        env->CallVoidMethod(activity->javaGameActivity, methodId);
         if (env->ExceptionCheck()) {
             env->ExceptionClear();
         }

@@ -123,6 +123,7 @@ private:
     void handlePointerUp(int32_t pointerId, float screenX, float screenY);
     void triggerRuneSelectionEffect(int row, int col);
     void sendRuneSelectionToJava(float centerX, float centerY, float sizePx);
+    void sendRuneDeselectionToJava();
     Model buildQuadModel(float left,
                          float top,
                          float right,
