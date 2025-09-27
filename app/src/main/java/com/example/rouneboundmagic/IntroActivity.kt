@@ -22,6 +22,7 @@ class IntroActivity : AppCompatActivity() {
 
         hideSystemBars()
 
+
         setContentView(R.layout.activity_intro)
 
         videoView = findViewById(R.id.introVideoView)
@@ -45,6 +46,7 @@ class IntroActivity : AppCompatActivity() {
         }
     }
 
+
     private fun hideSystemBars() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         val controller = WindowInsetsControllerCompat(window, window.decorView)
@@ -60,4 +62,5 @@ class IntroActivity : AppCompatActivity() {
             hideSystemBars()
         }
     }
+
 }
