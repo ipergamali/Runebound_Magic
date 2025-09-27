@@ -36,7 +36,7 @@ public:
             heroHP_(heroMaxHP_),
             enemyHP_(enemyMaxHP_),
             heroMana_(0),
-            battleOutcome_(BattleOutcome::None) {
+            gameState_(GameState::START) {
         initRenderer();
     }
 
@@ -85,10 +85,11 @@ private:
         std::vector<std::pair<int, int>> cells;
     };
 
-    enum class BattleOutcome {
-        None,
-        Victory,
-        Defeat,
+    enum class GameState {
+        START,
+        PLAYING,
+        VICTORY,
+        DEFEAT,
     };
 
     void ensureBoardInitialized();
@@ -149,7 +150,7 @@ private:
     const int heroMaxHP_ = 100;
     const int enemyMaxHP_ = 100;
     const int heroMaxMana_ = 100;
-    BattleOutcome battleOutcome_;
+    GameState gameState_;
     bool boardGeometryValid_ = false;
     float boardLeft_ = 0.0f;
     float boardRight_ = 0.0f;

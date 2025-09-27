@@ -548,16 +548,16 @@ void Renderer::createModels() {
         }
     }
 
-    if (battleOutcome_ != BattleOutcome::None) {
+    if (gameState_ == GameState::VICTORY || gameState_ == GameState::DEFEAT) {
         std::shared_ptr<TextureAsset> spTextTexture;
-        if (battleOutcome_ == BattleOutcome::Victory) {
+        if (gameState_ == GameState::VICTORY) {
             if (!spVictoryTexture_) {
-                spVictoryTexture_ = TextureAsset::createTextTexture("Victory", 255, 255, 255, 255);
+                spVictoryTexture_ = TextureAsset::createTextTexture("VICTORY", 255, 255, 255, 255);
             }
             spTextTexture = spVictoryTexture_;
-        } else if (battleOutcome_ == BattleOutcome::Defeat) {
+        } else if (gameState_ == GameState::DEFEAT) {
             if (!spDefeatTexture_) {
-                spDefeatTexture_ = TextureAsset::createTextTexture("Defeat", 255, 100, 100, 255);
+                spDefeatTexture_ = TextureAsset::createTextTexture("DEFEAT", 255, 100, 100, 255);
             }
             spTextTexture = spDefeatTexture_;
         }
@@ -591,13 +591,20 @@ void Renderer::ensureBoardInitialized() {
     }
 
     board_.assign(kBoardRows * kBoardColumns, GemType::None);
-    for (int row = 0; row < kBoardRows; ++row) {
-        for (int col = 0; col < kBoardColumns; ++col) {
-            setGem(row, col, randomGem());
-        }
-    }
-
     boardReady_ = true;
+
+    do {
+        for (int row = 0; row < kBoardRows; ++row) {
+            for (int col = 0; col < kBoardColumns; ++col) {
+                setGem(row, col, randomGem());
+            }
+        }
+    } while (!findMatches().empty());
+
+    heroHP_ = heroMaxHP_;
+    enemyHP_ = enemyMaxHP_;
+    heroMana_ = 0;
+    gameState_ = GameState::PLAYING;
     sceneDirty_ = true;
 }
 
@@ -786,12 +793,12 @@ void Renderer::applyMatchEffects(const std::vector<MatchGroup> &matches) {
         sceneDirty_ = true;
     }
 
-    if (battleOutcome_ == BattleOutcome::None) {
+    if (gameState_ == GameState::PLAYING) {
         if (enemyHP_ <= 0) {
-            battleOutcome_ = BattleOutcome::Victory;
+            gameState_ = GameState::VICTORY;
             sceneDirty_ = true;
         } else if (heroHP_ <= 0) {
-            battleOutcome_ = BattleOutcome::Defeat;
+            gameState_ = GameState::DEFEAT;
             sceneDirty_ = true;
         }
     }
@@ -821,7 +828,7 @@ bool Renderer::updateBoardState() {
         return false;
     }
 
-    if (battleOutcome_ != BattleOutcome::None) {
+    if (gameState_ != GameState::PLAYING) {
         return false;
     }
 
@@ -830,7 +837,7 @@ bool Renderer::updateBoardState() {
 
 bool Renderer::processMatches() {
     bool changed = false;
-    while (true) {
+    while (gameState_ == GameState::PLAYING) {
         auto matches = findMatches();
         if (matches.empty()) {
             break;
@@ -839,7 +846,7 @@ bool Renderer::processMatches() {
         removeMatches(matches);
         applyGravityAndFill();
         changed = true;
-        if (battleOutcome_ != BattleOutcome::None) {
+        if (gameState_ != GameState::PLAYING) {
             break;
         }
     }
@@ -940,7 +947,7 @@ void Renderer::handleInput() {
 }
 
 bool Renderer::attemptSwap(int startRow, int startCol, int endRow, int endCol) {
-    if (!boardReady_ || battleOutcome_ != BattleOutcome::None) {
+    if (!boardReady_ || gameState_ != GameState::PLAYING) {
         return false;
     }
 
