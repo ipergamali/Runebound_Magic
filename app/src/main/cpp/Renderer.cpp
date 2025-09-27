@@ -89,12 +89,14 @@ static constexpr float kProjectionFarPlane = 1.f;
 static constexpr int kBoardRows = 8;
 static constexpr int kBoardColumns = 5;
 static constexpr float kGemVisualScale = 0.8f;
-static constexpr float kBoardPixelWidth = 768.f;
-static constexpr float kBoardPixelHeight = 1152.f;
-static constexpr float kBoardFrameLeftPixels = 64.f;
-static constexpr float kBoardFrameRightPixels = 64.f;
-static constexpr float kBoardFrameTopPixels = 64.f;
-static constexpr float kBoardFrameBottomPixels = 64.f;
+
+static constexpr float kBoardPixelWidth = 1022.f;
+static constexpr float kBoardPixelHeight = 1535.f;
+static constexpr float kBoardMarginLeftPx = 55.f;
+static constexpr float kBoardMarginRightPx = 50.f;
+static constexpr float kBoardMarginTopPx = 80.f;
+static constexpr float kBoardMarginBottomPx = 80.f;
+
 static constexpr float kBoardMarginScale = 0.85f;
 static constexpr float kPortraitHeightScale = 0.6f;
 static constexpr float kPortraitMarginScale = 0.05f;
@@ -392,20 +394,16 @@ void Renderer::createModels() {
                                         0.05f,
                                         spEnemyTexture_));
 
-    const float innerBoardPixelX = kBoardFrameLeftPixels;
-    const float innerBoardPixelY = kBoardFrameTopPixels;
-    const float innerBoardPixelWidth = kBoardPixelWidth -
-                                       (kBoardFrameLeftPixels + kBoardFrameRightPixels);
-    const float innerBoardPixelHeight = kBoardPixelHeight -
-                                        (kBoardFrameTopPixels + kBoardFrameBottomPixels);
+    const float boardScale = pixelToWorld;
+    const float marginLeft = kBoardMarginLeftPx * boardScale;
+    const float marginRight = kBoardMarginRightPx * boardScale;
+    const float marginTop = kBoardMarginTopPx * boardScale;
+    const float marginBottom = kBoardMarginBottomPx * boardScale;
+    const float innerWidth = boardDrawWidth - marginLeft - marginRight;
+    const float innerHeight = boardDrawHeight - marginTop - marginBottom;
+    const float cellWidth = innerWidth / static_cast<float>(kBoardColumns);
+    const float cellHeight = innerHeight / static_cast<float>(kBoardRows);
 
-    const float innerBoardX = originX + innerBoardPixelX * pixelToWorld;
-    const float innerBoardY = originY - innerBoardPixelY * pixelToWorld;
-    const float innerBoardWidth = innerBoardPixelWidth * pixelToWorld;
-    const float innerBoardHeight = innerBoardPixelHeight * pixelToWorld;
-
-    const float cellWidth = innerBoardWidth / static_cast<float>(kBoardColumns);
-    const float cellHeight = innerBoardHeight / static_cast<float>(kBoardRows);
     const float gemSize = std::min(cellWidth, cellHeight) * kGemVisualScale;
     const float gemHalfWidth = gemSize * 0.5f;
     const float gemHalfHeight = gemSize * 0.5f;
@@ -422,9 +420,10 @@ void Renderer::createModels() {
                 continue;
             }
 
-            const float gemCenterX = innerBoardX +
+            const float gemCenterX = originX + marginLeft +
                                      (static_cast<float>(col) + 0.5f) * cellWidth;
-            const float gemCenterY = innerBoardY -
+            const float gemCenterY = originY - marginTop -
+
                                      (static_cast<float>(row) + 0.5f) * cellHeight;
 
             models_.emplace_back(buildQuadModel(gemCenterX - gemHalfWidth,
