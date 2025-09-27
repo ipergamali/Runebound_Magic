@@ -3,6 +3,7 @@
 #include <game-activity/native_app_glue/android_native_app_glue.h>
 #include <GLES3/gl3.h>
 #include <algorithm>
+#include <array>
 #include <cmath>
 #include <memory>
 #include <utility>
@@ -389,44 +390,6 @@ void Renderer::createModels() {
                                         -0.2f,
                                         spBoardTexture_));
 
-    const float boardBaseX = boardLeft_;
-    const float boardBaseY = boardBottom_;
-    const float boardMidY = boardBaseY + boardDrawHeight * 0.5f;
-
-    const float heroWidth = 120.0f * pixelToWorld;
-    const float heroHeight = 240.0f * pixelToWorld;
-    const float heroLeft = boardBaseX - 150.0f * pixelToWorld;
-    const float heroBottom = boardMidY - 150.0f * pixelToWorld;
-
-    renderTexture(spHeroTexture_,
-                  heroLeft,
-                  heroBottom,
-                  heroWidth,
-                  heroHeight,
-                  0.05f);
-
-    const float enemyWidth = 120.0f * pixelToWorld;
-    const float enemyHeight = 240.0f * pixelToWorld;
-    const float enemyLeft = boardRight_ + 30.0f * pixelToWorld;
-    const float enemyBottom = boardMidY - 150.0f * pixelToWorld;
-
-    renderTexture(spEnemyTexture_,
-                  enemyLeft,
-                  enemyBottom,
-                  enemyWidth,
-                  enemyHeight,
-                  0.05f);
-
-    const float hpBarWidth = 120.0f * pixelToWorld;
-    const float hpBarHeight = 15.0f * pixelToWorld;
-    const float heroBarLeft = heroLeft;
-    const float heroBarBottom = boardMidY + 110.0f * pixelToWorld;
-    const float enemyBarLeft = enemyLeft;
-    const float enemyBarBottom = boardMidY + 110.0f * pixelToWorld;
-
-    drawHPBar(heroHP_, heroMaxHP_, heroBarLeft, heroBarBottom, hpBarWidth, hpBarHeight);
-    drawHPBar(enemyHP_, enemyMaxHP_, enemyBarLeft, enemyBarBottom, hpBarWidth, hpBarHeight);
-
     const float boardScale = pixelToWorld;
     const float marginLeft = kBoardMarginLeftPx * boardScale;
     const float marginRight = kBoardMarginRightPx * boardScale;
@@ -480,6 +443,78 @@ void Renderer::createModels() {
                                                 0.0f,
                                                 texture));
         }
+    }
+
+    const float screenW = static_cast<float>(width_);
+    const float screenH = static_cast<float>(height_);
+    if (screenW > 0.0f && screenH > 0.0f) {
+        const float worldWidthToPixel = worldWidth / screenW;
+        const float worldHeightToPixel = worldHeight / screenH;
+
+        auto rectFromTopLeft = [&](float leftPx,
+                                   float topPx,
+                                   float widthPx,
+                                   float heightPx) {
+            const float widthWorld = widthPx * worldWidthToPixel;
+            const float heightWorld = heightPx * worldHeightToPixel;
+            const float leftWorld = -worldWidth * 0.5f + (leftPx / screenW) * worldWidth;
+            const float topWorld = kProjectionHalfHeight - (topPx / screenH) * worldHeight;
+            const float bottomWorld = topWorld - heightWorld;
+            return std::array<float, 4>{leftWorld, bottomWorld, widthWorld, heightWorld};
+        };
+
+        const float heroWidthPx = 200.0f;
+        const float heroHeightPx = 240.0f;
+        const float heroLeftPx = screenW * 0.5f - heroWidthPx * 0.5f;
+        const float heroTopPx = screenH - heroHeightPx - 40.0f;
+        const auto heroRect = rectFromTopLeft(heroLeftPx, heroTopPx, heroWidthPx, heroHeightPx);
+        renderTexture(spHeroTexture_,
+                      heroRect[0],
+                      heroRect[1],
+                      heroRect[2],
+                      heroRect[3],
+                      0.05f);
+
+        const float enemyWidthPx = 200.0f;
+        const float enemyHeightPx = 240.0f;
+        const float enemyLeftPx = screenW * 0.5f - enemyWidthPx * 0.5f;
+        const float enemyTopPx = 40.0f;
+        const auto enemyRect = rectFromTopLeft(enemyLeftPx,
+                                               enemyTopPx,
+                                               enemyWidthPx,
+                                               enemyHeightPx);
+        renderTexture(spEnemyTexture_,
+                      enemyRect[0],
+                      enemyRect[1],
+                      enemyRect[2],
+                      enemyRect[3],
+                      0.05f);
+
+        const float hpBarWidthPx = 200.0f;
+        const float hpBarHeightPx = 20.0f;
+        const float heroHpTopPx = heroTopPx - hpBarHeightPx;
+        const auto heroHpRect = rectFromTopLeft(heroLeftPx,
+                                                heroHpTopPx,
+                                                hpBarWidthPx,
+                                                hpBarHeightPx);
+        drawHPBar(heroHP_,
+                  heroMaxHP_,
+                  heroHpRect[0],
+                  heroHpRect[1],
+                  heroHpRect[2],
+                  heroHpRect[3]);
+
+        const float enemyHpTopPx = enemyTopPx + enemyHeightPx;
+        const auto enemyHpRect = rectFromTopLeft(enemyLeftPx,
+                                                 enemyHpTopPx,
+                                                 hpBarWidthPx,
+                                                 hpBarHeightPx);
+        drawHPBar(enemyHP_,
+                  enemyMaxHP_,
+                  enemyHpRect[0],
+                  enemyHpRect[1],
+                  enemyHpRect[2],
+                  enemyHpRect[3]);
     }
 
     if (gameState_ == GameState::VICTORY || gameState_ == GameState::DEFEAT) {
