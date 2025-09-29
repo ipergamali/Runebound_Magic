@@ -30,6 +30,7 @@ class IntroActivity : AppCompatActivity() {
     private lateinit var gemRow: LinearLayout
     private lateinit var redGem: ImageView
     private lateinit var blueGem: ImageView
+    private lateinit var turquoiseGem: ImageView
     private lateinit var greenGem: ImageView
     private lateinit var subtitleText: TextView
     private lateinit var startButton: Button
@@ -55,6 +56,7 @@ class IntroActivity : AppCompatActivity() {
         gemRow = findViewById(R.id.gemRow)
         redGem = findViewById(R.id.redGem)
         blueGem = findViewById(R.id.blueGem)
+        turquoiseGem = findViewById(R.id.turquoiseGem)
         greenGem = findViewById(R.id.greenGem)
         subtitleText = findViewById(R.id.subtitleText)
         startButton = findViewById(R.id.startButton)
@@ -105,6 +107,7 @@ class IntroActivity : AppCompatActivity() {
         loadBitmap("puzzle/red_gem.png")?.let(redGem::setImageBitmap)
         loadBitmap("puzzle/blue_gem.png")?.let(blueGem::setImageBitmap)
         loadBitmap("puzzle/green_gem.png")?.let(greenGem::setImageBitmap)
+        loadBitmap("puzzle/turquoise.png")?.let(turquoiseGem::setImageBitmap)
         loadBitmap("puzzle/black_wizard.png")?.let(blackWizard::setImageBitmap)
         loadBitmap("puzzle/elf.png")?.let(elfGuardian::setImageBitmap)
     }
@@ -134,22 +137,25 @@ class IntroActivity : AppCompatActivity() {
     }
 
     private fun playSceneOne() {
-        showSubtitle("The world was once bound by the elemental runes — Fire, Water, and Earth — that kept the balance of magic alive.")
+        showSubtitle("The world was once bound by the elemental runes — Fire, Water, Air, and Earth — that kept the balance of magic alive.")
         prepareGemsForScene()
         playAudio(R.raw.a1) {
             startScene(1)
         }
         handler.postDelayed({ revealGem(redGem) }, 3000L)
         handler.postDelayed({ revealGem(blueGem) }, 4000L)
-        handler.postDelayed({ revealGem(greenGem) }, 5000L)
+        handler.postDelayed({ revealGem(turquoiseGem) }, 5000L)
+        handler.postDelayed({ revealGem(greenGem) }, 6000L)
     }
 
     private fun playSceneTwo() {
         stopGlow(redGem)
         stopGlow(blueGem)
+        stopGlow(turquoiseGem)
         stopGlow(greenGem)
         fadeOutView(redGem)
         fadeOutView(blueGem)
+        fadeOutView(turquoiseGem)
         fadeOutView(greenGem)
 
         showSubtitle("But balance is a chain meant to be broken… and I, the Black Wizard, will forge a new world from the ashes.")
@@ -173,7 +179,7 @@ class IntroActivity : AppCompatActivity() {
     private fun playSceneFour() {
         val offset = resources.displayMetrics.widthPixels * 0.28f
 
-        showSubtitle("The battle of runes begins. Match their power, wield their magic, and decide the fate of the realm.")
+        showSubtitle("The battle of Fire, Water, Air, and Earth has begun!")
 
         showFinalCharacter(blackWizard, wizardAura, offset)
         showFinalCharacter(elfGuardian, elfAura, -offset)
@@ -181,6 +187,7 @@ class IntroActivity : AppCompatActivity() {
         prepareGemsForScene()
         revealGem(redGem)
         revealGem(blueGem)
+        revealGem(turquoiseGem)
         revealGem(greenGem)
 
         playAudio(R.raw.a4) {
@@ -192,7 +199,7 @@ class IntroActivity : AppCompatActivity() {
 
     private fun prepareGemsForScene() {
         gemRow.visibility = View.VISIBLE
-        listOf(redGem, blueGem, greenGem).forEach { gem ->
+        listOf(redGem, blueGem, turquoiseGem, greenGem).forEach { gem ->
             gem.visibility = View.VISIBLE
             gem.alpha = 0f
             gem.scaleX = 1f

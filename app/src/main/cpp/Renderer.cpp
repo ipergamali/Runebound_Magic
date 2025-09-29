@@ -7,6 +7,7 @@
 #include <array>
 #include <cmath>
 #include <memory>
+#include <random>
 #include <utility>
 #include <vector>
 #include <android/imagedecoder.h>
@@ -103,11 +104,14 @@ static constexpr float kBoardMarginBottomPx = 80.f;
 static constexpr float kBoardMarginScale = 0.85f;
 static constexpr float kResultBannerWidthScale = 0.6f;
 
-static constexpr int kRedMatchDamage = 10;
-static constexpr int kBlueMatchHeal = 5;
-static constexpr int kGreenMatchMana = 10;
-static constexpr int kSkullMatchDamage = 10;
-static constexpr float kSkullSpawnChance = 0.1f;
+static constexpr int kFireMatchDamage = 10;
+static constexpr int kWaterMatchHeal = 6;
+static constexpr int kAirMatchDamage = 4;
+static constexpr int kEarthMatchShield = 12;
+static constexpr float kWindEffectMinLife = 0.8f;
+static constexpr float kWindEffectMaxLife = 1.4f;
+static constexpr int kWindSwirlCount = 6;
+static constexpr float kTwoPi = 6.2831853f;
 
 Renderer::~Renderer() {
     if (display_ != EGL_NO_DISPLAY) {
@@ -147,6 +151,7 @@ void Renderer::render() {
     }
 
     updateRuneAnimation(deltaTime);
+    updateWindEffects(deltaTime);
 
     // When the renderable area changes, the projection matrix has to also be updated. This is true
     // even if you change from the sample orthographic projection matrix as your aspect ratio has
@@ -341,10 +346,17 @@ void Renderer::createModels() {
         }
     }
 
-    if (!spSkullGemTexture_) {
-        spSkullGemTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/skull.png");
-        if (!spSkullGemTexture_) {
-            spSkullGemTexture_ = TextureAsset::createSolidColorTexture(220, 220, 220, 255);
+    if (!spTurquoiseGemTexture_) {
+        spTurquoiseGemTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/turquoise.png");
+        if (!spTurquoiseGemTexture_) {
+            spTurquoiseGemTexture_ = TextureAsset::createSolidColorTexture(90, 200, 200, 255);
+        }
+    }
+
+    if (!spWindSwirlTexture_) {
+        spWindSwirlTexture_ = TextureAsset::loadAsset(assetManager, "puzzle/circle.png");
+        if (!spWindSwirlTexture_) {
+            spWindSwirlTexture_ = TextureAsset::createSolidColorTexture(200, 255, 255, 180);
         }
     }
 
@@ -455,6 +467,29 @@ void Renderer::createModels() {
         }
     }
 
+    if (!windSwirls_.empty() && spWindSwirlTexture_) {
+        for (const auto &swirl: windSwirls_) {
+            if (swirl.life >= swirl.maxLife) {
+                continue;
+            }
+            const float progress = std::clamp(swirl.life / swirl.maxLife, 0.0f, 1.0f);
+            const float radius = swirl.radius + swirl.radiusGrowth * swirl.life;
+            const float angle = swirl.angle;
+            const float offsetX = std::cos(angle) * radius;
+            const float offsetY = std::sin(angle) * radius;
+            const float pulse = 1.0f + 0.1f * std::sin(swirl.life * swirl.pulseFrequency * kTwoPi);
+            const float size = swirl.baseSize * (1.0f - 0.3f * progress) * pulse;
+            const float halfSize = size * 0.5f;
+
+            models_.emplace_back(buildQuadModel(swirl.centerX + offsetX - halfSize,
+                                                swirl.centerY + offsetY + halfSize,
+                                                swirl.centerX + offsetX + halfSize,
+                                                swirl.centerY + offsetY - halfSize,
+                                                0.02f,
+                                                spWindSwirlTexture_));
+        }
+    }
+
     const float screenW = static_cast<float>(width_);
     const float screenH = static_cast<float>(height_);
     if (screenW > 0.0f && screenH > 0.0f) {
@@ -514,6 +549,37 @@ void Renderer::createModels() {
                   heroHpRect[2],
                   heroHpRect[3]);
 
+        if (heroShield_ > 0) {
+            const float shieldHeightPx = 10.0f;
+            const float shieldGapPx = 6.0f;
+            const auto heroShieldRect = rectFromTopLeft(heroLeftPx,
+                                                        heroHpTopPx - shieldHeightPx - shieldGapPx,
+                                                        hpBarWidthPx,
+                                                        shieldHeightPx);
+            renderQuad(heroShieldRect[0],
+                       heroShieldRect[1],
+                       heroShieldRect[2],
+                       heroShieldRect[3],
+                       0.15f,
+                       0.3f,
+                       0.18f,
+                       1.0f,
+                       0.06f);
+            float shieldRatio = static_cast<float>(heroShield_) / static_cast<float>(heroMaxShield_);
+            shieldRatio = std::clamp(shieldRatio, 0.0f, 1.0f);
+            if (shieldRatio > 0.0f) {
+                renderQuad(heroShieldRect[0],
+                           heroShieldRect[1],
+                           heroShieldRect[2] * shieldRatio,
+                           heroShieldRect[3],
+                           0.4f,
+                           0.8f,
+                           0.4f,
+                           1.0f,
+                           0.05f);
+            }
+        }
+
         const float enemyHpTopPx = enemyTopPx + enemyHeightPx;
         const auto enemyHpRect = rectFromTopLeft(enemyLeftPx,
                                                  enemyHpTopPx,
@@ -531,7 +597,12 @@ void Renderer::createModels() {
         std::shared_ptr<TextureAsset> spTextTexture;
         if (gameState_ == GameState::VICTORY) {
             if (!spVictoryTexture_) {
-                spVictoryTexture_ = TextureAsset::createTextTexture("VICTORY", 255, 255, 255, 255);
+                spVictoryTexture_ = TextureAsset::createTextTexture(
+                        "The battle of Fire, Water, Air, and Earth has begun!",
+                        255,
+                        255,
+                        255,
+                        255);
             }
             spTextTexture = spVictoryTexture_;
         } else if (gameState_ == GameState::DEFEAT) {
@@ -582,24 +653,22 @@ void Renderer::ensureBoardInitialized() {
 
     heroHP_ = heroMaxHP_;
     enemyHP_ = enemyMaxHP_;
-    heroMana_ = 0;
+    heroShield_ = 0;
     gameState_ = GameState::PLAYING;
     sceneDirty_ = true;
 }
 
 Renderer::GemType Renderer::randomGem() {
-    if (skullChanceDistribution_(rng_) < kSkullSpawnChance) {
-        return GemType::Skull;
-    }
-
     int value = gemDistribution_(rng_);
     switch (value) {
         case 0:
-            return GemType::Red;
+            return GemType::Fire;
         case 1:
-            return GemType::Green;
+            return GemType::Water;
+        case 2:
+            return GemType::Air;
         default:
-            return GemType::Blue;
+            return GemType::Earth;
     }
 }
 
@@ -731,10 +800,15 @@ void Renderer::applyMatchEffects(const std::vector<MatchGroup> &matches) {
 
     std::array<int, 4> gemCounts = {0, 0, 0, 0};
     std::vector<bool> counted(board_.size(), false);
+    std::vector<std::pair<int, int>> airMatchCells;
     for (const auto &group: matches) {
         const int typeIndex = static_cast<int>(group.type);
         if (typeIndex < 0 || typeIndex >= static_cast<int>(gemCounts.size())) {
             continue;
+        }
+
+        if (group.type == GemType::Air) {
+            airMatchCells.insert(airMatchCells.end(), group.cells.begin(), group.cells.end());
         }
 
         for (const auto &cell: group.cells) {
@@ -754,40 +828,44 @@ void Renderer::applyMatchEffects(const std::vector<MatchGroup> &matches) {
 
     bool statsChanged = false;
 
-    const int redCount = gemCounts[static_cast<int>(GemType::Red)];
-    if (redCount > 0) {
-        const int newEnemyHP = std::max(0, enemyHP_ - kRedMatchDamage * redCount);
+    const int fireCount = gemCounts[static_cast<int>(GemType::Fire)];
+    if (fireCount > 0) {
+        const int newEnemyHP = std::max(0, enemyHP_ - kFireMatchDamage * fireCount);
         if (newEnemyHP != enemyHP_) {
             enemyHP_ = newEnemyHP;
             statsChanged = true;
         }
     }
 
-    const int blueCount = gemCounts[static_cast<int>(GemType::Blue)];
-    if (blueCount > 0) {
-        const int newHeroHP = std::min(heroMaxHP_, heroHP_ + kBlueMatchHeal * blueCount);
+    const int waterCount = gemCounts[static_cast<int>(GemType::Water)];
+    if (waterCount > 0) {
+        const int newHeroHP = std::min(heroMaxHP_, heroHP_ + kWaterMatchHeal * waterCount);
         if (newHeroHP != heroHP_) {
             heroHP_ = newHeroHP;
             statsChanged = true;
         }
     }
 
-    const int greenCount = gemCounts[static_cast<int>(GemType::Green)];
-    if (greenCount > 0) {
-        const int newMana = std::min(heroMaxMana_, heroMana_ + kGreenMatchMana * greenCount);
-        if (newMana != heroMana_) {
-            heroMana_ = newMana;
+    const int airCount = gemCounts[static_cast<int>(GemType::Air)];
+    if (airCount > 0) {
+        const int newEnemyHP = std::max(0, enemyHP_ - kAirMatchDamage * airCount);
+        if (newEnemyHP != enemyHP_) {
+            enemyHP_ = newEnemyHP;
             statsChanged = true;
         }
     }
 
-    const int skullCount = gemCounts[static_cast<int>(GemType::Skull)];
-    if (skullCount > 0) {
-        const int newHeroHP = std::max(0, heroHP_ - kSkullMatchDamage * skullCount);
-        if (newHeroHP != heroHP_) {
-            heroHP_ = newHeroHP;
+    const int earthCount = gemCounts[static_cast<int>(GemType::Earth)];
+    if (earthCount > 0) {
+        const int newShield = std::min(heroMaxShield_, heroShield_ + kEarthMatchShield * earthCount);
+        if (newShield != heroShield_) {
+            heroShield_ = newShield;
             statsChanged = true;
         }
+    }
+
+    if (!airMatchCells.empty()) {
+        spawnWindEffect(airMatchCells);
     }
 
     if (statsChanged) {
@@ -803,6 +881,64 @@ void Renderer::applyMatchEffects(const std::vector<MatchGroup> &matches) {
             sceneDirty_ = true;
         }
     }
+}
+
+void Renderer::spawnWindEffect(const std::vector<std::pair<int, int>> &cells) {
+    if (cells.empty() || !boardGeometryValid_) {
+        return;
+    }
+
+    float accumulatedX = 0.0f;
+    float accumulatedY = 0.0f;
+    int validCount = 0;
+    for (const auto &cell: cells) {
+        const int row = cell.first;
+        const int col = cell.second;
+        if (row < 0 || row >= kBoardRows || col < 0 || col >= kBoardColumns) {
+            continue;
+        }
+        const auto center = cellCenter(row, col);
+        accumulatedX += center.first;
+        accumulatedY += center.second;
+        ++validCount;
+    }
+
+    if (validCount <= 0) {
+        return;
+    }
+
+    const float effectCenterX = accumulatedX / static_cast<float>(validCount);
+    const float effectCenterY = accumulatedY / static_cast<float>(validCount);
+    const float baseSize = std::min(cellWidth_, cellHeight_);
+    if (baseSize <= 0.0f) {
+        return;
+    }
+
+    std::uniform_real_distribution<float> angleDist(0.0f, kTwoPi);
+    std::uniform_real_distribution<float> radiusDist(baseSize * 0.2f, baseSize * 0.55f);
+    std::uniform_real_distribution<float> lifeDist(kWindEffectMinLife, kWindEffectMaxLife);
+    std::uniform_real_distribution<float> speedDist(3.0f, 6.0f);
+    std::uniform_real_distribution<float> sizeDist(baseSize * 0.4f, baseSize * 0.7f);
+    std::uniform_real_distribution<float> growthDist(-baseSize * 0.05f, baseSize * 0.08f);
+    std::uniform_real_distribution<float> pulseDist(0.8f, 1.2f);
+
+    windSwirls_.reserve(windSwirls_.size() + static_cast<size_t>(kWindSwirlCount));
+    for (int i = 0; i < kWindSwirlCount; ++i) {
+        WindSwirl swirl{};
+        swirl.centerX = effectCenterX;
+        swirl.centerY = effectCenterY;
+        swirl.radius = radiusDist(rng_);
+        swirl.angularVelocity = speedDist(rng_);
+        swirl.angle = angleDist(rng_);
+        swirl.life = 0.0f;
+        swirl.maxLife = lifeDist(rng_);
+        swirl.baseSize = sizeDist(rng_);
+        swirl.pulseFrequency = pulseDist(rng_);
+        swirl.radiusGrowth = growthDist(rng_);
+        windSwirls_.push_back(swirl);
+    }
+
+    sceneDirty_ = true;
 }
 
 void Renderer::applyGravityAndFill() {
@@ -1011,14 +1147,14 @@ std::shared_ptr<TextureAsset> Renderer::getSolidColorTexture(float r,
 
 std::shared_ptr<TextureAsset> Renderer::textureForGem(GemType type) const {
     switch (type) {
-        case GemType::Red:
+        case GemType::Fire:
             return spRedGemTexture_;
-        case GemType::Green:
-            return spGreenGemTexture_;
-        case GemType::Blue:
+        case GemType::Water:
             return spBlueGemTexture_;
-        case GemType::Skull:
-            return spSkullGemTexture_;
+        case GemType::Air:
+            return spTurquoiseGemTexture_;
+        case GemType::Earth:
+            return spGreenGemTexture_;
         default:
             return nullptr;
     }
@@ -1102,6 +1238,30 @@ void Renderer::updateRuneAnimation(float deltaTimeSeconds) {
     }
 
     if (anyMovement) {
+        sceneDirty_ = true;
+    }
+}
+
+void Renderer::updateWindEffects(float deltaTimeSeconds) {
+    if (windSwirls_.empty() || deltaTimeSeconds <= 0.0f) {
+        return;
+    }
+
+    for (auto &swirl: windSwirls_) {
+        swirl.life += deltaTimeSeconds;
+        swirl.angle += swirl.angularVelocity * deltaTimeSeconds;
+    }
+
+    bool removed = false;
+    auto it = std::remove_if(windSwirls_.begin(), windSwirls_.end(), [](const WindSwirl &swirl) {
+        return swirl.life >= swirl.maxLife;
+    });
+    if (it != windSwirls_.end()) {
+        windSwirls_.erase(it, windSwirls_.end());
+        removed = true;
+    }
+
+    if (!windSwirls_.empty() || removed) {
         sceneDirty_ = true;
     }
 }

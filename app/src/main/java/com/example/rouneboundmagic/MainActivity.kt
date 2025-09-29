@@ -1,22 +1,24 @@
 package com.example.rouneboundmagic
 
+import android.graphics.Bitmap
+import android.graphics.BitmapFactory
 import android.graphics.Color
-import android.media.MediaPlayer
-import android.net.Uri
 import android.util.Log
 import android.view.View
 import android.view.ViewGroup
+import android.view.animation.AccelerateDecelerateInterpolator
 import android.widget.FrameLayout
-import android.widget.VideoView
+import android.widget.ImageView
 import androidx.annotation.Keep
 import com.google.androidgamesdk.GameActivity
+import java.io.IOException
 
 class MainActivity : GameActivity() {
-    private lateinit var selectionOverlay: VideoView
+    private lateinit var selectionOverlay: ImageView
     private lateinit var overlayContainer: FrameLayout
-    private var overlayVideoPrepared = false
     private val overlaySizeFallbackPx = 120
-    private val circleVideoUri: Uri? by lazy { resolveCircleVideoUri() }
+    private val overlayScaleFactor = 1.15f
+    private var overlayBitmap: Bitmap? = null
 
     companion object {
         private const val TAG = "MainActivity"
@@ -49,25 +51,23 @@ class MainActivity : GameActivity() {
             isFocusable = false
         }
 
-        selectionOverlay = VideoView(this).apply {
+        selectionOverlay = ImageView(this).apply {
             visibility = View.GONE
+            alpha = 0f
+            scaleX = 1f
+            scaleY = 1f
             setBackgroundColor(Color.TRANSPARENT)
-            setZOrderOnTop(true)
-            setOnPreparedListener { mediaPlayer ->
-                mediaPlayer.isLooping = false
-                overlayVideoPrepared = true
-            }
-            setOnCompletionListener {
-                visibility = View.GONE
-            }
-            setOnErrorListener { _: MediaPlayer?, _, _ ->
-                visibility = View.GONE
-                true
-            }
-            setOnTouchListener { _, _ -> false }
-            circleVideoUri?.let(this::setVideoURI) ?: run {
-                overlayVideoPrepared = false
-                Log.w(TAG, "Missing circle selection overlay resource. Overlay animation disabled.")
+            scaleType = ImageView.ScaleType.FIT_XY
+        }
+
+        overlayBitmap = loadOverlayBitmap().also { bitmap ->
+            if (bitmap != null) {
+                selectionOverlay.setImageBitmap(bitmap)
+            } else {
+                Log.w(
+                    TAG,
+                    "Circle overlay image (assets/puzzle/circle.png) not found. Selection overlay will be hidden."
+                )
             }
         }
 
@@ -94,37 +94,56 @@ class MainActivity : GameActivity() {
     @Keep
     fun onRuneSelected(centerX: Float, centerY: Float, sizePx: Float) {
         runOnUiThread {
-            circleVideoUri ?: run {
+            overlayBitmap ?: run {
                 selectionOverlay.visibility = View.GONE
                 return@runOnUiThread
             }
+
             val targetSize = if (sizePx > 0f) sizePx.toInt() else overlaySizeFallbackPx
             val halfSize = targetSize / 2
             val params = FrameLayout.LayoutParams(targetSize, targetSize)
             params.leftMargin = (centerX - halfSize).toInt()
             params.topMargin = (centerY - halfSize).toInt()
             selectionOverlay.layoutParams = params
+
             selectionOverlay.visibility = View.VISIBLE
-            if (overlayVideoPrepared) {
-                selectionOverlay.pause()
-                selectionOverlay.seekTo(0)
-            }
-            selectionOverlay.start()
+            selectionOverlay.alpha = 0f
+            selectionOverlay.scaleX = 0.7f
+            selectionOverlay.scaleY = 0.7f
+            selectionOverlay.animate().cancel()
+            selectionOverlay.animate()
+                .alpha(1f)
+                .scaleX(overlayScaleFactor)
+                .scaleY(overlayScaleFactor)
+                .setDuration(180L)
+                .setInterpolator(AccelerateDecelerateInterpolator())
+                .withEndAction {
+                    selectionOverlay.animate()
+                        .alpha(0f)
+                        .scaleX(1f)
+                        .scaleY(1f)
+                        .setStartDelay(200L)
+                        .setDuration(220L)
+                        .withEndAction { selectionOverlay.visibility = View.GONE }
+                        .start()
+                }
+                .start()
         }
     }
 
-    private fun resolveCircleVideoUri(): Uri? {
-        val resourceId = resources.getIdentifier("circle", "raw", packageName)
-        return if (resourceId != 0) {
-            Uri.parse("android.resource://$packageName/$resourceId")
-        } else {
-            Log.w(TAG, "Circle overlay video (res/raw/circle.*) not found. Selection overlay will be hidden.")
+    private fun loadOverlayBitmap(): Bitmap? {
+        return try {
+            assets.open("puzzle/circle.png").use(BitmapFactory::decodeStream)
+        } catch (io: IOException) {
+            Log.w(TAG, "Failed to load circle overlay image from assets.", io)
             null
         }
     }
 
     override fun onDestroy() {
         super.onDestroy()
-        selectionOverlay.stopPlayback()
+        selectionOverlay.animate().cancel()
+        overlayBitmap?.recycle()
+        overlayBitmap = null
     }
 }
