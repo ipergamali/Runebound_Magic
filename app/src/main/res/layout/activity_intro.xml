@@ -1,111 +1,89 @@
 <?xml version="1.0" encoding="utf-8"?>
-<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black">
+    android:background="@android:color/black"
+    android:padding="24dp">
 
     <ImageView
-        android:id="@+id/backgroundImage"
-        android:layout_width="match_parent"
-        android:layout_height="match_parent"
-        android:scaleType="centerCrop" />
-
-    <ImageView
-        android:id="@+id/wizardAura"
-        android:layout_width="280dp"
-        android:layout_height="280dp"
-        android:layout_gravity="center"
-        android:alpha="0"
-        android:src="@drawable/green_aura"
-        android:visibility="gone" />
-
-    <ImageView
-        android:id="@+id/elfAura"
-        android:layout_width="280dp"
-        android:layout_height="280dp"
-        android:layout_gravity="center"
-        android:alpha="0"
-        android:src="@drawable/golden_aura"
-        android:visibility="gone" />
-
-    <ImageView
-        android:id="@+id/blackWizard"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
+        android:id="@+id/heroCard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
         android:adjustViewBounds="true"
-        android:alpha="0"
-        android:visibility="gone" />
-
-    <ImageView
-        android:id="@+id/elfGuardian"
-        android:layout_width="220dp"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:adjustViewBounds="true"
-        android:alpha="0"
-        android:visibility="gone" />
+        android:background="@drawable/card_background"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toTopOf="@+id/heroInfoContainer"
+        app:layout_constraintDimensionRatio="3:4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
 
     <LinearLayout
-        android:id="@+id/gemRow"
-        android:layout_width="wrap_content"
+        android:id="@+id/heroInfoContainer"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_gravity="center"
-        android:gravity="center"
-        android:orientation="horizontal"
-        android:visibility="visible">
+        android:layout_marginTop="12dp"
+        android:orientation="vertical"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/heroCard">
 
-        <ImageView
-            android:id="@+id/redGem"
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:alpha="0"
-            android:padding="8dp" />
+        <TextView
+            android:id="@+id/heroName"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:textColor="@android:color/white"
+            android:textSize="20sp"
+            android:textStyle="bold" />
 
-        <ImageView
-            android:id="@+id/blueGem"
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:alpha="0"
-            android:padding="8dp" />
-
-        <ImageView
-            android:id="@+id/turquoiseGem"
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:alpha="0"
-            android:padding="8dp" />
-
-        <ImageView
-            android:id="@+id/greenGem"
-            android:layout_width="96dp"
-            android:layout_height="96dp"
-            android:alpha="0"
-            android:padding="8dp" />
+        <TextView
+            android:id="@+id/heroDescription"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:gravity="center"
+            android:paddingTop="4dp"
+            android:textColor="@android:color/darker_gray"
+            android:textSize="14sp" />
     </LinearLayout>
 
-    <TextView
-        android:id="@+id/subtitleText"
-        android:layout_width="match_parent"
-        android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
-        android:layout_margin="32dp"
-        android:alpha="0"
-        android:gravity="center"
-        android:textColor="@android:color/white"
-        android:textSize="18sp"
-        android:textStyle="bold"
-        android:visibility="gone" />
+    <FrameLayout
+        android:id="@+id/runePlaceholder"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:layout_marginTop="24dp"
+        android:layout_marginBottom="24dp"
+        android:background="@drawable/rune_placeholder_background"
+        app:layout_constraintDimensionRatio="1:0.6"
+        app:layout_constraintBottom_toTopOf="@id/villainCard"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/heroInfoContainer" />
+
+    <ImageView
+        android:id="@+id/villainCard"
+        android:layout_width="0dp"
+        android:layout_height="0dp"
+        android:adjustViewBounds="true"
+        android:background="@drawable/card_background"
+        android:scaleType="centerCrop"
+        app:layout_constraintBottom_toTopOf="@id/continueButton"
+        app:layout_constraintDimensionRatio="3:4"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/runePlaceholder" />
 
     <Button
-        android:id="@+id/startButton"
+        android:id="@+id/continueButton"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:layout_gravity="center_horizontal|bottom"
-        android:layout_marginBottom="48dp"
-        android:backgroundTint="@android:color/holo_purple"
-        android:text="@string/start_game"
-        android:textColor="@android:color/white"
-        android:visibility="gone" />
+        android:text="@string/continue_to_battle"
+        android:textAllCaps="false"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/villainCard"
+        app:layout_constraintVertical_bias="0" />
 
-</FrameLayout>
+</androidx.constraintlayout.widget.ConstraintLayout>
