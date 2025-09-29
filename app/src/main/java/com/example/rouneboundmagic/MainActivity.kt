@@ -22,6 +22,7 @@ class MainActivity : GameActivity() {
 
     companion object {
         private const val TAG = "MainActivity"
+        const val EXTRA_SELECTED_HERO = "selected_hero"
 
         init {
                 System.loadLibrary("rouneboundmagic")
