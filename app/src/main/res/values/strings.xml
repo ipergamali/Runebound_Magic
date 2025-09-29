@@ -3,6 +3,9 @@
     <string name="start_game">Start Game</string>
     <string name="game_title">Rounebound Magic</string>
     <string name="start_play">Start Play</string>
+    <string name="lobby_select_hero">Επιλογή Ήρωα</string>
+    <string name="lobby_back">Επιστροφή στην εισαγωγή</string>
+    <string name="lobby_start_battle">Έναρξη Μάχης</string>
     <string name="select_hero">Επίλεξε τον Ήρωά σου</string>
     <string name="hero_warrior">Warrior</string>
     <string name="hero_mage">Mage</string>
