@@ -20,4 +20,6 @@
     <string name="intro_black_mage">Ο Μαύρος Μάγος</string>
     <string name="hero_confirm_selection">Επιβεβαίωση</string>
     <string name="hero_cancel_selection">Ακύρωση</string>
+    <string name="hero_carousel_previous">Προηγούμενος ήρωας</string>
+    <string name="hero_carousel_next">Επόμενος ήρωας</string>
 </resources>
