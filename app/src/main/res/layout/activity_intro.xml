@@ -1,89 +1,156 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    android:background="@android:color/black"
-    android:padding="24dp">
+    android:background="@android:color/black">
 
     <ImageView
-        android:id="@+id/heroCard"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:adjustViewBounds="true"
-        android:background="@drawable/card_background"
+        android:id="@+id/introBackground"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:contentDescription="@null"
         android:scaleType="centerCrop"
-        app:layout_constraintBottom_toTopOf="@+id/heroInfoContainer"
-        app:layout_constraintDimensionRatio="3:4"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        tools:src="@drawable/ic_launcher_background" />
 
-    <LinearLayout
-        android:id="@+id/heroInfoContainer"
-        android:layout_width="0dp"
-        android:layout_height="wrap_content"
-        android:layout_marginTop="12dp"
-        android:orientation="vertical"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/heroCard">
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:background="#88000000" />
 
-        <TextView
-            android:id="@+id/heroName"
-            android:layout_width="match_parent"
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:padding="24dp">
+
+        <FrameLayout
+            android:id="@+id/runeCluster"
+            android:layout_width="220dp"
+            android:layout_height="220dp"
+            android:background="@drawable/rune_circle_background"
+            android:visibility="visible"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent"
+            app:layout_constraintTop_toTopOf="parent"
+            app:layout_constraintVertical_bias="0.45">
+
+            <androidx.constraintlayout.widget.ConstraintLayout
+                android:layout_width="match_parent"
+                android:layout_height="match_parent">
+
+                <ImageView
+                    android:id="@+id/runeFire"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:alpha="0"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent" />
+
+                <ImageView
+                    android:id="@+id/runeWater"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:alpha="0"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="@id/runeFire"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintVertical_bias="0.1" />
+
+                <ImageView
+                    android:id="@+id/runeAir"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:alpha="0"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="@id/runeFire"
+                    app:layout_constraintStart_toStartOf="parent"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintHorizontal_bias="0.15" />
+
+                <ImageView
+                    android:id="@+id/runeEarth"
+                    android:layout_width="72dp"
+                    android:layout_height="72dp"
+                    android:alpha="0"
+                    android:contentDescription="@null"
+                    android:scaleType="fitCenter"
+                    android:visibility="gone"
+                    app:layout_constraintBottom_toBottomOf="parent"
+                    app:layout_constraintEnd_toEndOf="parent"
+                    app:layout_constraintStart_toStartOf="@id/runeFire"
+                    app:layout_constraintTop_toTopOf="parent"
+                    app:layout_constraintHorizontal_bias="0.85" />
+
+            </androidx.constraintlayout.widget.ConstraintLayout>
+
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/priestessContainer"
+            android:layout_width="180dp"
+            android:layout_height="300dp"
+            android:layout_marginBottom="36dp"
+            android:background="@drawable/character_glow_priestess"
+            android:padding="12dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintStart_toStartOf="parent">
+
+            <ImageView
+                android:id="@+id/priestessPortrait"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/intro_priestess"
+                android:scaleType="fitCenter" />
+        </FrameLayout>
+
+        <FrameLayout
+            android:id="@+id/mageContainer"
+            android:layout_width="180dp"
+            android:layout_height="300dp"
+            android:layout_marginBottom="36dp"
+            android:background="@drawable/character_glow_mage"
+            android:padding="12dp"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent">
+
+            <ImageView
+                android:id="@+id/magePortrait"
+                android:layout_width="match_parent"
+                android:layout_height="match_parent"
+                android:contentDescription="@string/intro_black_mage"
+                android:scaleType="fitCenter" />
+        </FrameLayout>
+
+        <com.google.android.material.button.MaterialButton
+            android:id="@+id/startGameButton"
+            style="@style/Widget.MaterialComponents.Button"
+            android:layout_width="wrap_content"
             android:layout_height="wrap_content"
-            android:gravity="center"
-            android:textColor="@android:color/white"
-            android:textSize="20sp"
-            android:textStyle="bold" />
+            android:layout_marginBottom="24dp"
+            android:enabled="false"
+            android:text="@string/intro_start_game"
+            android:textAllCaps="false"
+            android:visibility="gone"
+            app:layout_constraintBottom_toBottomOf="parent"
+            app:layout_constraintEnd_toEndOf="parent"
+            app:layout_constraintStart_toStartOf="parent" />
 
-        <TextView
-            android:id="@+id/heroDescription"
-            android:layout_width="match_parent"
-            android:layout_height="wrap_content"
-            android:gravity="center"
-            android:paddingTop="4dp"
-            android:textColor="@android:color/darker_gray"
-            android:textSize="14sp" />
-    </LinearLayout>
+    </androidx.constraintlayout.widget.ConstraintLayout>
 
-    <FrameLayout
-        android:id="@+id/runePlaceholder"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:layout_marginTop="24dp"
-        android:layout_marginBottom="24dp"
-        android:background="@drawable/rune_placeholder_background"
-        app:layout_constraintDimensionRatio="1:0.6"
-        app:layout_constraintBottom_toTopOf="@id/villainCard"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/heroInfoContainer" />
-
-    <ImageView
-        android:id="@+id/villainCard"
-        android:layout_width="0dp"
-        android:layout_height="0dp"
-        android:adjustViewBounds="true"
-        android:background="@drawable/card_background"
-        android:scaleType="centerCrop"
-        app:layout_constraintBottom_toTopOf="@id/continueButton"
-        app:layout_constraintDimensionRatio="3:4"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/runePlaceholder" />
-
-    <Button
-        android:id="@+id/continueButton"
-        android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:text="@string/continue_to_battle"
-        android:textAllCaps="false"
-        app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/villainCard"
-        app:layout_constraintVertical_bias="0" />
-
-</androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

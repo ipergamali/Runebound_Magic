@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <dimen name="hero_card_corner_radius">16dp</dimen>
+    <dimen name="hero_card_stroke_width">3dp</dimen>
+    <dimen name="hero_card_image_height">220dp</dimen>
+</resources>

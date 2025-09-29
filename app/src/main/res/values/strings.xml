@@ -1,11 +1,11 @@
 <resources>
     <string name="app_name">Rounebound Magic</string>
-    <string name="start_game">Start Game</string>
-    <string name="game_title">Rounebound Magic</string>
-    <string name="start_play">Start Play</string>
     <string name="lobby_select_hero">Επιλογή Ήρωα</string>
-    <string name="lobby_back">Επιστροφή στην εισαγωγή</string>
+    <string name="lobby_select_hero_with_choice">Επιλογή Ήρωα (%1$s)</string>
+    <string name="lobby_selected_hero">Ήρωας: %1$s</string>
+    <string name="lobby_back">Πίσω στην εισαγωγή</string>
     <string name="lobby_start_battle">Έναρξη Μάχης</string>
+    <string name="lobby_select_prompt">Επίλεξε έναν ήρωα πριν ξεκινήσεις</string>
     <string name="select_hero">Επίλεξε τον Ήρωά σου</string>
     <string name="hero_warrior">Warrior</string>
     <string name="hero_mage">Mage</string>
@@ -15,5 +15,9 @@
     <string name="hero_mage_desc">Κυρίαρχος των ρούνων και της μαγείας.</string>
     <string name="hero_priestess_desc">Θεραπεύτρια, σύμμαχος του φωτός.</string>
     <string name="hero_ranger_desc">Τοξότης με υψηλή ευκινησία.</string>
-    <string name="continue_to_battle">Συνέχεια στη μάχη</string>
+    <string name="intro_start_game">Έναρξη Παιχνιδιού</string>
+    <string name="intro_priestess">Η Ιέρεια</string>
+    <string name="intro_black_mage">Ο Μαύρος Μάγος</string>
+    <string name="hero_confirm_selection">Επιβεβαίωση</string>
+    <string name="hero_cancel_selection">Ακύρωση</string>
 </resources>
