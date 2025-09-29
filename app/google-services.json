@@ -1,0 +1,29 @@
+{
+  "project_info": {
+    "project_number": "674254019889",
+    "project_id": "runebound-magic",
+    "storage_bucket": "runebound-magic.firebasestorage.app"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:674254019889:android:563ef282d6dbd2282aa410",
+        "android_client_info": {
+          "package_name": "com.example.runboundMgic"
+        }
+      },
+      "oauth_client": [],
+      "api_key": [
+        {
+          "current_key": "AIzaSyBv0r9qIIC2W0uxeSEMzOqHg_9ljxUlTpI"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": []
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}
