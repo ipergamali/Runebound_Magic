@@ -1,4 +1,4 @@
-package com.example.rouneboundmagic
+package com.example.runeboundmagic
 
 import android.graphics.Bitmap
 import android.view.LayoutInflater

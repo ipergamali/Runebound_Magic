@@ -1,4 +1,4 @@
-package com.example.rouneboundmagic
+package com.example.runeboundmagic
 
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
@@ -25,7 +25,7 @@ class MainActivity : GameActivity() {
         const val EXTRA_SELECTED_HERO = "selected_hero"
 
         init {
-                System.loadLibrary("rouneboundmagic")
+                System.loadLibrary("runeboundmagic")
         }
     }
 

@@ -4,14 +4,14 @@ plugins {
 }
 
 android {
-    namespace = "com.example.rouneboundmagic"
+    namespace = "com.example.runeboundmagic"
 
     compileSdk = 35
     ndkVersion = "27.0.12077973"
 
 
     defaultConfig {
-        applicationId = "com.example.rouneboundmagic"
+        applicationId = "com.example.runeboundmagic"
         minSdk = 26
         targetSdk = 35
         versionCode = 1

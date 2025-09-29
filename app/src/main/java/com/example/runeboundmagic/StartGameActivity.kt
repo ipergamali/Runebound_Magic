@@ -1,4 +1,4 @@
-package com.example.rouneboundmagic
+package com.example.runeboundmagic
 
 import android.content.Intent
 import android.graphics.Bitmap
