@@ -32,13 +32,12 @@ public:
             height_(0),
             shaderNeedsNewProjectionMatrix_(true),
             rng_(std::random_device{}()),
-            gemDistribution_(0, 2),
-            skullChanceDistribution_(0.0f, 1.0f),
+            gemDistribution_(0, 3),
             sceneDirty_(true),
             boardReady_(false),
             heroHP_(heroMaxHP_),
             enemyHP_(enemyMaxHP_),
-            heroMana_(0),
+            heroShield_(0),
             gameState_(GameState::START) {
         initRenderer();
     }
@@ -78,10 +77,10 @@ private:
 
     enum class GemType {
         None = -1,
-        Red = 0,
-        Green = 1,
-        Blue = 2,
-        Skull = 3,
+        Fire = 0,
+        Water = 1,
+        Air = 2,
+        Earth = 3,
     };
 
     struct MatchGroup {
@@ -113,6 +112,7 @@ private:
     void removeMatches(const std::vector<MatchGroup> &matches);
     void applyGravityAndFill();
     void applyMatchEffects(const std::vector<MatchGroup> &matches);
+    void spawnWindEffect(const std::vector<std::pair<int, int>> &cells);
     bool updateBoardState();
     bool processMatches();
     bool attemptSwap(int startRow, int startCol, int endRow, int endCol);
@@ -160,6 +160,7 @@ private:
     void updateRuneTarget(int row, int col, Rune &rune);
     void updateAllRuneTargets(bool snapToTarget);
     void updateRuneAnimation(float deltaTimeSeconds);
+    void updateWindEffects(float deltaTimeSeconds);
     std::pair<float, float> cellCenter(int row, int col) const;
 
     android_app *app_;
@@ -177,7 +178,8 @@ private:
     std::shared_ptr<TextureAsset> spRedGemTexture_;
     std::shared_ptr<TextureAsset> spGreenGemTexture_;
     std::shared_ptr<TextureAsset> spBlueGemTexture_;
-    std::shared_ptr<TextureAsset> spSkullGemTexture_;
+    std::shared_ptr<TextureAsset> spTurquoiseGemTexture_;
+    std::shared_ptr<TextureAsset> spWindSwirlTexture_;
     std::shared_ptr<TextureAsset> spHeroTexture_;
     std::shared_ptr<TextureAsset> spEnemyTexture_;
     std::shared_ptr<TextureAsset> spWhiteTexture_;
@@ -188,15 +190,14 @@ private:
     std::vector<Rune> board_;
     std::mt19937 rng_;
     std::uniform_int_distribution<int> gemDistribution_;
-    std::uniform_real_distribution<float> skullChanceDistribution_;
     bool sceneDirty_;
     bool boardReady_;
     int heroHP_;
     int enemyHP_;
-    int heroMana_;
+    int heroShield_;
     const int heroMaxHP_ = 100;
     const int enemyMaxHP_ = 100;
-    const int heroMaxMana_ = 100;
+    const int heroMaxShield_ = 100;
     GameState gameState_;
     bool boardGeometryValid_ = false;
     float boardLeft_ = 0.0f;
@@ -215,6 +216,19 @@ private:
     int selectedCol_ = 0;
     int32_t activePointerId_ = -1;
     std::chrono::steady_clock::time_point lastFrameTime_ = std::chrono::steady_clock::now();
+    struct WindSwirl {
+        float centerX;
+        float centerY;
+        float radius;
+        float angularVelocity;
+        float angle;
+        float life;
+        float maxLife;
+        float baseSize;
+        float pulseFrequency;
+        float radiusGrowth;
+    };
+    std::vector<WindSwirl> windSwirls_;
 };
 
 #endif //ANDROIDGLINVESTIGATIONS_RENDERER_H
