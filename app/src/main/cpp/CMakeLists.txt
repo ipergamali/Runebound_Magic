@@ -3,11 +3,11 @@
 
 cmake_minimum_required(VERSION 3.22.1)
 
-project("rouneboundmagic")
+project("runeboundmagic")
 
 # Creates your game shared library. The name must be the same as the
 # one used for loading in your Kotlin/Java or AndroidManifest.txt files.
-add_library(rouneboundmagic SHARED
+add_library(runeboundmagic SHARED
         main.cpp
         AndroidOut.cpp
         Renderer.cpp
@@ -19,7 +19,7 @@ add_library(rouneboundmagic SHARED
 find_package(game-activity REQUIRED CONFIG)
 
 # Configure libraries CMake uses to link your target library.
-target_link_libraries(rouneboundmagic
+target_link_libraries(runeboundmagic
         # The game activity
         game-activity::game-activity
 
