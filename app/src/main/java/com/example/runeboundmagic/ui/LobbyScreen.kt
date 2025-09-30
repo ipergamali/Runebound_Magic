@@ -10,10 +10,11 @@ import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.heightIn
+import androidx.compose.foundation.layout.imePadding
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
@@ -51,6 +52,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -228,15 +230,19 @@ fun LobbyScreen(
                 )
             }
 
+            val cardWidth = 220.dp
+            val cardHeight = 340.dp
+            val cardSpacing = 24.dp
+
             Column(
                 modifier = Modifier
-                    .align(Alignment.BottomCenter)
+                    .align(Alignment.Center)
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
                     .padding(bottom = bottomPadding)
-                    .offset(y = (-72).dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(20.dp)
+                    .offset(y = (-24).dp)
+                    .imePadding(),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 HeroCarousel(
                     heroes = heroes,
@@ -246,8 +252,13 @@ fun LobbyScreen(
                         if (index in heroes.indices) {
                             selectedHeroIndex = index
                         }
-                    }
+                    },
+                    cardWidth = cardWidth,
+                    cardHeight = cardHeight,
+                    cardSpacing = cardSpacing
                 )
+
+                Spacer(Modifier.height(8.dp))
 
                 OutlinedTextField(
                     value = playerName,
@@ -260,15 +271,12 @@ fun LobbyScreen(
                             heroNameInput = newValue
                         )
                     },
-                    placeholder = {
-                        Text(
-                            text = stringResource(id = R.string.hero_name_hint),
-                            color = Color.White.copy(alpha = 0.7f)
-                        )
-                    },
+                    placeholder = { Text(text = "Hero Name", color = Color.White.copy(alpha = 0.7f)) },
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
-                    modifier = Modifier.width(240.dp),
+                    modifier = Modifier
+                        .width(320.dp)
+                        .height(56.dp),
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color(0xFFFFD700),
                         unfocusedIndicatorColor = Color(0xB3FFD700),
@@ -471,16 +479,19 @@ private fun HeroCarousel(
     pagerState: PagerState,
     selectedIndex: Int,
     onHeroSelected: (Int) -> Unit,
+    cardWidth: Dp,
+    cardHeight: Dp,
+    cardSpacing: Dp,
     modifier: Modifier = Modifier
 ) {
     HorizontalPager(
         state = pagerState,
-        pageSize = PageSize.Fixed(180.dp),
-        contentPadding = PaddingValues(horizontal = 64.dp),
-        pageSpacing = 20.dp,
+        pageSize = PageSize.Fixed(cardWidth),
+        contentPadding = PaddingValues(horizontal = cardSpacing),
+        pageSpacing = cardSpacing,
         modifier = modifier
             .fillMaxWidth()
-            .heightIn(min = 200.dp)
+            .height(cardHeight)
     ) { page ->
         val hero = heroes[page]
         val isSelected = page == selectedIndex
@@ -489,8 +500,8 @@ private fun HeroCarousel(
             selected = isSelected,
             onClick = { onHeroSelected(page) },
             modifier = Modifier
-                .height(220.dp)
-                .width(160.dp)
+                .width(cardWidth)
+                .height(cardHeight)
         )
     }
 }
