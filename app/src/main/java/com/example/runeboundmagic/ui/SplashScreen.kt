@@ -4,23 +4,37 @@ import androidx.compose.animation.core.Animatable
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
+import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.alpha
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.res.painterResource
 import androidx.navigation.NavHostController
 import kotlinx.coroutines.delay
+import com.example.runeboundmagic.R
 
 @Composable
 fun SplashScreen(navController: NavHostController) {
     val alpha = remember { Animatable(0f) }
+    var hasNavigated by remember { mutableStateOf(false) }
+
+    fun navigateToIntro() {
+        if (hasNavigated) return
+        hasNavigated = true
+        navController.navigate(Routes.Intro) {
+            popUpTo(Routes.Splash) { inclusive = true }
+        }
+    }
 
     LaunchedEffect(Unit) {
         alpha.animateTo(
@@ -28,9 +42,7 @@ fun SplashScreen(navController: NavHostController) {
             animationSpec = tween(durationMillis = 2000)
         )
         delay(3000)
-        navController.navigate(Routes.Intro) {
-            popUpTo(Routes.Splash) { inclusive = true }
-        }
+        navigateToIntro()
     }
 
     Box(
@@ -44,11 +56,14 @@ fun SplashScreen(navController: NavHostController) {
                         Color(0xFF0B3D3B)
                     )
                 )
-            ),
+            )
+            .clickable(enabled = !hasNavigated) {
+                navigateToIntro()
+            },
         contentAlignment = Alignment.Center
     ) {
         Image(
-            painter = rememberAssetPainter("logo/RuneboundMagic.png"),
+            painter = painterResource(id = R.drawable.logo),
             contentDescription = "Runebound Magic Logo",
             modifier = Modifier
                 .fillMaxWidth(0.7f)
