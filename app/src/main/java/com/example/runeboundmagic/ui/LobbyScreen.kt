@@ -29,6 +29,7 @@ import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
+import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -77,6 +78,7 @@ fun LobbyScreen(
     onBack: () -> Unit,
     onSelectHero: () -> Unit,
     onStartBattle: (HeroOption, String) -> Unit,
+    onOpenCodex: () -> Unit,
     viewModel: HeroChoiceViewModel = lobbyViewModel(),
 ) {
     val context = LocalContext.current
@@ -176,6 +178,17 @@ fun LobbyScreen(
                                 .padding(horizontal = 32.dp),
                             textAlign = TextAlign.Center
                         )
+
+                        OutlinedButton(
+                            onClick = onOpenCodex,
+                            modifier = Modifier.padding(top = 8.dp)
+                        ) {
+                            Text(
+                                text = stringResource(id = R.string.codex_open_button),
+                                color = Color(0xFF38B6FF),
+                                fontWeight = FontWeight.SemiBold
+                            )
+                        }
                     }
                 }
 
