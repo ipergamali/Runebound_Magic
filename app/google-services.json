@@ -7,9 +7,9 @@
   "client": [
     {
       "client_info": {
-        "mobilesdk_app_id": "1:674254019889:android:563ef282d6dbd2282aa410",
+        "mobilesdk_app_id": "1:674254019889:android:d3d23d5af9fb74342aa410",
         "android_client_info": {
-          "package_name": "com.example.runboundMgic"
+          "package_name": "com.example.runeboundmagic"
         }
       },
       "oauth_client": [],

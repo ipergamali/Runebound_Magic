@@ -8,10 +8,10 @@
             <InsightsFilterSettings>
               <option name="connection">
                 <ConnectionSetting>
-                  <option name="appId" value="PLACEHOLDER" />
-                  <option name="mobileSdkAppId" value="" />
-                  <option name="projectId" value="" />
-                  <option name="projectNumber" value="" />
+                  <option name="appId" value="com.example.runeboundmagic" />
+                  <option name="mobileSdkAppId" value="1:674254019889:android:d3d23d5af9fb74342aa410" />
+                  <option name="projectId" value="runebound-magic" />
+                  <option name="projectNumber" value="674254019889" />
                 </ConnectionSetting>
               </option>
               <option name="signal" value="SIGNAL_UNSPECIFIED" />
