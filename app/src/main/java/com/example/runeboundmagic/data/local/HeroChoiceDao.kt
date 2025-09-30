@@ -13,4 +13,7 @@ interface HeroChoiceDao {
 
     @Query("SELECT * FROM hero_choices ORDER BY timestamp DESC LIMIT 1")
     fun observeLastChoice(): Flow<HeroChoiceEntity?>
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun insertInteraction(interaction: LobbyInteractionEntity)
 }

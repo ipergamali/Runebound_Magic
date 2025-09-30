@@ -7,20 +7,20 @@ import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
-import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.width
-import androidx.compose.foundation.layout.wrapContentWidth
+import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
@@ -46,11 +46,11 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
@@ -62,6 +62,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.runeboundmagic.HeroChoiceViewModel
 import com.example.runeboundmagic.HeroChoiceViewModelFactory
 import com.example.runeboundmagic.HeroOption
+import com.example.runeboundmagic.LobbyInteractionEvent
 import com.example.runeboundmagic.R
 import com.example.runeboundmagic.data.local.HeroChoiceDatabase
 import com.example.runeboundmagic.toHeroOption
@@ -87,7 +88,14 @@ fun LobbyScreen(
 
     LaunchedEffect(Unit) { onLobbyShown() }
 
-    val heroes = remember { HeroOption.values().toList() }
+    val heroes = remember {
+        listOf(
+            HeroOption.MAGE,
+            HeroOption.MYSTICAL_PRIESTESS,
+            HeroOption.RANGER,
+            HeroOption.WARRIOR
+        )
+    }
     var selectedHero by rememberSaveable { mutableStateOf(heroes.first()) }
     var playerName by rememberSaveable { mutableStateOf("") }
     var lastSavedSignature by remember { mutableStateOf<Pair<String, String>?>(null) }
@@ -110,58 +118,160 @@ fun LobbyScreen(
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
         val selectedHeroLabel = stringResource(id = selectedHero.displayNameRes)
+        val selectedHeroDescription = stringResource(id = selectedHero.descriptionRes)
 
-        Box(
+        BoxWithConstraints(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(padding)
         ) {
+            val density = LocalDensity.current
+            val screenWidthPx = constraints.maxWidth.toFloat()
+            val screenHeightPx = constraints.maxHeight.toFloat()
+
+            val selectHeroSize = 220.dp to 60.dp
+            val backSize = 120.dp to 50.dp
+            val startBattleSize = 140.dp to 50.dp
+            val codexSize = 220.dp to 48.dp
+
+            val selectHeroWidthPx = with(density) { selectHeroSize.first.toPx() }
+            val selectHeroHeightPx = with(density) { selectHeroSize.second.toPx() }
+            val backWidthPx = with(density) { backSize.first.toPx() }
+            val backHeightPx = with(density) { backSize.second.toPx() }
+            val startBattleWidthPx = with(density) { startBattleSize.first.toPx() }
+            val startBattleHeightPx = with(density) { startBattleSize.second.toPx() }
+            val codexWidthPx = with(density) { codexSize.first.toPx() }
+            val codexHeightPx = with(density) { codexSize.second.toPx() }
+
+            val selectHeroOffsetX = with(density) {
+                (screenWidthPx * 0.5f - selectHeroWidthPx / 2f).toDp()
+            }
+            val selectHeroOffsetY = with(density) {
+                (screenHeightPx * 0.87f - selectHeroHeightPx / 2f).toDp()
+            }
+            val backOffsetX = with(density) {
+                (screenWidthPx * 0.18f - backWidthPx / 2f).toDp()
+            }
+            val backOffsetY = with(density) {
+                (screenHeightPx * 0.94f - backHeightPx / 2f).toDp()
+            }
+            val startBattleOffsetX = with(density) {
+                (screenWidthPx * 0.82f - startBattleWidthPx / 2f).toDp()
+            }
+            val startBattleOffsetY = with(density) {
+                (screenHeightPx * 0.94f - startBattleHeightPx / 2f).toDp()
+            }
+            val codexOffsetX = with(density) {
+                (screenWidthPx * 0.5f - codexWidthPx / 2f).toDp()
+            }
+            val codexOffsetY = with(density) {
+                (screenHeightPx * 0.98f - codexHeightPx / 2f).toDp()
+            }
+
+            val extraBottomSpacePx = with(density) { 16.dp.toPx() }
+            val selectHeroTopPx = screenHeightPx * 0.87f - selectHeroHeightPx / 2f
+            val bottomPadding = with(density) {
+                (screenHeightPx - selectHeroTopPx + extraBottomSpacePx)
+                    .coerceAtLeast(0f)
+                    .toDp()
+            }
+
+            val selectHeroInteraction = remember { MutableInteractionSource() }
+            val backInteraction = remember { MutableInteractionSource() }
+            val startBattleInteraction = remember { MutableInteractionSource() }
+            val codexInteraction = remember { MutableInteractionSource() }
+
             Image(
                 painter = rememberAssetPainter("lobby/Game_Lobby.png"),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
-                contentScale = ContentScale.Crop
+                contentScale = ContentScale.FillBounds
             )
 
             Box(
                 modifier = Modifier
                     .fillMaxSize()
-                    .background(Color(0xAA0B111A))
+                    .background(Color(0x880B111A))
             )
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
+                    .align(Alignment.TopCenter)
+                    .fillMaxWidth()
                     .padding(horizontal = 32.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.spacedBy(18.dp)
+                verticalArrangement = Arrangement.Top
             ) {
                 LobbyHeader(
                     heroName = selectedHeroLabel,
                     modifier = Modifier.fillMaxWidth()
                 )
+            }
 
+            Column(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .fillMaxWidth()
+                    .padding(horizontal = 24.dp)
+                    .padding(bottom = bottomPadding),
+                horizontalAlignment = Alignment.CenterHorizontally
+            ) {
                 HeroCarousel(
                     modifier = Modifier
                         .fillMaxWidth()
-                        .weight(1f),
+                        .height(300.dp),
                     heroes = heroes,
                     selectedHero = selectedHero,
                     isA4Playing = isA4Playing,
                     onHeroSelected = { hero ->
                         selectedHero = hero
+                        viewModel.logInteraction(
+                            event = LobbyInteractionEvent.HERO_SELECTED,
+                            heroType = hero.toHeroType(),
+                            heroDisplayName = context.getString(hero.displayNameRes),
+                            heroNameInput = playerName
+                        )
                     }
                 )
 
+                Spacer(modifier = Modifier.height(12.dp))
+
+                Text(
+                    text = selectedHeroLabel,
+                    color = Color(0xFFF0C977),
+                    fontWeight = FontWeight.Bold,
+                    fontSize = 20.sp,
+                    textAlign = TextAlign.Center
+                )
+
+                Spacer(modifier = Modifier.height(6.dp))
+
+                Text(
+                    text = selectedHeroDescription,
+                    color = Color(0xFFE8F5FF),
+                    fontSize = 14.sp,
+                    textAlign = TextAlign.Center,
+                    lineHeight = 18.sp,
+                    modifier = Modifier.fillMaxWidth(0.9f)
+                )
+
+                Spacer(modifier = Modifier.height(16.dp))
+
                 OutlinedTextField(
                     value = playerName,
-                    onValueChange = { playerName = it },
-                    label = { Text(text = stringResource(id = R.string.hero_name_hint)) },
+                    onValueChange = { newValue ->
+                        playerName = newValue
+                        viewModel.logInteraction(
+                            event = LobbyInteractionEvent.HERO_NAME_CHANGED,
+                            heroType = selectedHero.toHeroType(),
+                            heroDisplayName = context.getString(selectedHero.displayNameRes),
+                            heroNameInput = newValue
+                        )
+                    },
+                    placeholder = { Text(text = stringResource(id = R.string.hero_name_hint)) },
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(top = 8.dp),
+                    modifier = Modifier.fillMaxWidth(0.8f),
                     colors = TextFieldDefaults.colors(
                         unfocusedIndicatorColor = Color(0xFFE0D299),
                         focusedIndicatorColor = Color(0xFFF0C977),
@@ -172,40 +282,45 @@ fun LobbyScreen(
                         unfocusedLabelColor = Color(0xFFE8F5FF),
                     )
                 )
+            }
 
-                val selectionSignature = remember(selectedHero, playerName) {
-                    playerName.trim() to selectedHero.name
-                }
+            val selectionSignature = remember(selectedHero, playerName) {
+                playerName.trim() to selectedHero.name
+            }
 
-                fun persistSelection(trimmedName: String, heroLabel: String) {
-                    viewModel.saveHeroChoice(
-                        playerName = trimmedName,
-                        heroType = selectedHero.toHeroType(),
-                        heroName = heroLabel
-                    )
-                    lastSavedSignature = trimmedName to selectedHero.name
-                    scope.launch {
-                        snackbarHostState.showSnackbar(
-                            message = context.getString(
-                                R.string.lobby_selection_saved,
-                                trimmedName,
-                                heroLabel
-                            )
+            fun persistSelection(trimmedName: String, heroLabel: String) {
+                viewModel.saveHeroChoice(
+                    playerName = trimmedName,
+                    heroType = selectedHero.toHeroType(),
+                    heroName = heroLabel
+                )
+                lastSavedSignature = trimmedName to selectedHero.name
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = context.getString(
+                            R.string.lobby_selection_saved,
+                            trimmedName,
+                            heroLabel
                         )
-                    }
+                    )
                 }
+            }
 
-                LobbyActionButton(
-                    text = stringResource(id = R.string.lobby_select_hero),
-                    backgroundBrush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFFFE7A7), Color(0xFFB8860B))
-                    ),
-                    borderColor = Color(0xFFF7F2C5),
-                    contentColor = Color(0xFF402600),
-                    modifier = Modifier
-                        .fillMaxWidth(0.7f)
-                        .height(58.dp),
-                    onClick = {
+            Box(
+                modifier = Modifier
+                    .offset(x = selectHeroOffsetX, y = selectHeroOffsetY)
+                    .size(selectHeroSize.first, selectHeroSize.second)
+                    .clickable(
+                        indication = null,
+                        interactionSource = selectHeroInteraction
+                    ) {
+                        viewModel.logInteraction(
+                            event = LobbyInteractionEvent.SELECT_HERO_CLICKED,
+                            heroType = selectedHero.toHeroType(),
+                            heroDisplayName = selectedHeroLabel,
+                            heroNameInput = playerName
+                        )
+
                         val trimmedName = playerName.trim()
                         if (trimmedName.isEmpty()) {
                             scope.launch {
@@ -213,79 +328,85 @@ fun LobbyScreen(
                                     message = context.getString(R.string.error_empty_hero_name)
                                 )
                             }
-                            return@LobbyActionButton
+                            return@clickable
                         }
 
-                        persistSelection(trimmedName, selectedHeroLabel)
+                        if (lastSavedSignature != selectionSignature) {
+                            persistSelection(trimmedName, selectedHeroLabel)
+                        }
+
                         onSelectHero()
                     }
-                )
+            )
 
-                Row(
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .wrapContentWidth(),
-                    horizontalArrangement = Arrangement.SpaceBetween,
-                    verticalAlignment = Alignment.CenterVertically
-                ) {
-                    LobbyActionButton(
-                        text = stringResource(id = R.string.lobby_back),
-                        backgroundBrush = Brush.verticalGradient(
-                            colors = listOf(Color(0xFF6EE27D), Color(0xFF2F7F39))
-                        ),
-                        borderColor = Color(0xFFB5F9C0),
-                        contentColor = Color(0xFF042B0F),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        onClick = onBack
-                    )
+            Box(
+                modifier = Modifier
+                    .offset(x = backOffsetX, y = backOffsetY)
+                    .size(backSize.first, backSize.second)
+                    .clickable(
+                        indication = null,
+                        interactionSource = backInteraction
+                    ) {
+                        viewModel.logInteraction(
+                            event = LobbyInteractionEvent.BACK_CLICKED,
+                            heroType = selectedHero.toHeroType(),
+                            heroDisplayName = selectedHeroLabel,
+                            heroNameInput = playerName
+                        )
+                        onBack()
+                    }
+            )
 
-                    Spacer(modifier = Modifier.width(18.dp))
+            Box(
+                modifier = Modifier
+                    .offset(x = startBattleOffsetX, y = startBattleOffsetY)
+                    .size(startBattleSize.first, startBattleSize.second)
+                    .clickable(
+                        indication = null,
+                        interactionSource = startBattleInteraction
+                    ) {
+                        viewModel.logInteraction(
+                            event = LobbyInteractionEvent.START_BATTLE_CLICKED,
+                            heroType = selectedHero.toHeroType(),
+                            heroDisplayName = selectedHeroLabel,
+                            heroNameInput = playerName
+                        )
 
-                    LobbyActionButton(
-                        text = stringResource(id = R.string.lobby_start_battle),
-                        backgroundBrush = Brush.verticalGradient(
-                            colors = listOf(Color(0xFF7FB5FF), Color(0xFF2354A2))
-                        ),
-                        borderColor = Color(0xFFAED4FF),
-                        contentColor = Color(0xFF021B38),
-                        modifier = Modifier
-                            .weight(1f)
-                            .height(56.dp),
-                        onClick = {
-                            val trimmedName = playerName.trim()
-                            if (trimmedName.isEmpty()) {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        message = context.getString(R.string.error_empty_hero_name)
-                                    )
-                                }
-                                return@LobbyActionButton
+                        val trimmedName = playerName.trim()
+                        if (trimmedName.isEmpty()) {
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = context.getString(R.string.error_empty_hero_name)
+                                )
                             }
-
-                            if (lastSavedSignature != selectionSignature) {
-                                persistSelection(trimmedName, selectedHeroLabel)
-                            }
-
-                            onStartBattle(selectedHero, trimmedName)
+                            return@clickable
                         }
-                    )
-                }
 
-                LobbyActionButton(
-                    text = stringResource(id = R.string.codex_open_button),
-                    backgroundBrush = Brush.verticalGradient(
-                        colors = listOf(Color(0xFFE2EAFF), Color(0xFF7A8BB6))
-                    ),
-                    borderColor = Color(0xFFEEF3FF),
-                    contentColor = Color(0xFF14213D),
-                    modifier = Modifier
-                        .fillMaxWidth(0.7f)
-                        .height(48.dp),
-                    onClick = onOpenCodex
-                )
-            }
+                        if (lastSavedSignature != selectionSignature) {
+                            persistSelection(trimmedName, selectedHeroLabel)
+                        }
+
+                        onStartBattle(selectedHero, trimmedName)
+                    }
+            )
+
+            Box(
+                modifier = Modifier
+                    .offset(x = codexOffsetX, y = codexOffsetY)
+                    .size(codexSize.first, codexSize.second)
+                    .clickable(
+                        indication = null,
+                        interactionSource = codexInteraction
+                    ) {
+                        viewModel.logInteraction(
+                            event = LobbyInteractionEvent.CODEX_CLICKED,
+                            heroType = selectedHero.toHeroType(),
+                            heroDisplayName = selectedHeroLabel,
+                            heroNameInput = playerName
+                        )
+                        onOpenCodex()
+                    }
+            )
         }
     }
 }
@@ -318,38 +439,6 @@ private fun LobbyHeader(
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
             textAlign = TextAlign.Center
-        )
-    }
-}
-
-@Composable
-private fun LobbyActionButton(
-    text: String,
-    backgroundBrush: Brush,
-    borderColor: Color,
-    contentColor: Color,
-    modifier: Modifier = Modifier,
-    onClick: () -> Unit
-) {
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(28.dp))
-            .background(backgroundBrush)
-            .border(
-                width = 1.5.dp,
-                color = borderColor.copy(alpha = 0.8f),
-                shape = RoundedCornerShape(28.dp)
-            )
-            .clickable(onClick = onClick),
-        contentAlignment = Alignment.Center
-    ) {
-        Text(
-            text = text,
-            color = contentColor,
-            fontSize = 16.sp,
-            fontWeight = FontWeight.Bold,
-            textAlign = TextAlign.Center,
-            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
         )
     }
 }

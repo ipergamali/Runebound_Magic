@@ -5,6 +5,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.viewModelScope
 import com.example.runeboundmagic.data.local.HeroChoiceDao
 import com.example.runeboundmagic.data.local.HeroChoiceEntity
+import com.example.runeboundmagic.data.local.LobbyInteractionEntity
 import kotlinx.coroutines.flow.Flow
 import kotlinx.coroutines.launch
 import com.google.firebase.firestore.ktx.firestore
@@ -38,6 +39,34 @@ class HeroChoiceViewModel(
     }
 
     fun getLastChoice(): Flow<HeroChoiceEntity?> = dao.observeLastChoice()
+
+    fun logInteraction(
+        event: LobbyInteractionEvent,
+        heroType: HeroType,
+        heroDisplayName: String,
+        heroNameInput: String
+    ) {
+        val interaction = LobbyInteractionEntity(
+            eventType = event.name,
+            heroType = heroType,
+            heroDisplayName = heroDisplayName,
+            heroNameInput = heroNameInput,
+            timestamp = System.currentTimeMillis()
+        )
+
+        viewModelScope.launch {
+            dao.insertInteraction(interaction)
+
+            val data = hashMapOf(
+                "eventType" to event.name,
+                "heroType" to heroType.name,
+                "heroDisplayName" to heroDisplayName,
+                "heroNameInput" to heroNameInput,
+                "timestamp" to interaction.timestamp
+            )
+            db.collection("lobby_interactions").add(data)
+        }
+    }
 }
 
 class HeroChoiceViewModelFactory(
