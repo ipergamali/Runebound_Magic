@@ -6,6 +6,7 @@ import androidx.annotation.RawRes
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
+import androidx.compose.animation.core.animateFloat
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -22,7 +23,6 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.matchParentSize
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
@@ -191,7 +191,7 @@ private fun RunePrologueScene(
         )
         Box(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxSize()
                 .background(Color(0xAA040015))
         )
         Column(
@@ -317,7 +317,7 @@ private fun BlackMageScene(
         )
         Box(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxSize()
                 .background(Color(0xAA01040A))
         )
         CharacterPortraitCard(
@@ -385,7 +385,7 @@ private fun MysticalPriestessScene(
         )
         Box(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxSize()
                 .background(Color(0x88040A17))
         )
         CharacterPortraitCard(
@@ -555,7 +555,7 @@ private fun RuneCluster(
     ) {
         Box(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxSize()
                 .clip(CircleShape)
                 .background(Color(0x332CFF8F))
         )
@@ -612,13 +612,13 @@ private fun CharacterPortraitCard(
     ) {
         Box(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxSize()
                 .clip(RoundedCornerShape(28.dp))
                 .background(glowColor.copy(alpha = 0.35f))
         )
         Box(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxSize()
                 .padding(12.dp)
                 .clip(RoundedCornerShape(22.dp))
                 .background(
@@ -635,13 +635,13 @@ private fun CharacterPortraitCard(
             contentDescription = contentDescription,
             contentScale = ContentScale.Crop,
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxSize()
                 .padding(12.dp)
                 .clip(RoundedCornerShape(20.dp))
         )
         Box(
             modifier = Modifier
-                .matchParentSize()
+                .fillMaxSize()
                 .clip(RoundedCornerShape(28.dp))
                 .border(
                     width = 2.dp,
