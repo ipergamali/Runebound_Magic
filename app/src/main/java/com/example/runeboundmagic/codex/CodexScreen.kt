@@ -54,6 +54,7 @@ import androidx.lifecycle.viewmodel.compose.viewModel
 import coil.compose.AsyncImage
 import coil.request.ImageRequest
 import com.example.runeboundmagic.R
+import java.util.Locale
 
 @Composable
 fun CodexScreen(
@@ -106,7 +107,7 @@ fun CodexScreen(
                             viewModel.saveProgress(
                                 heroId = entry.id,
                                 level = 1,
-                                inventory = emptyList()
+                                inventory = buildHeroInventory(entry)
                             )
                         }
                     }
@@ -114,6 +115,29 @@ fun CodexScreen(
             }
         }
     }
+}
+
+private fun buildHeroInventory(entry: CodexEntry): HeroInventory {
+    val cleanedId = entry.id.ifBlank {
+        entry.name.lowercase(Locale.ROOT).replace("\s+".toRegex(), "_")
+    }
+    val idForLore = entry.id.ifBlank { entry.name }
+    val heroCardLore = when (idForLore.lowercase(Locale.ROOT)) {
+        "sora" -> "Η Sora είναι ανιχνεύτρια των ουρανών που συνδυάζει τεχνολογία και αρχαία ρούνια. Η κάρτα της υπενθυμίζει στον παίκτη ότι κάθε αποστολή απαιτεί στρατηγική, ευελιξία και μια εφεδρική επιλογή για την ίδια την κάρτα του ήρωα."
+        else -> entry.description.ifBlank {
+            "Η κάρτα του ήρωα λειτουργεί ως γρήγορη αναφορά για τις ικανότητες και τα σημεία ισχύος του."
+        }
+    }
+    val heroCardName = entry.name.ifBlank { "Άγνωστος Ήρωας" }
+    val heroCardSlot = HeroCardSlot(
+        id = "${cleanedId}_hero_card",
+        name = "Κάρτα Ήρωα $heroCardName",
+        lore = heroCardLore
+    )
+    return HeroInventory(
+        heroCard = heroCardSlot,
+        equipment = emptyList()
+    )
 }
 
 @Composable

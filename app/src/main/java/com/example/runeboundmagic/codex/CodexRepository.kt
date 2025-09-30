@@ -124,7 +124,7 @@ class FirestoreCodexRepository(
                 mapOf(
                     "heroId" to progress.heroId,
                     "level" to progress.level,
-                    "inventory" to progress.inventory,
+                    "inventory" to progress.inventory.toFirestoreMap(),
                     "lastUpdated" to progress.lastUpdated
                 )
             )
@@ -153,10 +153,36 @@ private fun QuerySnapshot?.toProgressList(playerId: String): List<PlayerProgress
             playerId = playerId,
             heroId = document.getString("heroId").orEmpty(),
             level = document.getLong("level")?.toInt() ?: 1,
-            inventory = document.get("inventory")?.let { list ->
-                (list as? List<*>)?.map { it.toString() } ?: emptyList()
-            } ?: emptyList(),
+            inventory = document.get("inventory")?.toHeroInventory() ?: HeroInventory(),
             lastUpdated = document.getDate("lastUpdated") ?: Date()
         )
     }
+}
+
+private fun HeroInventory.toFirestoreMap(): Map<String, Any> {
+    val map = mutableMapOf<String, Any>()
+    heroCard?.let { card ->
+        map["heroCard"] = mapOf(
+            "id" to card.id,
+            "name" to card.name,
+            "lore" to card.lore
+        )
+    }
+    map["equipment"] = equipment
+    return map
+}
+
+@Suppress("UNCHECKED_CAST")
+private fun Any.toHeroInventory(): HeroInventory {
+    val map = this as? Map<String, Any?> ?: return HeroInventory()
+    val heroCardMap = map["heroCard"] as? Map<String, Any?>
+    val heroCard = heroCardMap?.let {
+        HeroCardSlot(
+            id = it["id"]?.toString().orEmpty(),
+            name = it["name"]?.toString().orEmpty(),
+            lore = it["lore"]?.toString().orEmpty()
+        )
+    }
+    val equipment = (map["equipment"] as? List<*>)?.map { it.toString() } ?: emptyList()
+    return HeroInventory(heroCard = heroCard, equipment = equipment)
 }
