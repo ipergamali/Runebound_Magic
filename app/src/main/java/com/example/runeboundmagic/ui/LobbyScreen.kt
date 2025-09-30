@@ -1,33 +1,23 @@
 package com.example.runeboundmagic.ui
 
-import android.os.SystemClock
-import androidx.compose.animation.Crossfade
-import androidx.compose.animation.core.FastOutSlowInEasing
-import androidx.compose.animation.core.animateFloatAsState
-import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
-import androidx.compose.foundation.lazy.LazyRow
-import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.lazy.rememberLazyListState
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.CardDefaults
-import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
@@ -38,7 +28,6 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -48,12 +37,13 @@ import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
-import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.text.font.Font
+import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -67,19 +57,17 @@ import com.example.runeboundmagic.R
 import com.example.runeboundmagic.data.local.HeroChoiceDatabase
 import com.example.runeboundmagic.toHeroOption
 import com.example.runeboundmagic.toHeroType
-import kotlinx.coroutines.delay
-import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
+
+private val WhisperingSignature = FontFamily(Font(R.font.whispering_signature))
 
 @Composable
 fun LobbyScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
-    onSelectHero: () -> Unit,
     onStartBattle: (HeroOption, String) -> Unit,
     onOpenCodex: () -> Unit,
     onLobbyShown: () -> Unit = {},
-    isA4Playing: Boolean = false,
     viewModel: HeroChoiceViewModel = lobbyViewModel(),
 ) {
     val context = LocalContext.current
@@ -90,10 +78,8 @@ fun LobbyScreen(
 
     val heroes = remember {
         listOf(
-            HeroOption.MAGE,
             HeroOption.MYSTICAL_PRIESTESS,
-            HeroOption.RANGER,
-            HeroOption.WARRIOR
+            HeroOption.MAGE
         )
     }
     var selectedHero by rememberSaveable { mutableStateOf(heroes.first()) }
@@ -198,11 +184,11 @@ fun LobbyScreen(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
                     .fillMaxWidth()
-                    .padding(horizontal = 32.dp, vertical = 24.dp),
-                horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Top
+                    .padding(horizontal = 32.dp)
+                    .padding(top = 36.dp),
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
-                LobbyHeader(
+                HeroInfoHeader(
                     heroName = selectedHeroLabel,
                     heroTrait = selectedHeroDescription,
                     modifier = Modifier.fillMaxWidth()
@@ -214,31 +200,11 @@ fun LobbyScreen(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-                    .padding(bottom = bottomPadding + 32.dp),
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .padding(bottom = bottomPadding)
+                    .offset(y = (-72).dp),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
-                HeroCarousel(
-                    modifier = Modifier
-                        .fillMaxWidth(0.8f)
-                        .height(300.dp),
-                    heroes = heroes,
-                    selectedHero = selectedHero,
-                    isA4Playing = isA4Playing,
-                    onHeroSelected = { hero ->
-                        selectedHero = hero
-                        viewModel.logInteraction(
-                            event = LobbyInteractionEvent.HERO_SELECTED,
-                            heroType = hero.toHeroType(),
-                            heroDisplayName = context.getString(hero.displayNameRes),
-                            heroNameInput = playerName
-                        )
-                    }
-                )
-
-
-                Spacer(modifier = Modifier.height(4.dp))
-
-
                 OutlinedTextField(
                     value = playerName,
                     onValueChange = { newValue ->
@@ -250,22 +216,41 @@ fun LobbyScreen(
                             heroNameInput = newValue
                         )
                     },
-                    placeholder = { Text(text = stringResource(id = R.string.hero_name_hint)) },
+                    placeholder = {
+                        Text(
+                            text = stringResource(id = R.string.hero_name_hint),
+                            color = Color.White.copy(alpha = 0.7f)
+                        )
+                    },
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
                     modifier = Modifier.width(220.dp),
                     colors = TextFieldDefaults.colors(
-                        unfocusedIndicatorColor = Color(0xFFE0D299),
-                        focusedIndicatorColor = Color(0xFFF0C977),
-                        unfocusedContainerColor = Color(0x330B111A),
+                        focusedIndicatorColor = Color(0xFFFFD700),
+                        unfocusedIndicatorColor = Color(0xB3FFD700),
                         focusedContainerColor = Color(0x330B111A),
-                        cursorColor = Color(0xFFF0C977),
-                        focusedLabelColor = Color(0xFFF0C977),
-                        unfocusedLabelColor = Color(0xFFE8F5FF),
+                        unfocusedContainerColor = Color(0x330B111A),
+                        cursorColor = Color.White,
+                        focusedTextColor = Color.White,
+                        unfocusedTextColor = Color.White,
+                        focusedPlaceholderColor = Color.White.copy(alpha = 0.7f),
+                        unfocusedPlaceholderColor = Color.White.copy(alpha = 0.7f)
                     )
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
+                HeroCardRow(
+                    heroes = heroes,
+                    selectedHero = selectedHero,
+                    onHeroSelected = { hero ->
+                        selectedHero = hero
+                        viewModel.logInteraction(
+                            event = LobbyInteractionEvent.HERO_SELECTED,
+                            heroType = hero.toHeroType(),
+                            heroDisplayName = context.getString(hero.displayNameRes),
+                            heroNameInput = playerName
+                        )
+                    }
+                )
             }
 
             val selectionSignature = remember(selectedHero, playerName) {
@@ -318,8 +303,6 @@ fun LobbyScreen(
                         if (lastSavedSignature != selectionSignature) {
                             persistSelection(trimmedName, selectedHeroLabel)
                         }
-
-                        onSelectHero()
                     }
             )
 
@@ -396,7 +379,7 @@ fun LobbyScreen(
 }
 
 @Composable
-private fun LobbyHeader(
+private fun HeroInfoHeader(
     heroName: String,
     heroTrait: String,
     modifier: Modifier = Modifier
@@ -404,141 +387,74 @@ private fun LobbyHeader(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(6.dp)
+        verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
             text = stringResource(id = R.string.lobby_title),
-            color = Color(0xFFF0C977),
-            fontWeight = FontWeight.Bold,
-            fontSize = 28.sp
-        )
-        Text(
-            text = stringResource(id = R.string.lobby_subtitle),
-            color = Color(0xFFE8F5FF),
-            fontSize = 16.sp,
-            textAlign = TextAlign.Center
-        )
-        Text(
-            text = stringResource(id = R.string.lobby_selected_hero_details, heroName, heroTrait),
-            color = Color(0xFFFFE7A7),
-            fontSize = 18.sp,
+            color = Color(0xFFFFD700),
             fontWeight = FontWeight.SemiBold,
-            textAlign = TextAlign.Center
+            fontSize = 20.sp
+        )
+        Text(
+            text = stringResource(id = R.string.lobby_hero_header, heroName, heroTrait),
+            textAlign = TextAlign.Center,
+            fontSize = 32.sp,
+            color = Color.White,
+            fontFamily = WhisperingSignature,
+            lineHeight = 40.sp,
+            modifier = Modifier
+                .fillMaxWidth()
+                .clip(RoundedCornerShape(20.dp))
+                .background(Color(0x330B111A))
+                .padding(horizontal = 16.dp, vertical = 12.dp)
         )
     }
 }
 
 @Composable
-private fun HeroCarousel(
-    modifier: Modifier = Modifier,
+private fun HeroCardRow(
     heroes: List<HeroOption>,
     selectedHero: HeroOption,
-    isA4Playing: Boolean,
     onHeroSelected: (HeroOption) -> Unit
 ) {
-    if (heroes.isEmpty()) {
-        return
-    }
-
-    val listState = rememberLazyListState()
-    var lastInteractionTimestamp by remember { mutableLongStateOf(0L) }
-
-    LaunchedEffect(selectedHero, heroes) {
-        val index = heroes.indexOf(selectedHero)
-        if (index >= 0) {
-            listState.animateScrollToItem(index)
-        }
-    }
-
-    LaunchedEffect(isA4Playing, selectedHero, heroes, lastInteractionTimestamp) {
-        if (!isA4Playing || heroes.isEmpty()) {
-            return@LaunchedEffect
-        }
-        while (isActive && isA4Playing) {
-            delay(4_000)
-            if (!isActive || !isA4Playing) break
-            val now = SystemClock.elapsedRealtime()
-            if (now - lastInteractionTimestamp < 6_000L) {
-                continue
-            }
-            val currentIndex = heroes.indexOf(selectedHero)
-            if (currentIndex == -1) {
-                continue
-            }
-            val nextHero = heroes[(currentIndex + 1) % heroes.size]
-            onHeroSelected(nextHero)
-        }
-    }
-
-    LazyRow(
-        modifier = modifier.fillMaxWidth(),
-        state = listState,
-        contentPadding = PaddingValues(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp)
+    Row(
+        modifier = Modifier.fillMaxWidth(),
+        horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
+        verticalAlignment = Alignment.CenterVertically
     ) {
-        items(heroes) { hero ->
-            val isSelected = hero == selectedHero
-            val targetScale by animateFloatAsState(
-                targetValue = if (isSelected) 1f else 0.9f,
-                animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing),
-                label = "heroScale${hero.name}"
-            )
-
-            HeroCarouselCard(
+        heroes.forEach { hero ->
+            HeroSelectionCard(
                 hero = hero,
-                scale = targetScale,
-                isSelected = isSelected,
-                onClick = {
-                    lastInteractionTimestamp = SystemClock.elapsedRealtime()
-                    onHeroSelected(hero)
-                }
+                selected = hero == selectedHero,
+                onClick = { onHeroSelected(hero) }
             )
         }
     }
 }
 
 @Composable
-private fun HeroCarouselCard(
+private fun HeroSelectionCard(
     hero: HeroOption,
-    scale: Float,
-    isSelected: Boolean,
+    selected: Boolean,
     onClick: () -> Unit
 ) {
-    ElevatedCard(
+    val borderColor = if (selected) Color(0xFFFFD700) else Color(0x66FFFFFF)
+    Box(
         modifier = Modifier
-            .width(156.dp)
-            .height(268.dp)
-            .graphicsLayer {
-                scaleX = scale
-                scaleY = scale
-                alpha = 0.85f + (scale - 0.9f).coerceIn(0f, 0.15f)
-            }
+            .width(120.dp)
+            .height(180.dp)
+            .clip(RoundedCornerShape(20.dp))
+            .border(width = if (selected) 3.dp else 1.dp, color = borderColor, shape = RoundedCornerShape(20.dp))
+            .background(Color(0x330B111A))
             .clickable(onClick = onClick),
-        shape = RoundedCornerShape(26.dp),
-        colors = CardDefaults.elevatedCardColors(
-            containerColor = if (isSelected) Color(0xFF2F4F3A) else Color(0x33212B1C)
-        ),
-        elevation = CardDefaults.elevatedCardElevation(defaultElevation = if (isSelected) 10.dp else 2.dp)
+        contentAlignment = Alignment.Center
     ) {
-        Box(
-            modifier = Modifier
-                .fillMaxSize()
-                .padding(12.dp)
-                .clip(RoundedCornerShape(22.dp))
-        ) {
-            Crossfade(
-                targetState = hero.assetPath,
-                animationSpec = tween(durationMillis = 300),
-                label = "heroAsset${hero.name}"
-            ) { assetPath ->
-                Image(
-                    painter = rememberAssetPainter(assetPath),
-                    contentDescription = stringResource(id = hero.displayNameRes),
-                    contentScale = ContentScale.Crop,
-                    modifier = Modifier.fillMaxSize()
-                )
-            }
-        }
+        Image(
+            painter = rememberAssetPainter(hero.assetPath),
+            contentDescription = stringResource(id = hero.displayNameRes),
+            contentScale = ContentScale.Crop,
+            modifier = Modifier.fillMaxSize()
+        )
     }
 }
 

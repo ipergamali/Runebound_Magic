@@ -411,7 +411,8 @@ private fun RunePrologueScene(
                 airRunePainter = airRunePainter,
                 earthRunePainter = earthRunePainter,
                 runeVisibility = runeVisibility,
-                showLogo = showLogo
+                showLogo = showLogo,
+                modifier = Modifier.offset(y = (-50).dp)
             )
         }
     }

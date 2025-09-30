@@ -14,6 +14,8 @@
     <string name="lobby_subtitle">Διάλεξε τον ήρωά σου και ξεκίνα.</string>
     <string name="lobby_last_choice">Τελευταία επιλογή: %1$s – %2$s</string>
     <string name="lobby_last_saved_time">Αποθηκεύτηκε: %1$s</string>
+    <string name="lobby_hero_header">Hero: %1$s
+%2$s</string>
     <string name="select_hero">Επίλεξε τον Ήρωά σου</string>
     <string name="hero_warrior">Warrior</string>
     <string name="hero_mage">Mage</string>
@@ -44,4 +46,10 @@
     <string name="codex_role">Ρόλος: %1$s</string>
     <string name="codex_category_label">Κατηγορία: %1$s</string>
     <string name="codex_open_button">Άνοιγμα Codex</string>
+    <string name="match3_title">Rune Clash</string>
+    <string name="match3_exit_battle">Επιστροφή στο Lobby</string>
+    <string name="match3_enemy_name">Black Mage</string>
+    <string name="match3_enemy_subtitle">Σκοτεινός άρχοντας των ρούνων</string>
+    <string name="match3_vs">VS</string>
+    <string name="match3_hint">Πάτησε δύο ρούνους για να τους ανταλλάξεις και να φορτίσεις τη δύναμή σου.</string>
 </resources>
