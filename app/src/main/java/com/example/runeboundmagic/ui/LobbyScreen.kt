@@ -235,7 +235,9 @@ fun LobbyScreen(
                     }
                 )
 
+
                 Spacer(modifier = Modifier.height(4.dp))
+
 
                 OutlinedTextField(
                     value = playerName,
@@ -264,7 +266,7 @@ fun LobbyScreen(
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
-            }
+
 
             val selectionSignature = remember(selectedHero, playerName) {
                 playerName.trim() to selectedHero.name

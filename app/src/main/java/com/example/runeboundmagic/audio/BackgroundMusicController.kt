@@ -63,6 +63,7 @@ class BackgroundMusicController(private val context: Context) : DefaultLifecycle
         player.prepare()
         player.setVolume(0.1f, 0.1f)
 
+
         mediaPlayer = player
         return player
     }
