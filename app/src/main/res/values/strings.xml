@@ -2,7 +2,7 @@
     <string name="app_name">Rounebound Magic</string>
     <string name="lobby_select_hero">Επιλογή Ήρωα</string>
     <string name="lobby_select_hero_with_choice">Επιλογή Ήρωα (%1$s)</string>
-    <string name="lobby_selected_hero">Ήρωας: %1$s</string>
+    <string name="lobby_selected_hero_details">Ήρωας: %1$s – %2$s</string>
     <string name="lobby_selected_custom_hero">%1$s the %2$s</string>
     <string name="lobby_back">Πίσω στην εισαγωγή</string>
     <string name="lobby_start_battle">Έναρξη Μάχης</string>
@@ -30,7 +30,7 @@
     <string name="hero_cancel_selection">Ακύρωση</string>
     <string name="hero_carousel_previous">Προηγούμενος ήρωας</string>
     <string name="hero_carousel_next">Επόμενος ήρωας</string>
-    <string name="hero_name_hint">Όνομα Ήρωα</string>
+    <string name="hero_name_hint">Hero Name</string>
     <string name="error_empty_hero_name">Δώσε ένα όνομα για τον ήρωα</string>
     <string name="codex_title">Runebound Codex</string>
     <string name="codex_search_placeholder">Αναζήτηση σε ήρωες, κάρτες, lore…</string>
