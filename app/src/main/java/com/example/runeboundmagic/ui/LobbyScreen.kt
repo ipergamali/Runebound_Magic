@@ -25,9 +25,6 @@ import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
-import androidx.compose.foundation.relocation.BringIntoViewRequester
-import androidx.compose.foundation.relocation.bringIntoView
-import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
@@ -86,7 +83,6 @@ fun LobbyScreen(
     val backgroundPainter = rememberAssetPainter("lobby/Game_Lobby.png")
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
-    val carouselBringIntoView = remember { BringIntoViewRequester() }
 
     val heroes = remember { HeroOption.values().toList() }
     var selectedHero by rememberSaveable { mutableStateOf(heroes.first()) }
@@ -152,7 +148,6 @@ fun LobbyScreen(
 
                         HeroCarousel(
                             modifier = Modifier
-                                .bringIntoViewRequester(carouselBringIntoView)
                                 .offset(y = (-32).dp),
                             heroes = heroes,
                             selectedHero = selectedHero,
@@ -221,9 +216,10 @@ fun LobbyScreen(
                     .size(width = 180.dp, height = 88.dp),
                 label = stringResource(id = R.string.lobby_select_hero)
             ) {
-                scope.launch { carouselBringIntoView.bringIntoView() }
                 onSelectHero()
             }
+
+            val selectedHeroLabel = stringResource(id = selectedHero.displayNameRes)
 
             TransparentHotZone(
                 modifier = Modifier
@@ -242,12 +238,10 @@ fun LobbyScreen(
                     return@TransparentHotZone
                 }
 
-                val heroLabel = stringResource(id = selectedHero.displayNameRes)
-
                 viewModel.saveHeroChoice(
                     playerName = trimmedName,
                     heroType = selectedHero.toHeroType(),
-                    heroName = heroLabel
+                    heroName = selectedHeroLabel
                 )
 
                 onStartBattle(selectedHero, trimmedName)
@@ -257,7 +251,7 @@ fun LobbyScreen(
                         message = context.getString(
                             R.string.lobby_selection_saved,
                             trimmedName,
-                            heroLabel
+                            selectedHeroLabel
                         )
                     )
                 }
