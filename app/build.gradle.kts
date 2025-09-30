@@ -82,6 +82,7 @@ dependencies {
     implementation(platform(libs.firebase.bom))
     implementation(libs.firebase.firestore.ktx)
     implementation("io.coil-kt:coil-compose:2.6.0")
+    implementation("androidx.media3:media3-exoplayer:1.4.1")
 
     testImplementation(libs.junit)
     androidTestImplementation(libs.androidx.junit)
