@@ -813,44 +813,49 @@ private fun FinalClashScene(
                     )
                 )
         )
-        Row(
+        Column(
             modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .fillMaxWidth()
-                .padding(start = 24.dp, end = 24.dp, bottom = 112.dp),
-            verticalAlignment = Alignment.Bottom,
-            horizontalArrangement = Arrangement.spacedBy(24.dp)
+                .fillMaxSize()
+                .align(Alignment.Center)
+                .padding(horizontal = 24.dp, top = 160.dp, bottom = 120.dp),
+            horizontalAlignment = Alignment.CenterHorizontally
         ) {
-            CharacterPortraitCard(
-                painter = priestessPainter,
-                contentDescription = null,
-                glowColor = Color(0xFF7C8DFF),
-                backgroundTint = Color(0xFF0B0F1F),
-                scale = cardScale,
-                alpha = contentAlpha,
-                offsetY = cardOffset,
-                modifier = Modifier.weight(1f)
+            RuneCluster(
+                fireRunePainter = fireRunePainter,
+                waterRunePainter = waterRunePainter,
+                airRunePainter = airRunePainter,
+                earthRunePainter = earthRunePainter,
+                scale = runeScale,
+                alpha = runeAlpha,
+                modifier = Modifier.padding(top = 40.dp, bottom = 48.dp)
             )
-            CharacterPortraitCard(
-                painter = magePainter,
-                contentDescription = null,
-                glowColor = Color(0xFF2CFF8F),
-                backgroundTint = Color(0xFF04110A),
-                scale = cardScale,
-                alpha = contentAlpha,
-                offsetY = cardOffset,
-                modifier = Modifier.weight(1f)
-            )
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                verticalAlignment = Alignment.CenterVertically,
+                horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally)
+            ) {
+                CharacterPortraitCard(
+                    painter = priestessPainter,
+                    contentDescription = null,
+                    glowColor = Color(0xFF7C8DFF),
+                    backgroundTint = Color(0xFF0B0F1F),
+                    scale = cardScale,
+                    alpha = contentAlpha,
+                    offsetY = cardOffset,
+                    modifier = Modifier.weight(1f)
+                )
+                CharacterPortraitCard(
+                    painter = magePainter,
+                    contentDescription = null,
+                    glowColor = Color(0xFF2CFF8F),
+                    backgroundTint = Color(0xFF04110A),
+                    scale = cardScale,
+                    alpha = contentAlpha,
+                    offsetY = cardOffset,
+                    modifier = Modifier.weight(1f)
+                )
+            }
         }
-        RuneCluster(
-            fireRunePainter = fireRunePainter,
-            waterRunePainter = waterRunePainter,
-            airRunePainter = airRunePainter,
-            earthRunePainter = earthRunePainter,
-            scale = runeScale,
-            alpha = runeAlpha,
-            modifier = Modifier.align(Alignment.Center)
-        )
     }
 }
 
