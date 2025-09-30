@@ -219,7 +219,7 @@ fun LobbyScreen(
             ) {
                 HeroCarousel(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(0.8f)
                         .height(300.dp),
                     heroes = heroes,
                     selectedHero = selectedHero,
@@ -233,6 +233,34 @@ fun LobbyScreen(
                             heroNameInput = playerName
                         )
                     }
+                )
+
+                Spacer(modifier = Modifier.height(8.dp))
+
+                OutlinedTextField(
+                    value = playerName,
+                    onValueChange = { newValue ->
+                        playerName = newValue
+                        viewModel.logInteraction(
+                            event = LobbyInteractionEvent.HERO_NAME_CHANGED,
+                            heroType = selectedHero.toHeroType(),
+                            heroDisplayName = context.getString(selectedHero.displayNameRes),
+                            heroNameInput = newValue
+                        )
+                    },
+                    placeholder = { Text(text = stringResource(id = R.string.hero_name_hint)) },
+                    singleLine = true,
+                    textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
+                    modifier = Modifier.width(220.dp),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedIndicatorColor = Color(0xFFE0D299),
+                        focusedIndicatorColor = Color(0xFFF0C977),
+                        unfocusedContainerColor = Color(0x330B111A),
+                        focusedContainerColor = Color(0x330B111A),
+                        cursorColor = Color(0xFFF0C977),
+                        focusedLabelColor = Color(0xFFF0C977),
+                        unfocusedLabelColor = Color(0xFFE8F5FF),
+                    )
                 )
 
                 Spacer(modifier = Modifier.height(12.dp))
@@ -254,34 +282,6 @@ fun LobbyScreen(
                     textAlign = TextAlign.Center,
                     lineHeight = 18.sp,
                     modifier = Modifier.fillMaxWidth(0.9f)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
-
-                OutlinedTextField(
-                    value = playerName,
-                    onValueChange = { newValue ->
-                        playerName = newValue
-                        viewModel.logInteraction(
-                            event = LobbyInteractionEvent.HERO_NAME_CHANGED,
-                            heroType = selectedHero.toHeroType(),
-                            heroDisplayName = context.getString(selectedHero.displayNameRes),
-                            heroNameInput = newValue
-                        )
-                    },
-                    placeholder = { Text(text = stringResource(id = R.string.hero_name_hint)) },
-                    singleLine = true,
-                    textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
-                    modifier = Modifier.fillMaxWidth(0.8f),
-                    colors = TextFieldDefaults.colors(
-                        unfocusedIndicatorColor = Color(0xFFE0D299),
-                        focusedIndicatorColor = Color(0xFFF0C977),
-                        unfocusedContainerColor = Color(0x330B111A),
-                        focusedContainerColor = Color(0x330B111A),
-                        cursorColor = Color(0xFFF0C977),
-                        focusedLabelColor = Color(0xFFF0C977),
-                        unfocusedLabelColor = Color(0xFFE8F5FF),
-                    )
                 )
             }
 
@@ -522,7 +522,7 @@ private fun HeroCarouselCard(
 ) {
     ElevatedCard(
         modifier = Modifier
-            .width(196.dp)
+            .width(156.dp)
             .height(268.dp)
             .graphicsLayer {
                 scaleX = scale
