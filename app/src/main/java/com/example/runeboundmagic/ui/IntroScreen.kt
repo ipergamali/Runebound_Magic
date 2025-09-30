@@ -26,6 +26,7 @@ import androidx.compose.foundation.layout.BoxScope
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
@@ -820,6 +821,7 @@ private fun FinalClashScene(
                 .padding(start = 24.dp, end = 24.dp, top = 160.dp, bottom = 120.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
+            Spacer(modifier = Modifier.height(16.dp))
             RuneCluster(
                 fireRunePainter = fireRunePainter,
                 waterRunePainter = waterRunePainter,
@@ -827,10 +829,9 @@ private fun FinalClashScene(
                 earthRunePainter = earthRunePainter,
                 scale = runeScale,
                 alpha = runeAlpha,
-                modifier = Modifier
-                    .padding(top = 40.dp, bottom = 48.dp)
-                    .offset(y = (-32).dp)
+                modifier = Modifier.offset(y = 24.dp)
             )
+            Spacer(modifier = Modifier.height(32.dp))
             Row(
                 modifier = Modifier.fillMaxWidth(),
                 verticalAlignment = Alignment.CenterVertically,
