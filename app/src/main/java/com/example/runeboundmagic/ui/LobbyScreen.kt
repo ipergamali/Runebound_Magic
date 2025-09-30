@@ -9,8 +9,8 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
+import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
@@ -19,13 +19,16 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.relocation.BringIntoViewRequester
+import androidx.compose.foundation.relocation.bringIntoView
+import androidx.compose.foundation.relocation.bringIntoViewRequester
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.MaterialTheme
@@ -47,12 +50,13 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
-import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -73,12 +77,16 @@ import kotlinx.coroutines.launch
 @Composable
 fun LobbyScreen(
     modifier: Modifier = Modifier,
-    viewModel: HeroChoiceViewModel = lobbyViewModel()
+    onBack: () -> Unit,
+    onSelectHero: () -> Unit,
+    onStartBattle: (HeroOption, String) -> Unit,
+    viewModel: HeroChoiceViewModel = lobbyViewModel(),
 ) {
     val context = LocalContext.current
     val backgroundPainter = rememberAssetPainter("lobby/Game_Lobby.png")
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+    val carouselBringIntoView = remember { BringIntoViewRequester() }
 
     val heroes = remember { HeroOption.values().toList() }
     var selectedHero by rememberSaveable { mutableStateOf(heroes.first()) }
@@ -89,6 +97,9 @@ fun LobbyScreen(
     LaunchedEffect(lastChoice) {
         lastChoice?.let { choice ->
             selectedHero = choice.heroType.toHeroOption()
+            if (playerName.isBlank()) {
+                playerName = choice.playerName
+            }
         }
     }
 
@@ -105,133 +116,150 @@ fun LobbyScreen(
             Image(
                 painter = backgroundPainter,
                 contentDescription = null,
-                contentScale = ContentScale.Crop,
+                contentScale = ContentScale.FillBounds,
                 modifier = Modifier.fillMaxSize()
-            )
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(
-                        Brush.verticalGradient(
-                            colors = listOf(
-                                Color(0xE6000814),
-                                Color(0x99000814),
-                                Color(0xCC000814)
-                            )
-                        )
-                    )
             )
 
             Column(
                 modifier = Modifier
                     .fillMaxSize()
-                    .padding(horizontal = 24.dp, vertical = 32.dp),
-                verticalArrangement = Arrangement.SpaceBetween
+                    .padding(horizontal = 24.dp)
+                    .padding(top = 32.dp)
+                    .padding(bottom = 140.dp),
+                verticalArrangement = Arrangement.SpaceBetween,
+                horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 LobbyHeader(lastChoice = lastChoice)
 
-                Column(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalAlignment = Alignment.CenterHorizontally
+                Box(
+                    modifier = Modifier
+                        .weight(1f)
+                        .fillMaxWidth(),
+                    contentAlignment = Alignment.Center
                 ) {
-                    Text(
-                        text = stringResource(id = R.string.select_hero),
-                        style = MaterialTheme.typography.headlineSmall.copy(
-                            color = Color(0xFFE8F5FF),
-                            fontWeight = FontWeight.SemiBold
-                        ),
-                        textAlign = TextAlign.Center
-                    )
-
-                    Spacer(modifier = Modifier.height(16.dp))
-
-                    HeroCarousel(
-                        heroes = heroes,
-                        selectedHero = selectedHero,
-                        onHeroSelected = { selectedHero = it }
-                    )
-
-                    Spacer(modifier = Modifier.height(24.dp))
-
-                    val heroLabel = stringResource(id = selectedHero.displayNameRes)
-                    val heroDescription = stringResource(id = selectedHero.descriptionRes)
-                    Text(
-                        text = heroLabel,
-                        style = MaterialTheme.typography.titleLarge.copy(
-                            color = Color(0xFF2CFF8F),
-                            fontWeight = FontWeight.Bold
-                        )
-                    )
-                    Text(
-                        text = heroDescription,
-                        style = MaterialTheme.typography.bodyLarge.copy(
-                            color = Color(0xFFB2D9FF),
-                            lineHeight = 22.sp
-                        ),
-                        textAlign = TextAlign.Center,
-                        modifier = Modifier.padding(horizontal = 32.dp, vertical = 8.dp)
-                    )
-
-                    OutlinedTextField(
-                        value = playerName,
-                        onValueChange = { playerName = it },
-                        modifier = Modifier
-                            .fillMaxWidth()
-                            .padding(horizontal = 16.dp),
-                        placeholder = {
-                            Text(text = stringResource(id = R.string.hero_name_hint))
-                        },
-                        singleLine = true,
-                        colors = TextFieldDefaults.colors(
-                            unfocusedIndicatorColor = Color(0xFF2CFF8F),
-                            focusedIndicatorColor = Color(0xFF38B6FF),
-                            unfocusedContainerColor = Color(0x22000814),
-                            focusedContainerColor = Color(0x22000814),
-                            cursorColor = Color(0xFF38B6FF)
-                        )
-                    )
-
-                    Spacer(modifier = Modifier.height(20.dp))
-
-                    val isSaveEnabled = playerName.isNotBlank()
-                    Button(
-                        onClick = {
-                            val trimmedName = playerName.trim()
-                            if (trimmedName.isEmpty()) {
-                                scope.launch {
-                                    snackbarHostState.showSnackbar(
-                                        message = context.getString(R.string.error_empty_hero_name)
-                                    )
-                                }
-                                return@Button
-                            }
-                            viewModel.saveHeroChoice(
-                                playerName = trimmedName,
-                                heroType = selectedHero.toHeroType(),
-                                heroName = heroLabel
-                            )
-                            scope.launch {
-                                snackbarHostState.showSnackbar(
-                                    message = context.getString(
-                                        R.string.lobby_selection_saved,
-                                        trimmedName,
-                                        heroLabel
-                                    )
-                                )
-                            }
-                        },
-                        enabled = isSaveEnabled,
-                        shape = RoundedCornerShape(28.dp),
-                        colors = ButtonDefaults.buttonColors(
-                            containerColor = if (isSaveEnabled) Color(0xFF2CFF8F) else Color(0x662CFF8F),
-                            contentColor = Color.Black
-                        )
+                    Column(
+                        horizontalAlignment = Alignment.CenterHorizontally,
+                        verticalArrangement = Arrangement.spacedBy(16.dp)
                     ) {
                         Text(
-                            text = stringResource(id = R.string.lobby_confirm_selection),
-                            style = MaterialTheme.typography.titleMedium.copy(fontWeight = FontWeight.Bold)
+                            text = stringResource(id = R.string.select_hero),
+                            style = MaterialTheme.typography.headlineSmall.copy(
+                                color = Color(0xFFE8F5FF),
+                                fontWeight = FontWeight.SemiBold
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+
+                        HeroCarousel(
+                            modifier = Modifier
+                                .bringIntoViewRequester(carouselBringIntoView)
+                                .offset(y = (-32).dp),
+                            heroes = heroes,
+                            selectedHero = selectedHero,
+                            onHeroSelected = { selectedHero = it }
+                        )
+
+                        val heroLabel = stringResource(id = selectedHero.displayNameRes)
+                        val heroDescription = stringResource(id = selectedHero.descriptionRes)
+
+                        Text(
+                            text = heroLabel,
+                            style = MaterialTheme.typography.titleLarge.copy(
+                                color = Color(0xFF2CFF8F),
+                                fontWeight = FontWeight.Bold
+                            ),
+                            textAlign = TextAlign.Center
+                        )
+                        Text(
+                            text = heroDescription,
+                            style = MaterialTheme.typography.bodyLarge.copy(
+                                color = Color(0xFFE8F5FF),
+                                lineHeight = 22.sp
+                            ),
+                            modifier = Modifier
+                                .fillMaxWidth()
+                                .padding(horizontal = 32.dp),
+                            textAlign = TextAlign.Center
                         )
                     }
+                }
+
+                OutlinedTextField(
+                    value = playerName,
+                    onValueChange = { playerName = it },
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(horizontal = 16.dp),
+                    placeholder = {
+                        Text(text = stringResource(id = R.string.hero_name_hint))
+                    },
+                    singleLine = true,
+                    colors = TextFieldDefaults.colors(
+                        unfocusedIndicatorColor = Color(0xFF2CFF8F),
+                        focusedIndicatorColor = Color(0xFF38B6FF),
+                        unfocusedContainerColor = Color(0x33000814),
+                        focusedContainerColor = Color(0x33000814),
+                        cursorColor = Color(0xFF38B6FF)
+                    )
+                )
+            }
+
+            TransparentHotZone(
+                modifier = Modifier
+                    .align(Alignment.BottomStart)
+                    .padding(start = 24.dp, bottom = 24.dp)
+                    .size(width = 160.dp, height = 76.dp),
+                label = stringResource(id = R.string.lobby_back)
+            ) {
+                onBack()
+            }
+
+            TransparentHotZone(
+                modifier = Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 20.dp)
+                    .size(width = 180.dp, height = 88.dp),
+                label = stringResource(id = R.string.lobby_select_hero)
+            ) {
+                scope.launch { carouselBringIntoView.bringIntoView() }
+                onSelectHero()
+            }
+
+            TransparentHotZone(
+                modifier = Modifier
+                    .align(Alignment.BottomEnd)
+                    .padding(end = 24.dp, bottom = 24.dp)
+                    .size(width = 168.dp, height = 80.dp),
+                label = stringResource(id = R.string.lobby_start_battle)
+            ) {
+                val trimmedName = playerName.trim()
+                if (trimmedName.isEmpty()) {
+                    scope.launch {
+                        snackbarHostState.showSnackbar(
+                            message = context.getString(R.string.error_empty_hero_name)
+                        )
+                    }
+                    return@TransparentHotZone
+                }
+
+                val heroLabel = stringResource(id = selectedHero.displayNameRes)
+
+                viewModel.saveHeroChoice(
+                    playerName = trimmedName,
+                    heroType = selectedHero.toHeroType(),
+                    heroName = heroLabel
+                )
+
+                onStartBattle(selectedHero, trimmedName)
+
+                scope.launch {
+                    snackbarHostState.showSnackbar(
+                        message = context.getString(
+                            R.string.lobby_selection_saved,
+                            trimmedName,
+                            heroLabel
+                        )
+                    )
                 }
             }
         }
@@ -302,15 +330,16 @@ private fun LobbyHeader(lastChoice: HeroChoiceEntity?) {
 
 @Composable
 private fun HeroCarousel(
+    modifier: Modifier = Modifier,
     heroes: List<HeroOption>,
     selectedHero: HeroOption,
     onHeroSelected: (HeroOption) -> Unit
 ) {
     LazyRow(
-        modifier = Modifier
+        modifier = modifier
             .fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 16.dp),
-        horizontalArrangement = Arrangement.spacedBy(20.dp)
+        contentPadding = PaddingValues(horizontal = 32.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(heroes) { hero ->
             val painter = rememberAssetPainter(hero.assetPath)
@@ -342,7 +371,8 @@ private fun HeroCarouselCard(
 ) {
     ElevatedCard(
         modifier = Modifier
-            .size(width = 200.dp, height = 280.dp)
+            .width(176.dp)
+            .height(244.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
@@ -364,7 +394,7 @@ private fun HeroCarouselCard(
         ) {
             Box(
                 modifier = Modifier
-                    .size(150.dp)
+                    .size(140.dp)
                     .clip(RoundedCornerShape(22.dp))
             ) {
                 Image(
@@ -398,4 +428,23 @@ private fun lobbyViewModel(): HeroChoiceViewModel {
     val database = remember { HeroChoiceDatabase.getInstance(context) }
     val factory = remember { HeroChoiceViewModelFactory(database.heroChoiceDao()) }
     return viewModel(factory = factory)
+}
+
+@Composable
+private fun TransparentHotZone(
+    modifier: Modifier,
+    label: String,
+    onClick: () -> Unit
+) {
+    val interactionSource = remember { MutableInteractionSource() }
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(20.dp))
+            .semantics { contentDescription = label }
+            .clickable(
+                interactionSource = interactionSource,
+                indication = null,
+                onClick = onClick
+            )
+    )
 }
