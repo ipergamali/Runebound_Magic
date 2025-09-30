@@ -1,6 +1,8 @@
 package com.example.runeboundmagic.ui
 
+import android.os.SystemClock
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
 import androidx.compose.animation.scaleIn
@@ -9,41 +11,42 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
-import androidx.compose.foundation.layout.Spacer
+import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
-import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
+import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
-import androidx.compose.material3.MaterialTheme
-import androidx.compose.material3.OutlinedButton
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
+import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableLongStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
-import androidx.compose.runtime.saveable.rememberSaveable
+import androidx.compose.runtime.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
@@ -53,10 +56,10 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.semantics.contentDescription
-import androidx.compose.ui.semantics.semantics
+import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
+import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -70,6 +73,8 @@ import com.example.runeboundmagic.toHeroOption
 import com.example.runeboundmagic.toHeroType
 import java.text.DateFormat
 import java.util.Date
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
 
 @Composable
@@ -79,10 +84,10 @@ fun LobbyScreen(
     onSelectHero: () -> Unit,
     onStartBattle: (HeroOption, String) -> Unit,
     onOpenCodex: () -> Unit,
+    isA4Playing: Boolean = false,
     viewModel: HeroChoiceViewModel = lobbyViewModel(),
 ) {
     val context = LocalContext.current
-    val backgroundPainter = rememberAssetPainter("lobby/Game_Lobby.png")
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
 
@@ -103,193 +108,155 @@ fun LobbyScreen(
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = Color.Transparent,
+        containerColor = Color(0xFF45533C),
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Box(
+        Column(
             modifier = Modifier
                 .fillMaxSize()
+                .background(Color(0xFF45533C))
                 .padding(padding)
+                .padding(horizontal = 24.dp, vertical = 16.dp),
+            horizontalAlignment = Alignment.CenterHorizontally,
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Image(
-                painter = backgroundPainter,
-                contentDescription = null,
-                contentScale = ContentScale.FillBounds,
-                modifier = Modifier.fillMaxSize()
+            Row(
+                modifier = Modifier.fillMaxWidth(),
+                horizontalArrangement = Arrangement.SpaceBetween,
+                verticalAlignment = Alignment.CenterVertically
+            ) {
+                TextButton(onClick = onBack) {
+                    Text(
+                        text = stringResource(id = R.string.lobby_back),
+                        color = Color(0xFFE8F5FF),
+                        fontSize = 13.sp
+                    )
+                }
+                TextButton(onClick = onOpenCodex) {
+                    Text(
+                        text = stringResource(id = R.string.codex_open_button),
+                        color = Color(0xFF38B6FF),
+                        fontWeight = FontWeight.SemiBold,
+                        fontSize = 13.sp
+                    )
+                }
+            }
+
+            LobbyHeader(
+                lastChoice = lastChoice,
+                modifier = Modifier.fillMaxWidth()
+            )
+
+            OutlinedTextField(
+                value = playerName,
+                onValueChange = { playerName = it },
+                label = { Text(text = stringResource(id = R.string.hero_name_hint)) },
+                singleLine = true,
+                textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
+                modifier = Modifier
+                    .fillMaxWidth(0.85f)
+                    .padding(vertical = 8.dp),
+                colors = TextFieldDefaults.colors(
+                    unfocusedIndicatorColor = Color(0xFF00FF88),
+                    focusedIndicatorColor = Color(0xFF38B6FF),
+                    unfocusedContainerColor = Color(0x33000814),
+                    focusedContainerColor = Color(0x33000814),
+                    cursorColor = Color(0xFF38B6FF),
+                    focusedLabelColor = Color(0xFF38B6FF),
+                    unfocusedLabelColor = Color(0xFFB2D9FF),
+                )
             )
 
             Column(
                 modifier = Modifier
-                    .fillMaxSize()
-                    .padding(horizontal = 24.dp)
-                    .padding(top = 32.dp)
-                    .padding(bottom = 140.dp),
-                verticalArrangement = Arrangement.SpaceBetween,
-                horizontalAlignment = Alignment.CenterHorizontally
+                    .fillMaxWidth()
+                    .weight(1f, fill = true),
+                horizontalAlignment = Alignment.CenterHorizontally,
+                verticalArrangement = Arrangement.Center
             ) {
-                LobbyHeader(lastChoice = lastChoice)
-
-                Box(
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth(),
-                    contentAlignment = Alignment.Center
-                ) {
-                    Column(
-                        horizontalAlignment = Alignment.CenterHorizontally,
-                        verticalArrangement = Arrangement.spacedBy(16.dp)
-                    ) {
-                        Text(
-                            text = stringResource(id = R.string.select_hero),
-                            style = MaterialTheme.typography.headlineSmall.copy(
-                                color = Color(0xFFE8F5FF),
-                                fontWeight = FontWeight.SemiBold
-                            ),
-                            textAlign = TextAlign.Center
-                        )
-
-                        HeroCarousel(
-                            modifier = Modifier
-                                .offset(y = (-32).dp),
-                            heroes = heroes,
-                            selectedHero = selectedHero,
-                            onHeroSelected = { selectedHero = it }
-                        )
-
-                        val heroLabel = stringResource(id = selectedHero.displayNameRes)
-                        val heroDescription = stringResource(id = selectedHero.descriptionRes)
-
-                        Text(
-                            text = heroLabel,
-                            style = MaterialTheme.typography.titleLarge.copy(
-                                color = Color(0xFF2CFF8F),
-                                fontWeight = FontWeight.Bold
-                            ),
-                            textAlign = TextAlign.Center
-                        )
-                        Text(
-                            text = heroDescription,
-                            style = MaterialTheme.typography.bodyLarge.copy(
-                                color = Color(0xFFE8F5FF),
-                                lineHeight = 22.sp
-                            ),
-                            modifier = Modifier
-                                .fillMaxWidth()
-                                .padding(horizontal = 32.dp),
-                            textAlign = TextAlign.Center
-                        )
-
-                        OutlinedButton(
-                            onClick = onOpenCodex,
-                            modifier = Modifier.padding(top = 8.dp)
-                        ) {
-                            Text(
-                                text = stringResource(id = R.string.codex_open_button),
-                                color = Color(0xFF38B6FF),
-                                fontWeight = FontWeight.SemiBold
-                            )
-                        }
-                    }
-                }
-
-                OutlinedTextField(
-                    value = playerName,
-                    onValueChange = { playerName = it },
-                    modifier = Modifier
-                        .fillMaxWidth()
-                        .padding(horizontal = 16.dp),
-                    placeholder = {
-                        Text(text = stringResource(id = R.string.hero_name_hint))
-                    },
-                    singleLine = true,
-                    colors = TextFieldDefaults.colors(
-                        unfocusedIndicatorColor = Color(0xFF2CFF8F),
-                        focusedIndicatorColor = Color(0xFF38B6FF),
-                        unfocusedContainerColor = Color(0x33000814),
-                        focusedContainerColor = Color(0x33000814),
-                        cursorColor = Color(0xFF38B6FF)
-                    )
+                HeroCarousel(
+                    heroes = heroes,
+                    selectedHero = selectedHero,
+                    isA4Playing = isA4Playing,
+                    onHeroSelected = { hero -> selectedHero = hero }
                 )
-            }
-
-            TransparentHotZone(
-                modifier = Modifier
-                    .align(Alignment.BottomStart)
-                    .padding(start = 24.dp, bottom = 24.dp)
-                    .size(width = 160.dp, height = 76.dp),
-                label = stringResource(id = R.string.lobby_back)
-            ) {
-                onBack()
-            }
-
-            TransparentHotZone(
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 20.dp)
-                    .size(width = 180.dp, height = 88.dp),
-                label = stringResource(id = R.string.lobby_select_hero)
-            ) {
-                onSelectHero()
             }
 
             val selectedHeroLabel = stringResource(id = selectedHero.displayNameRes)
 
-            TransparentHotZone(
-                modifier = Modifier
-                    .align(Alignment.BottomEnd)
-                    .padding(end = 24.dp, bottom = 24.dp)
-                    .size(width = 168.dp, height = 80.dp),
-                label = stringResource(id = R.string.lobby_start_battle)
+            Button(
+                onClick = onSelectHero,
+                modifier = Modifier.fillMaxWidth(0.85f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF38B6FF),
+                    contentColor = Color.Black
+                )
             ) {
-                val trimmedName = playerName.trim()
-                if (trimmedName.isEmpty()) {
+                Text(text = stringResource(id = R.string.lobby_select_hero))
+            }
+
+            Button(
+                onClick = {
+                    val trimmedName = playerName.trim()
+                    if (trimmedName.isEmpty()) {
+                        scope.launch {
+                            snackbarHostState.showSnackbar(
+                                message = context.getString(R.string.error_empty_hero_name)
+                            )
+                        }
+                        return@Button
+                    }
+
+                    viewModel.saveHeroChoice(
+                        playerName = trimmedName,
+                        heroType = selectedHero.toHeroType(),
+                        heroName = selectedHeroLabel
+                    )
+
+                    onStartBattle(selectedHero, trimmedName)
+
                     scope.launch {
                         snackbarHostState.showSnackbar(
-                            message = context.getString(R.string.error_empty_hero_name)
+                            message = context.getString(
+                                R.string.lobby_selection_saved,
+                                trimmedName,
+                                selectedHeroLabel
+                            )
                         )
                     }
-                    return@TransparentHotZone
-                }
-
-                viewModel.saveHeroChoice(
-                    playerName = trimmedName,
-                    heroType = selectedHero.toHeroType(),
-                    heroName = selectedHeroLabel
+                },
+                modifier = Modifier.fillMaxWidth(0.85f),
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF00FF88),
+                    contentColor = Color(0xFF002B1C)
                 )
-
-                onStartBattle(selectedHero, trimmedName)
-
-                scope.launch {
-                    snackbarHostState.showSnackbar(
-                        message = context.getString(
-                            R.string.lobby_selection_saved,
-                            trimmedName,
-                            selectedHeroLabel
-                        )
-                    )
-                }
+            ) {
+                Text(text = stringResource(id = R.string.lobby_start_battle))
             }
         }
     }
 }
 
 @Composable
-private fun LobbyHeader(lastChoice: HeroChoiceEntity?) {
+private fun LobbyHeader(
+    lastChoice: HeroChoiceEntity?,
+    modifier: Modifier = Modifier
+) {
     Column(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalAlignment = Alignment.Start
+        modifier = modifier,
+        horizontalAlignment = Alignment.Start,
+        verticalArrangement = Arrangement.spacedBy(4.dp)
     ) {
         Text(
             text = stringResource(id = R.string.lobby_title),
-            style = MaterialTheme.typography.headlineMedium.copy(
-                color = Color(0xFF2CFF8F),
-                fontWeight = FontWeight.Bold,
-                shadow = null
-            )
+            color = Color(0xFF00FF88),
+            fontWeight = FontWeight.Bold,
+            fontSize = 24.sp
         )
         Text(
             text = stringResource(id = R.string.lobby_subtitle),
-            style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFFB2D9FF))
+            color = Color(0xFFCFD9D4),
+            fontSize = 14.sp
         )
 
         AnimatedVisibility(
@@ -302,14 +269,15 @@ private fun LobbyHeader(lastChoice: HeroChoiceEntity?) {
             lastChoice?.let { choice ->
                 ElevatedCard(
                     modifier = Modifier
-                        .padding(top = 16.dp)
+                        .padding(top = 12.dp)
                         .fillMaxWidth(),
                     colors = CardDefaults.elevatedCardColors(
                         containerColor = Color(0x332CFF8F)
                     )
                 ) {
                     Column(
-                        modifier = Modifier.padding(16.dp)
+                        modifier = Modifier.padding(16.dp),
+                        verticalArrangement = Arrangement.spacedBy(6.dp)
                     ) {
                         val heroOption = choice.heroType.toHeroOption()
                         val heroLabel = stringResource(id = heroOption.displayNameRes)
@@ -322,11 +290,14 @@ private fun LobbyHeader(lastChoice: HeroChoiceEntity?) {
                                 choice.playerName,
                                 heroLabel
                             ),
-                            style = MaterialTheme.typography.bodyLarge.copy(color = Color(0xFFE8F5FF))
+                            color = Color(0xFFE8F5FF),
+                            fontSize = 15.sp,
+                            fontWeight = FontWeight.Medium
                         )
                         Text(
                             text = stringResource(id = R.string.lobby_last_saved_time, formattedTime),
-                            style = MaterialTheme.typography.bodySmall.copy(color = Color(0xFF8FA3BF))
+                            color = Color(0xFF8FA3BF),
+                            fontSize = 13.sp
                         )
                     }
                 }
@@ -340,16 +311,50 @@ private fun HeroCarousel(
     modifier: Modifier = Modifier,
     heroes: List<HeroOption>,
     selectedHero: HeroOption,
+    isA4Playing: Boolean,
     onHeroSelected: (HeroOption) -> Unit
 ) {
+    if (heroes.isEmpty()) {
+        return
+    }
+
+    val listState = rememberLazyListState()
+    var lastInteractionTimestamp by remember { mutableLongStateOf(0L) }
+
+    LaunchedEffect(selectedHero, heroes) {
+        val index = heroes.indexOf(selectedHero)
+        if (index >= 0) {
+            listState.animateScrollToItem(index)
+        }
+    }
+
+    LaunchedEffect(isA4Playing, selectedHero, heroes, lastInteractionTimestamp) {
+        if (!isA4Playing || heroes.isEmpty()) {
+            return@LaunchedEffect
+        }
+        while (isActive && isA4Playing) {
+            delay(4_000)
+            if (!isActive || !isA4Playing) break
+            val now = SystemClock.elapsedRealtime()
+            if (now - lastInteractionTimestamp < 6_000L) {
+                continue
+            }
+            val currentIndex = heroes.indexOf(selectedHero)
+            if (currentIndex == -1) {
+                continue
+            }
+            val nextHero = heroes[(currentIndex + 1) % heroes.size]
+            onHeroSelected(nextHero)
+        }
+    }
+
     LazyRow(
-        modifier = modifier
-            .fillMaxWidth(),
-        contentPadding = PaddingValues(horizontal = 32.dp),
+        modifier = modifier.fillMaxWidth(),
+        state = listState,
+        contentPadding = PaddingValues(horizontal = 24.dp),
         horizontalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         items(heroes) { hero ->
-            val painter = rememberAssetPainter(hero.assetPath)
             val isSelected = hero == selectedHero
             val targetScale by animateFloatAsState(
                 targetValue = if (isSelected) 1f else 0.9f,
@@ -359,10 +364,12 @@ private fun HeroCarousel(
 
             HeroCarouselCard(
                 hero = hero,
-                painter = painter,
                 scale = targetScale,
                 isSelected = isSelected,
-                onClick = { onHeroSelected(hero) }
+                onClick = {
+                    lastInteractionTimestamp = SystemClock.elapsedRealtime()
+                    onHeroSelected(hero)
+                }
             )
         }
     }
@@ -371,24 +378,23 @@ private fun HeroCarousel(
 @Composable
 private fun HeroCarouselCard(
     hero: HeroOption,
-    painter: androidx.compose.ui.graphics.painter.Painter,
     scale: Float,
     isSelected: Boolean,
     onClick: () -> Unit
 ) {
     ElevatedCard(
         modifier = Modifier
-            .width(176.dp)
-            .height(244.dp)
+            .width(196.dp)
+            .height(268.dp)
             .graphicsLayer {
                 scaleX = scale
                 scaleY = scale
-                alpha = 0.8f + (scale - 0.9f).coerceIn(0f, 0.2f)
+                alpha = 0.85f + (scale - 0.9f).coerceIn(0f, 0.15f)
             }
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(26.dp),
         colors = CardDefaults.elevatedCardColors(
-            containerColor = if (isSelected) Color(0x552CFF8F) else Color(0x33000814)
+            containerColor = if (isSelected) Color(0xFF2F4F3A) else Color(0x33212B1C)
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = if (isSelected) 10.dp else 2.dp)
     ) {
@@ -397,34 +403,48 @@ private fun HeroCarouselCard(
                 .fillMaxSize()
                 .padding(16.dp),
             horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.SpaceBetween
+            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
             Box(
                 modifier = Modifier
-                    .size(140.dp)
+                    .fillMaxWidth()
+                    .weight(1f)
                     .clip(RoundedCornerShape(22.dp))
             ) {
-                Image(
-                    painter = painter,
-                    contentDescription = stringResource(id = hero.displayNameRes),
-                    contentScale = ContentScale.Fit,
-                    modifier = Modifier.fillMaxSize()
-                )
+                Crossfade(
+                    targetState = hero.assetPath,
+                    animationSpec = tween(durationMillis = 300),
+                    label = "heroAsset${hero.name}"
+                ) { assetPath ->
+                    Image(
+                        painter = rememberAssetPainter(assetPath),
+                        contentDescription = stringResource(id = hero.displayNameRes),
+                        contentScale = ContentScale.Fit,
+                        modifier = Modifier.fillMaxSize()
+                    )
+                }
             }
 
             Text(
                 text = stringResource(id = hero.displayNameRes),
-                style = MaterialTheme.typography.titleMedium.copy(
-                    color = Color(0xFFE8F5FF),
-                    fontWeight = FontWeight.SemiBold
-                ),
+                color = Color(0xFF00FF88),
+                fontWeight = FontWeight.Bold,
+                fontSize = 18.sp,
+                textAlign = TextAlign.Center,
+                modifier = Modifier.fillMaxWidth()
+            )
+            Text(
+                text = stringResource(id = hero.descriptionRes),
+                color = Color.White,
+                fontSize = 13.sp,
+                lineHeight = 16.sp,
+                maxLines = 2,
+                overflow = TextOverflow.Ellipsis,
+                textAlign = TextAlign.Center,
                 modifier = Modifier
                     .fillMaxWidth()
-                    .padding(horizontal = 12.dp),
-                textAlign = TextAlign.Center
+                    .padding(horizontal = 8.dp)
             )
-
-            Spacer(modifier = Modifier.height(12.dp))
         }
     }
 }
@@ -435,23 +455,4 @@ private fun lobbyViewModel(): HeroChoiceViewModel {
     val database = remember { HeroChoiceDatabase.getInstance(context) }
     val factory = remember { HeroChoiceViewModelFactory(database.heroChoiceDao()) }
     return viewModel(factory = factory)
-}
-
-@Composable
-private fun TransparentHotZone(
-    modifier: Modifier,
-    label: String,
-    onClick: () -> Unit
-) {
-    val interactionSource = remember { MutableInteractionSource() }
-    Box(
-        modifier = modifier
-            .clip(RoundedCornerShape(20.dp))
-            .semantics { contentDescription = label }
-            .clickable(
-                interactionSource = interactionSource,
-                indication = null,
-                onClick = onClick
-            )
-    )
 }
