@@ -24,7 +24,6 @@ import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
-import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -44,7 +43,6 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
-import androidx.compose.runtime.key
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -58,6 +56,7 @@ import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
+import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.Font
@@ -67,7 +66,6 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.geometry.Offset
-import com.example.runeboundmagic.HeroOption
 import com.example.runeboundmagic.R
 import kotlinx.coroutines.delay
 
@@ -119,6 +117,7 @@ fun IntroScreen(
     val logoPainter = painterResource(id = R.drawable.logo)
 
     val currentScene = scenes[currentSceneIndex]
+    val isFinalScene = currentScene.kind == IntroSceneKind.FINAL_CONFRONTATION
 
     DisposableEffect(currentSceneIndex) {
         val player = MediaPlayer.create(context, currentScene.audioRes)
@@ -222,14 +221,21 @@ fun IntroScreen(
             }
         }
 
+        val subtitleModifier = if (isFinalScene) {
+            Modifier
+                .align(Alignment.BottomCenter)
+                .padding(start = 24.dp, end = 24.dp, bottom = 380.dp)
+        } else {
+            Modifier
+                .align(Alignment.TopCenter)
+                .padding(start = 24.dp, end = 24.dp, top = 48.dp)
+        }
         IntroSubtitleOverlay(
             kind = currentScene.kind,
             subtitle = currentScene.subtitle,
             fontFamily = signatureFont,
             highlightedWords = highlightedWords,
-            modifier = Modifier
-                .align(Alignment.TopCenter)
-                .padding(start = 24.dp, end = 24.dp, top = 48.dp)
+            modifier = subtitleModifier
         )
 
         AnimatedVisibility(
@@ -237,7 +243,13 @@ fun IntroScreen(
             enter = fadeIn(animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)) +
                 scaleIn(initialScale = 0.88f, animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)),
             exit = fadeOut(animationSpec = tween(durationMillis = 220)),
-            modifier = Modifier.align(Alignment.Center)
+            modifier = if (isFinalScene) {
+                Modifier
+                    .align(Alignment.BottomCenter)
+                    .padding(bottom = 200.dp)
+            } else {
+                Modifier.align(Alignment.Center)
+            }
         ) {
             Button(
                 onClick = onIntroFinished,
@@ -248,7 +260,7 @@ fun IntroScreen(
                 shape = RoundedCornerShape(28.dp)
             ) {
                 Text(
-                    text = "Start Game",
+                    text = stringResource(id = R.string.intro_start_game),
                     style = androidx.compose.ui.text.TextStyle(
                         fontFamily = signatureFont,
                         fontSize = 20.sp,
@@ -750,10 +762,10 @@ private fun FinalClashScene(
         )
         Row(
             modifier = Modifier
-                .fillMaxSize()
-                .padding(horizontal = 24.dp, vertical = 32.dp),
-            verticalAlignment = Alignment.CenterVertically,
-            horizontalArrangement = Arrangement.SpaceEvenly
+                .align(Alignment.BottomCenter)
+                .padding(horizontal = 24.dp, bottom = 32.dp),
+            verticalAlignment = Alignment.Bottom,
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
             CharacterPortraitCard(
                 painter = priestessPainter,
@@ -763,8 +775,7 @@ private fun FinalClashScene(
                 scale = cardScale,
                 alpha = contentAlpha,
                 modifier = Modifier
-                    .fillMaxHeight(0.72f)
-                    .padding(end = 12.dp)
+                    .height(320.dp)
             )
             CharacterPortraitCard(
                 painter = magePainter,
@@ -774,8 +785,7 @@ private fun FinalClashScene(
                 scale = cardScale,
                 alpha = contentAlpha,
                 modifier = Modifier
-                    .fillMaxHeight(0.72f)
-                    .padding(start = 12.dp)
+                    .height(320.dp)
             )
         }
         RuneCluster(
@@ -786,12 +796,6 @@ private fun FinalClashScene(
             scale = runeScale,
             alpha = runeAlpha,
             modifier = Modifier.align(Alignment.Center)
-        )
-        HeroCarouselPreview(
-            contentAlpha = contentAlpha,
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(bottom = 36.dp)
         )
     }
 }
@@ -854,102 +858,7 @@ private fun RuneCluster(
 }
 
 @Composable
-private fun HeroCarouselPreview(
-    contentAlpha: Float,
-    modifier: Modifier = Modifier
-) {
-    val heroes = remember { HeroOption.values().toList() }
-    if (heroes.isEmpty()) {
-        return
-    }
-    val heroPainters = heroes.associateWith { hero -> rememberAssetPainter(hero.assetPath) }
-    var currentIndex by remember { mutableIntStateOf(0) }
 
-    LaunchedEffect(heroes) {
-        while (heroes.isNotEmpty()) {
-            delay(2_200)
-            currentIndex = (currentIndex + 1) % heroes.size
-        }
-    }
-
-    BoxWithConstraints(
-        modifier = modifier
-            .graphicsLayer { this.alpha = contentAlpha }
-            .fillMaxWidth()
-            .padding(horizontal = 24.dp)
-    ) {
-        val spacing = 16.dp
-        val availableWidth = maxWidth
-        val cardWidth = ((availableWidth - spacing * 2) / 3f).coerceIn(140.dp, 240.dp)
-
-        Row(
-            modifier = Modifier.fillMaxWidth(),
-            horizontalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterHorizontally),
-            verticalAlignment = Alignment.CenterVertically
-        ) {
-            val heroCount = heroes.size
-            for (offset in -1..1) {
-                key(offset) {
-                    val heroIndex = (currentIndex + offset + heroCount) % heroCount
-                    val hero = heroes[heroIndex]
-                    val style = heroStyleFor(hero)
-                    val targetScale = if (offset == 0) 1f else 0.86f
-                    val targetAlpha = if (offset == 0) 1f else 0.45f
-                    val scale by animateFloatAsState(
-                        targetValue = targetScale,
-                        animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing),
-                        label = "heroCarouselScale$offset"
-                    )
-                    val alpha by animateFloatAsState(
-                        targetValue = targetAlpha,
-                        animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing),
-                        label = "heroCarouselAlpha$offset"
-                    )
-
-                    CharacterPortraitCard(
-                        painter = heroPainters.getValue(hero),
-                        contentDescription = null,
-                        glowColor = style.glowColor,
-                        backgroundTint = style.backgroundTint,
-                        scale = scale,
-                        alpha = alpha,
-                        modifier = Modifier
-                            .width(cardWidth)
-                            .heightIn(max = 320.dp)
-                    )
-                }
-            }
-        }
-    }
-}
-
-private data class HeroCardStyle(
-    val glowColor: Color,
-    val backgroundTint: Color
-)
-
-private fun heroStyleFor(hero: HeroOption): HeroCardStyle {
-    return when (hero) {
-        HeroOption.WARRIOR -> HeroCardStyle(
-            glowColor = Color(0xFFFFB74D),
-            backgroundTint = Color(0xFF331E05)
-        )
-        HeroOption.MAGE -> HeroCardStyle(
-            glowColor = Color(0xFF7C8DFF),
-            backgroundTint = Color(0xFF111535)
-        )
-        HeroOption.MYSTICAL_PRIESTESS -> HeroCardStyle(
-            glowColor = Color(0xFF6D77FF),
-            backgroundTint = Color(0xFF0B0F1F)
-        )
-        HeroOption.RANGER -> HeroCardStyle(
-            glowColor = Color(0xFF8BC34A),
-            backgroundTint = Color(0xFF102611)
-        )
-    }
-}
-
-@Composable
 private fun CharacterPortraitCard(
     painter: Painter,
     contentDescription: String?,

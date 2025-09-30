@@ -14,6 +14,7 @@ import com.example.runeboundmagic.StartGameActivity
 
 private const val SplashRoute = "splash"
 private const val IntroRoute = "intro"
+private const val LobbyRoute = "lobby"
 
 private val SplashColorScheme = darkColorScheme(
     primary = Color(0xFF38B6FF),
@@ -36,13 +37,17 @@ fun RuneboundMagicApp() {
                 SplashScreen(navController = navController)
             }
             composable(IntroRoute) {
-                val context = LocalContext.current
                 IntroScreen(
                     onIntroFinished = {
-                        context.startActivity(Intent(context, StartGameActivity::class.java))
-                        (context as? Activity)?.finish()
+                        navController.navigate(Routes.Lobby) {
+                            popUpTo(Routes.Splash) { inclusive = true }
+                        }
                     }
                 )
+            }
+            composable(LobbyRoute) {
+                LobbyScreen()
+
             }
         }
     }
@@ -51,4 +56,5 @@ fun RuneboundMagicApp() {
 internal object Routes {
     const val Splash = SplashRoute
     const val Intro = IntroRoute
+    const val Lobby = LobbyRoute
 }
