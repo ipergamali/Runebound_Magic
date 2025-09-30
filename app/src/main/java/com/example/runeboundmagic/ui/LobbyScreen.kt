@@ -9,6 +9,7 @@ import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
+import androidx.compose.foundation.background
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
@@ -181,10 +182,11 @@ fun LobbyScreen(
                             Text(text = stringResource(id = R.string.hero_name_hint))
                         },
                         singleLine = true,
-                        colors = TextFieldDefaults.outlinedTextFieldColors(
-                            unfocusedBorderColor = Color(0xFF2CFF8F),
-                            focusedBorderColor = Color(0xFF38B6FF),
-                            containerColor = Color(0x22000814),
+                        colors = TextFieldDefaults.colors(
+                            unfocusedIndicatorColor = Color(0xFF2CFF8F),
+                            focusedIndicatorColor = Color(0xFF38B6FF),
+                            unfocusedContainerColor = Color(0x22000814),
+                            focusedContainerColor = Color(0x22000814),
                             cursorColor = Color(0xFF38B6FF)
                         )
                     )

@@ -59,7 +59,6 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
-import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -105,7 +104,7 @@ fun IntroScreen(
     var showStartGameButton by rememberSaveable { mutableStateOf(false) }
     var showRuneLogo by rememberSaveable { mutableStateOf(false) }
 
-    val signatureFont = rememberSignatureFont()
+    val signatureFont = FontFamily.Cursive
 
     val templePainter = rememberAssetPainter("intro/MysticalTempleRuins")
     val magePainter = rememberAssetPainter("characters/black_mage.png")
@@ -763,7 +762,7 @@ private fun FinalClashScene(
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(horizontal = 24.dp, bottom = 32.dp),
+                .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
@@ -920,7 +919,3 @@ private fun CharacterPortraitCard(
     }
 }
 
-@Composable
-private fun rememberSignatureFont(): FontFamily {
-    return remember { FontFamily(Font(R.font.whisperingsignature)) }
-}
