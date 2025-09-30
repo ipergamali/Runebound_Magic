@@ -1,5 +1,7 @@
 package com.example.runeboundmagic.ui
 
+import android.app.Activity
+import android.content.Intent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
 import androidx.compose.runtime.Composable
@@ -7,6 +9,8 @@ import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
+import androidx.compose.ui.platform.LocalContext
+import com.example.runeboundmagic.StartGameActivity
 
 private const val SplashRoute = "splash"
 private const val IntroRoute = "intro"
@@ -43,6 +47,7 @@ fun RuneboundMagicApp() {
             }
             composable(LobbyRoute) {
                 LobbyScreen()
+
             }
         }
     }
