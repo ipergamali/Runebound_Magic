@@ -119,7 +119,7 @@ fun CodexScreen(
 
 private fun buildHeroInventory(entry: CodexEntry): HeroInventory {
     val cleanedId = entry.id.ifBlank {
-        entry.name.lowercase(Locale.ROOT).replace("\s+".toRegex(), "_")
+        entry.name.lowercase(Locale.ROOT).replace("""\s+""".toRegex(), "_")
     }
     val idForLore = entry.id.ifBlank { entry.name }
     val heroCardLore = when (idForLore.lowercase(Locale.ROOT)) {
