@@ -1,34 +1,30 @@
 package com.example.runeboundmagic.ui
 
 import android.os.SystemClock
-import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.scaleIn
-import androidx.compose.animation.scaleOut
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
+import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.wrapContentWidth
 import androidx.compose.foundation.lazy.LazyRow
 import androidx.compose.foundation.lazy.items
 import androidx.compose.foundation.lazy.rememberLazyListState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.Button
-import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.CardDefaults
 import androidx.compose.material3.ElevatedCard
 import androidx.compose.material3.OutlinedTextField
@@ -36,7 +32,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.SnackbarHost
 import androidx.compose.material3.SnackbarHostState
 import androidx.compose.material3.Text
-import androidx.compose.material3.TextButton
 import androidx.compose.material3.TextFieldDefaults
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -51,6 +46,7 @@ import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
@@ -68,11 +64,8 @@ import com.example.runeboundmagic.HeroChoiceViewModelFactory
 import com.example.runeboundmagic.HeroOption
 import com.example.runeboundmagic.R
 import com.example.runeboundmagic.data.local.HeroChoiceDatabase
-import com.example.runeboundmagic.data.local.HeroChoiceEntity
 import com.example.runeboundmagic.toHeroOption
 import com.example.runeboundmagic.toHeroType
-import java.text.DateFormat
-import java.util.Date
 import kotlinx.coroutines.delay
 import kotlinx.coroutines.isActive
 import kotlinx.coroutines.launch
@@ -97,6 +90,7 @@ fun LobbyScreen(
     val heroes = remember { HeroOption.values().toList() }
     var selectedHero by rememberSaveable { mutableStateOf(heroes.first()) }
     var playerName by rememberSaveable { mutableStateOf("") }
+    var lastSavedSignature by remember { mutableStateOf<Pair<String, String>?>(null) }
 
     val lastChoice by viewModel.getLastChoice().collectAsState(initial = null)
 
@@ -106,135 +100,191 @@ fun LobbyScreen(
             if (playerName.isBlank()) {
                 playerName = choice.playerName
             }
+            lastSavedSignature = choice.playerName.trim() to choice.heroType.name
         }
     }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
-        containerColor = Color(0xFF45533C),
+        containerColor = Color.Transparent,
         snackbarHost = { SnackbarHost(snackbarHostState) }
     ) { padding ->
-        Column(
+        val selectedHeroLabel = stringResource(id = selectedHero.displayNameRes)
+
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .background(Color(0xFF45533C))
                 .padding(padding)
-                .padding(horizontal = 24.dp, vertical = 16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
         ) {
-            Row(
-                modifier = Modifier.fillMaxWidth(),
-                horizontalArrangement = Arrangement.SpaceBetween,
-                verticalAlignment = Alignment.CenterVertically
-            ) {
-                TextButton(onClick = onBack) {
-                    Text(
-                        text = stringResource(id = R.string.lobby_back),
-                        color = Color(0xFFE8F5FF),
-                        fontSize = 13.sp
-                    )
-                }
-                TextButton(onClick = onOpenCodex) {
-                    Text(
-                        text = stringResource(id = R.string.codex_open_button),
-                        color = Color(0xFF38B6FF),
-                        fontWeight = FontWeight.SemiBold,
-                        fontSize = 13.sp
-                    )
-                }
-            }
-
-            LobbyHeader(
-                lastChoice = lastChoice,
-                modifier = Modifier.fillMaxWidth()
+            Image(
+                painter = rememberAssetPainter("lobby/Game_Lobby.png"),
+                contentDescription = null,
+                modifier = Modifier.fillMaxSize(),
+                contentScale = ContentScale.Crop
             )
 
-            OutlinedTextField(
-                value = playerName,
-                onValueChange = { playerName = it },
-                label = { Text(text = stringResource(id = R.string.hero_name_hint)) },
-                singleLine = true,
-                textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
+            Box(
                 modifier = Modifier
-                    .fillMaxWidth(0.85f)
-                    .padding(vertical = 8.dp),
-                colors = TextFieldDefaults.colors(
-                    unfocusedIndicatorColor = Color(0xFF00FF88),
-                    focusedIndicatorColor = Color(0xFF38B6FF),
-                    unfocusedContainerColor = Color(0x33000814),
-                    focusedContainerColor = Color(0x33000814),
-                    cursorColor = Color(0xFF38B6FF),
-                    focusedLabelColor = Color(0xFF38B6FF),
-                    unfocusedLabelColor = Color(0xFFB2D9FF),
-                )
+                    .fillMaxSize()
+                    .background(Color(0xAA0B111A))
             )
 
             Column(
                 modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f, fill = true),
+                    .fillMaxSize()
+                    .padding(horizontal = 32.dp, vertical = 24.dp),
                 horizontalAlignment = Alignment.CenterHorizontally,
-                verticalArrangement = Arrangement.Center
+                verticalArrangement = Arrangement.spacedBy(18.dp)
             ) {
+                LobbyHeader(
+                    heroName = selectedHeroLabel,
+                    modifier = Modifier.fillMaxWidth()
+                )
+
                 HeroCarousel(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .weight(1f),
                     heroes = heroes,
                     selectedHero = selectedHero,
                     isA4Playing = isA4Playing,
-                    onHeroSelected = { hero -> selectedHero = hero }
-                )
-            }
-
-            val selectedHeroLabel = stringResource(id = selectedHero.displayNameRes)
-
-            Button(
-                onClick = onSelectHero,
-                modifier = Modifier.fillMaxWidth(0.85f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF38B6FF),
-                    contentColor = Color.Black
-                )
-            ) {
-                Text(text = stringResource(id = R.string.lobby_select_hero))
-            }
-
-            Button(
-                onClick = {
-                    val trimmedName = playerName.trim()
-                    if (trimmedName.isEmpty()) {
-                        scope.launch {
-                            snackbarHostState.showSnackbar(
-                                message = context.getString(R.string.error_empty_hero_name)
-                            )
-                        }
-                        return@Button
+                    onHeroSelected = { hero ->
+                        selectedHero = hero
                     }
+                )
 
+                OutlinedTextField(
+                    value = playerName,
+                    onValueChange = { playerName = it },
+                    label = { Text(text = stringResource(id = R.string.hero_name_hint)) },
+                    singleLine = true,
+                    textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .padding(top = 8.dp),
+                    colors = TextFieldDefaults.colors(
+                        unfocusedIndicatorColor = Color(0xFFE0D299),
+                        focusedIndicatorColor = Color(0xFFF0C977),
+                        unfocusedContainerColor = Color(0x330B111A),
+                        focusedContainerColor = Color(0x330B111A),
+                        cursorColor = Color(0xFFF0C977),
+                        focusedLabelColor = Color(0xFFF0C977),
+                        unfocusedLabelColor = Color(0xFFE8F5FF),
+                    )
+                )
+
+                val selectionSignature = remember(selectedHero, playerName) {
+                    playerName.trim() to selectedHero.name
+                }
+
+                fun persistSelection(trimmedName: String, heroLabel: String) {
                     viewModel.saveHeroChoice(
                         playerName = trimmedName,
                         heroType = selectedHero.toHeroType(),
-                        heroName = selectedHeroLabel
+                        heroName = heroLabel
                     )
-
-                    onStartBattle(selectedHero, trimmedName)
-
+                    lastSavedSignature = trimmedName to selectedHero.name
                     scope.launch {
                         snackbarHostState.showSnackbar(
                             message = context.getString(
                                 R.string.lobby_selection_saved,
                                 trimmedName,
-                                selectedHeroLabel
+                                heroLabel
                             )
                         )
                     }
-                },
-                modifier = Modifier.fillMaxWidth(0.85f),
-                colors = ButtonDefaults.buttonColors(
-                    containerColor = Color(0xFF00FF88),
-                    contentColor = Color(0xFF002B1C)
+                }
+
+                LobbyActionButton(
+                    text = stringResource(id = R.string.lobby_select_hero),
+                    backgroundBrush = Brush.verticalGradient(
+                        colors = listOf(Color(0xFFFFE7A7), Color(0xFFB8860B))
+                    ),
+                    borderColor = Color(0xFFF7F2C5),
+                    contentColor = Color(0xFF402600),
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(58.dp),
+                    onClick = {
+                        val trimmedName = playerName.trim()
+                        if (trimmedName.isEmpty()) {
+                            scope.launch {
+                                snackbarHostState.showSnackbar(
+                                    message = context.getString(R.string.error_empty_hero_name)
+                                )
+                            }
+                            return@LobbyActionButton
+                        }
+
+                        persistSelection(trimmedName, selectedHeroLabel)
+                        onSelectHero()
+                    }
                 )
-            ) {
-                Text(text = stringResource(id = R.string.lobby_start_battle))
+
+                Row(
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .wrapContentWidth(),
+                    horizontalArrangement = Arrangement.SpaceBetween,
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    LobbyActionButton(
+                        text = stringResource(id = R.string.lobby_back),
+                        backgroundBrush = Brush.verticalGradient(
+                            colors = listOf(Color(0xFF6EE27D), Color(0xFF2F7F39))
+                        ),
+                        borderColor = Color(0xFFB5F9C0),
+                        contentColor = Color(0xFF042B0F),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        onClick = onBack
+                    )
+
+                    Spacer(modifier = Modifier.width(18.dp))
+
+                    LobbyActionButton(
+                        text = stringResource(id = R.string.lobby_start_battle),
+                        backgroundBrush = Brush.verticalGradient(
+                            colors = listOf(Color(0xFF7FB5FF), Color(0xFF2354A2))
+                        ),
+                        borderColor = Color(0xFFAED4FF),
+                        contentColor = Color(0xFF021B38),
+                        modifier = Modifier
+                            .weight(1f)
+                            .height(56.dp),
+                        onClick = {
+                            val trimmedName = playerName.trim()
+                            if (trimmedName.isEmpty()) {
+                                scope.launch {
+                                    snackbarHostState.showSnackbar(
+                                        message = context.getString(R.string.error_empty_hero_name)
+                                    )
+                                }
+                                return@LobbyActionButton
+                            }
+
+                            if (lastSavedSignature != selectionSignature) {
+                                persistSelection(trimmedName, selectedHeroLabel)
+                            }
+
+                            onStartBattle(selectedHero, trimmedName)
+                        }
+                    )
+                }
+
+                LobbyActionButton(
+                    text = stringResource(id = R.string.codex_open_button),
+                    backgroundBrush = Brush.verticalGradient(
+                        colors = listOf(Color(0xFFE2EAFF), Color(0xFF7A8BB6))
+                    ),
+                    borderColor = Color(0xFFEEF3FF),
+                    contentColor = Color(0xFF14213D),
+                    modifier = Modifier
+                        .fillMaxWidth(0.7f)
+                        .height(48.dp),
+                    onClick = onOpenCodex
+                )
             }
         }
     }
@@ -242,70 +292,65 @@ fun LobbyScreen(
 
 @Composable
 private fun LobbyHeader(
-    lastChoice: HeroChoiceEntity?,
+    heroName: String,
     modifier: Modifier = Modifier
 ) {
     Column(
         modifier = modifier,
-        horizontalAlignment = Alignment.Start,
-        verticalArrangement = Arrangement.spacedBy(4.dp)
+        horizontalAlignment = Alignment.CenterHorizontally,
+        verticalArrangement = Arrangement.spacedBy(6.dp)
     ) {
         Text(
             text = stringResource(id = R.string.lobby_title),
-            color = Color(0xFF00FF88),
+            color = Color(0xFFF0C977),
             fontWeight = FontWeight.Bold,
-            fontSize = 24.sp
+            fontSize = 28.sp
         )
         Text(
             text = stringResource(id = R.string.lobby_subtitle),
-            color = Color(0xFFCFD9D4),
-            fontSize = 14.sp
+            color = Color(0xFFE8F5FF),
+            fontSize = 16.sp,
+            textAlign = TextAlign.Center
         )
+        Text(
+            text = stringResource(id = R.string.lobby_selected_hero, heroName),
+            color = Color(0xFFFFE7A7),
+            fontSize = 18.sp,
+            fontWeight = FontWeight.SemiBold,
+            textAlign = TextAlign.Center
+        )
+    }
+}
 
-        AnimatedVisibility(
-            visible = lastChoice != null,
-            enter = fadeIn(animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)) +
-                scaleIn(initialScale = 0.95f, animationSpec = tween(durationMillis = 320, easing = FastOutSlowInEasing)),
-            exit = fadeOut(animationSpec = tween(durationMillis = 220)) +
-                scaleOut(targetScale = 0.9f, animationSpec = tween(durationMillis = 220))
-        ) {
-            lastChoice?.let { choice ->
-                ElevatedCard(
-                    modifier = Modifier
-                        .padding(top = 12.dp)
-                        .fillMaxWidth(),
-                    colors = CardDefaults.elevatedCardColors(
-                        containerColor = Color(0x332CFF8F)
-                    )
-                ) {
-                    Column(
-                        modifier = Modifier.padding(16.dp),
-                        verticalArrangement = Arrangement.spacedBy(6.dp)
-                    ) {
-                        val heroOption = choice.heroType.toHeroOption()
-                        val heroLabel = stringResource(id = heroOption.displayNameRes)
-                        val formattedTime = remember(choice.timestamp) {
-                            DateFormat.getDateTimeInstance().format(Date(choice.timestamp))
-                        }
-                        Text(
-                            text = stringResource(
-                                id = R.string.lobby_last_choice,
-                                choice.playerName,
-                                heroLabel
-                            ),
-                            color = Color(0xFFE8F5FF),
-                            fontSize = 15.sp,
-                            fontWeight = FontWeight.Medium
-                        )
-                        Text(
-                            text = stringResource(id = R.string.lobby_last_saved_time, formattedTime),
-                            color = Color(0xFF8FA3BF),
-                            fontSize = 13.sp
-                        )
-                    }
-                }
-            }
-        }
+@Composable
+private fun LobbyActionButton(
+    text: String,
+    backgroundBrush: Brush,
+    borderColor: Color,
+    contentColor: Color,
+    modifier: Modifier = Modifier,
+    onClick: () -> Unit
+) {
+    Box(
+        modifier = modifier
+            .clip(RoundedCornerShape(28.dp))
+            .background(backgroundBrush)
+            .border(
+                width = 1.5.dp,
+                color = borderColor.copy(alpha = 0.8f),
+                shape = RoundedCornerShape(28.dp)
+            )
+            .clickable(onClick = onClick),
+        contentAlignment = Alignment.Center
+    ) {
+        Text(
+            text = text,
+            color = contentColor,
+            fontSize = 16.sp,
+            fontWeight = FontWeight.Bold,
+            textAlign = TextAlign.Center,
+            modifier = Modifier.padding(horizontal = 16.dp, vertical = 12.dp)
+        )
     }
 }
 
