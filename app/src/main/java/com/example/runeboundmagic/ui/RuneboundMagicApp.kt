@@ -1,6 +1,5 @@
 package com.example.runeboundmagic.ui
 
-import android.app.Activity
 import android.content.Intent
 import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
@@ -10,7 +9,9 @@ import androidx.navigation.compose.NavHost
 import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import androidx.compose.ui.platform.LocalContext
-import com.example.runeboundmagic.StartGameActivity
+import com.example.runeboundmagic.CharacterSelectionActivity
+import com.example.runeboundmagic.HeroOption
+import com.example.runeboundmagic.MainActivity
 
 private const val SplashRoute = "splash"
 private const val IntroRoute = "intro"
@@ -46,8 +47,21 @@ fun RuneboundMagicApp() {
                 )
             }
             composable(LobbyRoute) {
-                LobbyScreen()
-
+                val context = LocalContext.current
+                LobbyScreen(
+                    onBack = { navController.popBackStack() },
+                    onSelectHero = {
+                        context.startActivity(
+                            Intent(context, CharacterSelectionActivity::class.java)
+                        )
+                    },
+                    onStartBattle = { hero: HeroOption, _ ->
+                        val intent = Intent(context, MainActivity::class.java).apply {
+                            putExtra(MainActivity.EXTRA_SELECTED_HERO, hero.name)
+                        }
+                        context.startActivity(intent)
+                    }
+                )
             }
         }
     }
