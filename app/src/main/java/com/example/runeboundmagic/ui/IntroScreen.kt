@@ -3,7 +3,11 @@ package com.example.runeboundmagic.ui
 import android.graphics.Typeface
 import android.media.MediaPlayer
 import androidx.annotation.RawRes
+import androidx.compose.animation.AnimatedVisibility
 import androidx.compose.animation.Crossfade
+import androidx.compose.animation.fadeIn
+import androidx.compose.animation.fadeOut
+import androidx.compose.animation.scaleIn
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
@@ -14,9 +18,9 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
 import androidx.compose.foundation.layout.fillMaxHeight
@@ -27,6 +31,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
+import androidx.compose.material3.Button
+import androidx.compose.material3.ButtonDefaults
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.DisposableEffect
@@ -35,6 +41,7 @@ import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
+import androidx.compose.runtime.key
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
 import androidx.compose.ui.Alignment
@@ -47,6 +54,7 @@ import androidx.compose.ui.graphics.Shadow
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
 import androidx.compose.ui.text.font.FontFamily
@@ -55,6 +63,7 @@ import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.geometry.Offset
+import com.example.runeboundmagic.HeroOption
 import com.example.runeboundmagic.R
 import kotlinx.coroutines.delay
 
@@ -66,14 +75,32 @@ fun IntroScreen(
     val context = LocalContext.current
     val scenes = remember {
         listOf(
-            IntroSceneDefinition(IntroSceneKind.RUNE_PROLOGUE, R.raw.a1),
-            IntroSceneDefinition(IntroSceneKind.BLACK_MAGE, R.raw.a2),
-            IntroSceneDefinition(IntroSceneKind.MYSTICAL_PRIESTESS, R.raw.a3),
-            IntroSceneDefinition(IntroSceneKind.FINAL_CONFRONTATION, R.raw.a4)
+            IntroSceneDefinition(
+                kind = IntroSceneKind.RUNE_PROLOGUE,
+                audioRes = R.raw.a1,
+                subtitle = "The world was once bound by the elemental runes — Fire, Water, Air, Earth — that kept the balance of magic alive."
+            ),
+            IntroSceneDefinition(
+                kind = IntroSceneKind.BLACK_MAGE,
+                audioRes = R.raw.a2,
+                subtitle = "But balance is a chain meant to be broken… and I, the Black Wizard, will forge a new world from the ashes!"
+            ),
+            IntroSceneDefinition(
+                kind = IntroSceneKind.MYSTICAL_PRIESTESS,
+                audioRes = R.raw.a3,
+                subtitle = "Yet hope remains. A lone guardian rises, chosen by the runes themselves, to stand against the growing darkness."
+            ),
+            IntroSceneDefinition(
+                kind = IntroSceneKind.FINAL_CONFRONTATION,
+                audioRes = R.raw.a4,
+                subtitle = "The battle of runes begins. Match their power, wield their magic, and decide the fate of the realm."
+            )
         )
     }
     var currentSceneIndex by rememberSaveable { mutableIntStateOf(0) }
     var highlightedWords by remember { mutableStateOf(emptySet<String>()) }
+    var runeVisibility by remember { mutableStateOf(RuneVisibility()) }
+    var showStartGameButton by rememberSaveable { mutableStateOf(false) }
 
     val signatureFont = rememberSignatureFont()
 
@@ -84,43 +111,66 @@ fun IntroScreen(
     val waterRunePainter = rememberAssetPainter("puzzle/blue_gem.png")
     val airRunePainter = rememberAssetPainter("puzzle/turquoise.png")
     val earthRunePainter = rememberAssetPainter("puzzle/green_gem.png")
+    val logoPainter = painterResource(id = R.drawable.logo)
 
     val currentScene = scenes[currentSceneIndex]
 
     DisposableEffect(currentSceneIndex) {
         val player = MediaPlayer.create(context, currentScene.audioRes)
         if (player == null) {
-            onIntroFinished()
+            showStartGameButton = true
             return@DisposableEffect onDispose { }
+        }
+        var released = false
+        fun releasePlayer() {
+            if (released) return
+            released = true
+            player.setOnCompletionListener(null)
+            runCatching { player.release() }
         }
         val listener = MediaPlayer.OnCompletionListener {
             if (currentSceneIndex < scenes.lastIndex) {
                 currentSceneIndex += 1
             } else {
-                onIntroFinished()
+                showStartGameButton = true
             }
+            releasePlayer()
         }
         player.setOnCompletionListener(listener)
         player.start()
         onDispose {
-            player.setOnCompletionListener(null)
-            runCatching { player.stop() }
-            player.release()
+            releasePlayer()
         }
     }
 
     LaunchedEffect(currentSceneIndex) {
         highlightedWords = emptySet()
+        runeVisibility = RuneVisibility()
+        showStartGameButton = false
         when (currentScene.kind) {
             IntroSceneKind.RUNE_PROLOGUE -> {
+                var visibility = RuneVisibility()
+                var words = emptySet<String>()
                 delay(3_000)
-                highlightedWords = setOf("Fire")
+                visibility = visibility.copy(fire = true)
+                runeVisibility = visibility
+                words = words + "Fire"
+                highlightedWords = words
                 delay(1_000)
-                highlightedWords = highlightedWords + "Water"
+                visibility = visibility.copy(water = true)
+                runeVisibility = visibility
+                words = words + "Water"
+                highlightedWords = words
                 delay(1_000)
-                highlightedWords = highlightedWords + "Air"
+                visibility = visibility.copy(air = true)
+                runeVisibility = visibility
+                words = words + "Air"
+                highlightedWords = words
                 delay(1_000)
-                highlightedWords = highlightedWords + "Earth"
+                visibility = visibility.copy(earth = true)
+                runeVisibility = visibility
+                words = words + "Earth"
+                highlightedWords = words
             }
             else -> Unit
         }
@@ -139,25 +189,62 @@ fun IntroScreen(
             when (sceneIndex) {
                 0 -> RunePrologueScene(
                     backgroundPainter = templePainter,
-                    fontFamily = signatureFont,
-                    highlightedWords = highlightedWords
+                    fireRunePainter = fireRunePainter,
+                    waterRunePainter = waterRunePainter,
+                    airRunePainter = airRunePainter,
+                    earthRunePainter = earthRunePainter,
+                    logoPainter = logoPainter,
+                    runeVisibility = runeVisibility
                 )
                 1 -> BlackMageScene(
-                    fontFamily = signatureFont,
                     magePainter = magePainter
                 )
                 2 -> MysticalPriestessScene(
-                    fontFamily = signatureFont,
                     priestessPainter = priestessPainter
                 )
                 else -> FinalClashScene(
-                    fontFamily = signatureFont,
                     magePainter = magePainter,
                     priestessPainter = priestessPainter,
                     fireRunePainter = fireRunePainter,
                     waterRunePainter = waterRunePainter,
                     airRunePainter = airRunePainter,
                     earthRunePainter = earthRunePainter
+                )
+            }
+        }
+
+        IntroSubtitleOverlay(
+            kind = currentScene.kind,
+            subtitle = currentScene.subtitle,
+            fontFamily = signatureFont,
+            highlightedWords = highlightedWords,
+            modifier = Modifier
+                .align(Alignment.TopCenter)
+                .padding(start = 24.dp, end = 24.dp, top = 48.dp)
+        )
+
+        AnimatedVisibility(
+            visible = showStartGameButton,
+            enter = fadeIn(animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)) +
+                scaleIn(initialScale = 0.88f, animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 220)),
+            modifier = Modifier.align(Alignment.Center)
+        ) {
+            Button(
+                onClick = onIntroFinished,
+                colors = ButtonDefaults.buttonColors(
+                    containerColor = Color(0xFF2CFF8F),
+                    contentColor = Color.Black
+                ),
+                shape = RoundedCornerShape(28.dp)
+            ) {
+                Text(
+                    text = "Start Game",
+                    style = androidx.compose.ui.text.TextStyle(
+                        fontFamily = signatureFont,
+                        fontSize = 20.sp,
+                        letterSpacing = 0.5.sp
+                    )
                 )
             }
         }
@@ -173,14 +260,82 @@ private enum class IntroSceneKind {
 
 private data class IntroSceneDefinition(
     val kind: IntroSceneKind,
-    @RawRes val audioRes: Int
+    @RawRes val audioRes: Int,
+    val subtitle: String
 )
+
+private data class RuneVisibility(
+    val fire: Boolean = false,
+    val water: Boolean = false,
+    val air: Boolean = false,
+    val earth: Boolean = false
+)
+
+@Composable
+private fun IntroSubtitleOverlay(
+    kind: IntroSceneKind,
+    subtitle: String,
+    fontFamily: FontFamily,
+    highlightedWords: Set<String>,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier.fillMaxWidth(),
+        contentAlignment = Alignment.Center
+    ) {
+        Crossfade(
+            targetState = kind,
+            animationSpec = tween(durationMillis = 520, easing = FastOutSlowInEasing),
+            label = "subtitle"
+        ) { targetKind ->
+            when (targetKind) {
+                IntroSceneKind.RUNE_PROLOGUE -> RuneNarrationText(
+                    fontFamily = fontFamily,
+                    highlightedWords = highlightedWords,
+                    modifier = Modifier.fillMaxWidth()
+                )
+                else -> SceneSubtitleText(
+                    text = subtitle,
+                    fontFamily = fontFamily,
+                    modifier = Modifier.fillMaxWidth()
+                )
+            }
+        }
+    }
+}
+
+@Composable
+private fun SceneSubtitleText(
+    text: String,
+    fontFamily: FontFamily,
+    modifier: Modifier = Modifier
+) {
+    Text(
+        text = text,
+        modifier = modifier
+            .clip(RoundedCornerShape(28.dp))
+            .background(Color(0xB0050A12))
+            .padding(horizontal = 24.dp, vertical = 16.dp),
+        style = androidx.compose.ui.text.TextStyle(
+            fontFamily = fontFamily,
+            color = Color(0xFFEAF7FF),
+            fontSize = 24.sp,
+            lineHeight = 32.sp,
+            textAlign = TextAlign.Center,
+            shadow = Shadow(color = Color(0x99000000), blurRadius = 18f)
+        )
+    )
+}
 
 @Composable
 private fun RunePrologueScene(
     backgroundPainter: Painter,
-    fontFamily: FontFamily,
-    highlightedWords: Set<String>,
+    fireRunePainter: Painter,
+    waterRunePainter: Painter,
+    airRunePainter: Painter,
+    earthRunePainter: Painter,
+    logoPainter: Painter,
+    runeVisibility: RuneVisibility,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -194,16 +349,19 @@ private fun RunePrologueScene(
                 .fillMaxSize()
                 .background(Color(0xAA040015))
         )
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
                 .padding(horizontal = 32.dp, vertical = 48.dp),
-            horizontalAlignment = Alignment.CenterHorizontally
+            contentAlignment = Alignment.Center
         ) {
-            RuneNarrationText(
-                fontFamily = fontFamily,
-                highlightedWords = highlightedWords,
-                modifier = Modifier.fillMaxWidth()
+            RuneCircle(
+                logoPainter = logoPainter,
+                fireRunePainter = fireRunePainter,
+                waterRunePainter = waterRunePainter,
+                airRunePainter = airRunePainter,
+                earthRunePainter = earthRunePainter,
+                runeVisibility = runeVisibility
             )
         }
     }
@@ -263,7 +421,10 @@ private fun RuneNarrationText(
 
     Text(
         text = text,
-        modifier = modifier,
+        modifier = modifier
+            .clip(RoundedCornerShape(28.dp))
+            .background(Color(0xB0050A12))
+            .padding(horizontal = 24.dp, vertical = 18.dp),
         textAlign = TextAlign.Center,
         style = baseStyle
     )
@@ -283,8 +444,133 @@ private fun runeSpanStyle(color: Color, glow: Float): SpanStyle {
 }
 
 @Composable
+private fun RuneCircle(
+    logoPainter: Painter,
+    fireRunePainter: Painter,
+    waterRunePainter: Painter,
+    airRunePainter: Painter,
+    earthRunePainter: Painter,
+    runeVisibility: RuneVisibility,
+    modifier: Modifier = Modifier
+) {
+    Box(
+        modifier = modifier
+            .size(260.dp),
+        contentAlignment = Alignment.Center
+    ) {
+        Box(
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(CircleShape)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0x442CFF8F),
+                            Color(0x22040015),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+        Box(
+            modifier = Modifier
+                .size(200.dp)
+                .clip(CircleShape)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            Color(0x332CFF8F),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+        Image(
+            painter = logoPainter,
+            contentDescription = null,
+            modifier = Modifier
+                .size(136.dp)
+                .graphicsLayer { this.alpha = 0.95f }
+        )
+        RuneOrb(
+            painter = fireRunePainter,
+            glowColor = Color(0xFFFF7043),
+            alignment = Alignment.TopCenter,
+            visible = runeVisibility.fire
+        )
+        RuneOrb(
+            painter = waterRunePainter,
+            glowColor = Color(0xFF4FC3F7),
+            alignment = Alignment.BottomCenter,
+            visible = runeVisibility.water
+        )
+        RuneOrb(
+            painter = airRunePainter,
+            glowColor = Color(0xFFA5F0FF),
+            alignment = Alignment.CenterStart,
+            visible = runeVisibility.air
+        )
+        RuneOrb(
+            painter = earthRunePainter,
+            glowColor = Color(0xFF8BC34A),
+            alignment = Alignment.CenterEnd,
+            visible = runeVisibility.earth
+        )
+    }
+}
+
+@Composable
+private fun BoxScope.RuneOrb(
+    painter: Painter,
+    glowColor: Color,
+    alignment: Alignment,
+    visible: Boolean,
+    size: Float = 78f
+) {
+    val targetAlpha = if (visible) 1f else 0f
+    val targetScale = if (visible) 1f else 0.8f
+    val alpha by animateFloatAsState(
+        targetValue = targetAlpha,
+        animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing),
+        label = "runeOrbAlpha"
+    )
+    val scale by animateFloatAsState(
+        targetValue = targetScale,
+        animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing),
+        label = "runeOrbScale"
+    )
+
+    Box(modifier = Modifier.align(alignment)) {
+        Box(
+            modifier = Modifier
+                .size(size.dp * 1.6f)
+                .graphicsLayer { this.alpha = alpha * 0.75f }
+                .clip(CircleShape)
+                .background(
+                    brush = Brush.radialGradient(
+                        colors = listOf(
+                            glowColor.copy(alpha = 0.55f),
+                            Color.Transparent
+                        )
+                    )
+                )
+        )
+        Image(
+            painter = painter,
+            contentDescription = null,
+            modifier = Modifier
+                .size(size.dp)
+                .graphicsLayer {
+                    this.alpha = alpha
+                    scaleX = scale
+                    scaleY = scale
+                }
+        )
+    }
+}
+
+@Composable
 private fun BlackMageScene(
-    fontFamily: FontFamily,
     magePainter: Painter,
 ) {
     var visible by remember { mutableStateOf(false) }
@@ -332,27 +618,11 @@ private fun BlackMageScene(
                 .height(360.dp)
                 .padding(horizontal = 24.dp)
         )
-        Text(
-            text = "But balance is a chain meant to be broken… and I, the Black Wizard, will forge a new world from the ashes!",
-            style = androidx.compose.ui.text.TextStyle(
-                fontFamily = fontFamily,
-                color = Color(0xFFEFFEF5),
-                fontSize = 26.sp,
-                lineHeight = 34.sp,
-                textAlign = TextAlign.Center,
-                shadow = Shadow(color = Color(0x882CFF8F), blurRadius = 18f)
-            ),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(32.dp)
-                .graphicsLayer { this.alpha = alpha }
-        )
     }
 }
 
 @Composable
 private fun MysticalPriestessScene(
-    fontFamily: FontFamily,
     priestessPainter: Painter,
 ) {
     var visible by remember { mutableStateOf(false) }
@@ -400,27 +670,11 @@ private fun MysticalPriestessScene(
                 .height(360.dp)
                 .padding(horizontal = 24.dp)
         )
-        Text(
-            text = "Yet hope remains. A lone guardian rises, chosen by the runes themselves, to stand against the growing darkness.",
-            style = androidx.compose.ui.text.TextStyle(
-                fontFamily = fontFamily,
-                color = Color(0xFFE7EBFF),
-                fontSize = 26.sp,
-                lineHeight = 34.sp,
-                textAlign = TextAlign.Center,
-                shadow = Shadow(color = Color(0x886D77FF), blurRadius = 18f)
-            ),
-            modifier = Modifier
-                .align(Alignment.BottomCenter)
-                .padding(32.dp)
-                .graphicsLayer { this.alpha = alpha }
-        )
     }
 }
 
 @Composable
 private fun FinalClashScene(
-    fontFamily: FontFamily,
     magePainter: Painter,
     priestessPainter: Painter,
     fireRunePainter: Painter,
@@ -515,20 +769,11 @@ private fun FinalClashScene(
             alpha = runeAlpha,
             modifier = Modifier.align(Alignment.Center)
         )
-        Text(
-            text = "The battle of runes begins. Match their power, wield their magic, and decide the fate of the realm.",
-            style = androidx.compose.ui.text.TextStyle(
-                fontFamily = fontFamily,
-                color = Color(0xFFE4F9FF),
-                fontSize = 24.sp,
-                lineHeight = 32.sp,
-                textAlign = TextAlign.Center,
-                shadow = Shadow(color = Color(0x882CFF8F), blurRadius = 18f)
-            ),
+        HeroCarouselPreview(
+            contentAlpha = contentAlpha,
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 32.dp, end = 32.dp, bottom = 28.dp)
-                .graphicsLayer { this.alpha = contentAlpha }
+                .padding(bottom = 36.dp)
         )
     }
 }
@@ -591,6 +836,91 @@ private fun RuneCluster(
 }
 
 @Composable
+private fun HeroCarouselPreview(
+    contentAlpha: Float,
+    modifier: Modifier = Modifier
+) {
+    val heroes = remember { HeroOption.values().toList() }
+    if (heroes.isEmpty()) {
+        return
+    }
+    val heroPainters = heroes.associateWith { hero -> rememberAssetPainter(hero.assetPath) }
+    var currentIndex by remember { mutableIntStateOf(0) }
+
+    LaunchedEffect(heroes) {
+        while (heroes.isNotEmpty()) {
+            delay(2_200)
+            currentIndex = (currentIndex + 1) % heroes.size
+        }
+    }
+
+    Row(
+        modifier = modifier
+            .graphicsLayer { this.alpha = contentAlpha }
+            .padding(horizontal = 24.dp),
+        horizontalArrangement = Arrangement.spacedBy(16.dp),
+        verticalAlignment = Alignment.CenterVertically
+    ) {
+        val heroCount = heroes.size
+        for (offset in -1..1) {
+            key(offset) {
+                val heroIndex = (currentIndex + offset + heroCount) % heroCount
+                val hero = heroes[heroIndex]
+                val style = heroStyleFor(hero)
+                val targetScale = if (offset == 0) 1f else 0.86f
+                val targetAlpha = if (offset == 0) 1f else 0.45f
+                val scale by animateFloatAsState(
+                    targetValue = targetScale,
+                    animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing),
+                    label = "heroCarouselScale$offset"
+                )
+                val alpha by animateFloatAsState(
+                    targetValue = targetAlpha,
+                    animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing),
+                    label = "heroCarouselAlpha$offset"
+                )
+
+                CharacterPortraitCard(
+                    painter = heroPainters.getValue(hero),
+                    contentDescription = null,
+                    glowColor = style.glowColor,
+                    backgroundTint = style.backgroundTint,
+                    scale = scale,
+                    alpha = alpha,
+                    modifier = Modifier.height(320.dp)
+                )
+            }
+        }
+    }
+}
+
+private data class HeroCardStyle(
+    val glowColor: Color,
+    val backgroundTint: Color
+)
+
+private fun heroStyleFor(hero: HeroOption): HeroCardStyle {
+    return when (hero) {
+        HeroOption.WARRIOR -> HeroCardStyle(
+            glowColor = Color(0xFFFFB74D),
+            backgroundTint = Color(0xFF331E05)
+        )
+        HeroOption.MAGE -> HeroCardStyle(
+            glowColor = Color(0xFF7C8DFF),
+            backgroundTint = Color(0xFF111535)
+        )
+        HeroOption.MYSTICAL_PRIESTESS -> HeroCardStyle(
+            glowColor = Color(0xFF6D77FF),
+            backgroundTint = Color(0xFF0B0F1F)
+        )
+        HeroOption.RANGER -> HeroCardStyle(
+            glowColor = Color(0xFF8BC34A),
+            backgroundTint = Color(0xFF102611)
+        )
+    }
+}
+
+@Composable
 private fun CharacterPortraitCard(
     painter: Painter,
     contentDescription: String?,
@@ -633,7 +963,7 @@ private fun CharacterPortraitCard(
         Image(
             painter = painter,
             contentDescription = contentDescription,
-            contentScale = ContentScale.Crop,
+            contentScale = ContentScale.Fit,
             modifier = Modifier
                 .fillMaxSize()
                 .padding(12.dp)
