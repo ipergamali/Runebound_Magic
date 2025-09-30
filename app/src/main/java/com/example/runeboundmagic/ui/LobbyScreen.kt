@@ -84,12 +84,15 @@ fun LobbyScreen(
     onSelectHero: () -> Unit,
     onStartBattle: (HeroOption, String) -> Unit,
     onOpenCodex: () -> Unit,
+    onLobbyShown: () -> Unit = {},
     isA4Playing: Boolean = false,
     viewModel: HeroChoiceViewModel = lobbyViewModel(),
 ) {
     val context = LocalContext.current
     val snackbarHostState = remember { SnackbarHostState() }
     val scope = rememberCoroutineScope()
+
+    LaunchedEffect(Unit) { onLobbyShown() }
 
     val heroes = remember { HeroOption.values().toList() }
     var selectedHero by rememberSaveable { mutableStateOf(heroes.first()) }

@@ -1,8 +1,8 @@
 package com.example.runeboundmagic.ui
 
 import android.content.Intent
-import androidx.compose.material3.MaterialTheme
 import androidx.compose.material3.darkColorScheme
+import androidx.compose.material3.MaterialTheme
 import androidx.compose.runtime.Composable
 import androidx.compose.ui.graphics.Color
 import androidx.navigation.compose.NavHost
@@ -12,6 +12,7 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.runeboundmagic.CharacterSelectionActivity
 import com.example.runeboundmagic.HeroOption
 import com.example.runeboundmagic.MainActivity
+import com.example.runeboundmagic.audio.BackgroundMusicController
 import com.example.runeboundmagic.codex.CodexScreen
 
 private const val SplashRoute = "splash"
@@ -29,7 +30,7 @@ private val SplashColorScheme = darkColorScheme(
 )
 
 @Composable
-fun RuneboundMagicApp() {
+fun RuneboundMagicApp(musicController: BackgroundMusicController) {
     val navController = rememberNavController()
     MaterialTheme(colorScheme = SplashColorScheme) {
         NavHost(
@@ -41,6 +42,7 @@ fun RuneboundMagicApp() {
             }
             composable(IntroRoute) {
                 IntroScreen(
+                    onIntroShown = { musicController.startOrResume() },
                     onIntroFinished = {
                         navController.navigate(Routes.Lobby) {
                             popUpTo(Routes.Splash) { inclusive = true }
@@ -58,6 +60,7 @@ fun RuneboundMagicApp() {
                         )
                     },
                     onStartBattle = { hero: HeroOption, _ ->
+                        musicController.stop()
                         val intent = Intent(context, MainActivity::class.java).apply {
                             putExtra(MainActivity.EXTRA_SELECTED_HERO, hero.name)
                         }
@@ -65,7 +68,8 @@ fun RuneboundMagicApp() {
                     },
                     onOpenCodex = {
                         navController.navigate(Routes.Codex)
-                    }
+                    },
+                    onLobbyShown = { musicController.startOrResume() }
                 )
             }
             composable(CodexRoute) {
