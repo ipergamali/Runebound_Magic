@@ -61,7 +61,7 @@ class BackgroundMusicController(private val context: Context) : DefaultLifecycle
         assetDescriptor.close()
         player.isLooping = true
         player.prepare()
-        player.setVolume(0.15f, 0.15f)
+        player.setVolume(0.2f, 0.2f)
 
 
         mediaPlayer = player

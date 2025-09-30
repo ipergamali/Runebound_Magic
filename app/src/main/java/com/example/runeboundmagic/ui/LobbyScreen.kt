@@ -1,7 +1,7 @@
 package com.example.runeboundmagic.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -9,14 +9,19 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.PagerState
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -28,6 +33,7 @@ import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
@@ -42,8 +48,6 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,9 +61,10 @@ import com.example.runeboundmagic.R
 import com.example.runeboundmagic.data.local.HeroChoiceDatabase
 import com.example.runeboundmagic.toHeroOption
 import com.example.runeboundmagic.toHeroType
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.flow.distinctUntilChanged
+import kotlinx.coroutines.flow.snapshotFlow
 import kotlinx.coroutines.launch
-
-private val WhisperingSignature = FontFamily(Font(R.font.whispering_signature))
 
 @Composable
 fun LobbyScreen(
@@ -76,13 +81,12 @@ fun LobbyScreen(
 
     LaunchedEffect(Unit) { onLobbyShown() }
 
-    val heroes = remember {
-        listOf(
-            HeroOption.MYSTICAL_PRIESTESS,
-            HeroOption.MAGE
-        )
-    }
-    var selectedHero by rememberSaveable { mutableStateOf(heroes.first()) }
+    val heroes = remember { HeroOption.entries.toList() }
+    var selectedHeroIndex by rememberSaveable { mutableIntStateOf(0) }
+    val pagerState = rememberPagerState(
+        initialPage = selectedHeroIndex,
+        pageCount = { heroes.size }
+    )
     var playerName by rememberSaveable { mutableStateOf("") }
     var lastSavedSignature by remember { mutableStateOf<Pair<String, String>?>(null) }
 
@@ -90,13 +94,48 @@ fun LobbyScreen(
 
     LaunchedEffect(lastChoice) {
         lastChoice?.let { choice ->
-            selectedHero = choice.heroType.toHeroOption()
+            val hero = choice.heroType.toHeroOption()
+            val heroIndex = heroes.indexOf(hero).coerceAtLeast(0)
+            if (heroIndex >= 0) {
+                selectedHeroIndex = heroIndex
+            }
             if (playerName.isBlank()) {
                 playerName = choice.playerName
             }
             lastSavedSignature = choice.playerName.trim() to choice.heroType.name
         }
     }
+
+    LaunchedEffect(selectedHeroIndex) {
+        if (pagerState.currentPage != selectedHeroIndex || pagerState.targetPage != selectedHeroIndex) {
+            pagerState.animateScrollToPage(selectedHeroIndex)
+        }
+    }
+
+    var lastLoggedPage by remember { mutableIntStateOf(-1) }
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.settledPage }
+            .distinctUntilChanged()
+            .collectLatest { page ->
+                if (page in heroes.indices) {
+                    if (selectedHeroIndex != page) {
+                        selectedHeroIndex = page
+                    }
+                    if (lastLoggedPage != page) {
+                        lastLoggedPage = page
+                        val hero = heroes[page]
+                        viewModel.logInteraction(
+                            event = LobbyInteractionEvent.HERO_SELECTED,
+                            heroType = hero.toHeroType(),
+                            heroDisplayName = context.getString(hero.displayNameRes),
+                            heroNameInput = playerName
+                        )
+                    }
+                }
+            }
+    }
+
+    val selectedHero = heroes[selectedHeroIndex.coerceIn(heroes.indices)]
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -174,12 +213,6 @@ fun LobbyScreen(
                 contentScale = ContentScale.FillBounds
             )
 
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0x880B111A))
-            )
-
             Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
@@ -205,6 +238,17 @@ fun LobbyScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                HeroCarousel(
+                    heroes = heroes,
+                    pagerState = pagerState,
+                    selectedIndex = selectedHeroIndex,
+                    onHeroSelected = { index ->
+                        if (index in heroes.indices) {
+                            selectedHeroIndex = index
+                        }
+                    }
+                )
+
                 OutlinedTextField(
                     value = playerName,
                     onValueChange = { newValue ->
@@ -224,7 +268,7 @@ fun LobbyScreen(
                     },
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
-                    modifier = Modifier.width(220.dp),
+                    modifier = Modifier.width(240.dp),
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color(0xFFFFD700),
                         unfocusedIndicatorColor = Color(0xB3FFD700),
@@ -236,20 +280,6 @@ fun LobbyScreen(
                         focusedPlaceholderColor = Color.White.copy(alpha = 0.7f),
                         unfocusedPlaceholderColor = Color.White.copy(alpha = 0.7f)
                     )
-                )
-
-                HeroCardRow(
-                    heroes = heroes,
-                    selectedHero = selectedHero,
-                    onHeroSelected = { hero ->
-                        selectedHero = hero
-                        viewModel.logInteraction(
-                            event = LobbyInteractionEvent.HERO_SELECTED,
-                            heroType = hero.toHeroType(),
-                            heroDisplayName = context.getString(hero.displayNameRes),
-                            heroNameInput = playerName
-                        )
-                    }
                 )
             }
 
@@ -387,48 +417,21 @@ private fun HeroInfoHeader(
     Column(
         modifier = modifier,
         horizontalAlignment = Alignment.CenterHorizontally,
-        verticalArrangement = Arrangement.spacedBy(16.dp)
+        verticalArrangement = Arrangement.spacedBy(8.dp)
     ) {
         Text(
-            text = stringResource(id = R.string.lobby_title),
-            color = Color(0xFFFFD700),
-            fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp
-        )
-        Text(
-            text = stringResource(id = R.string.lobby_hero_header, heroName, heroTrait),
+            text = heroName,
             textAlign = TextAlign.Center,
-            fontSize = 32.sp,
-            color = Color.White,
-            fontFamily = WhisperingSignature,
-            lineHeight = 40.sp,
-            modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color(0x330B111A))
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+            fontSize = 20.sp,
+            color = Color(0xFFFFD700),
+            fontWeight = FontWeight.SemiBold
         )
-    }
-}
-
-@Composable
-private fun HeroCardRow(
-    heroes: List<HeroOption>,
-    selectedHero: HeroOption,
-    onHeroSelected: (HeroOption) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        heroes.forEach { hero ->
-            HeroSelectionCard(
-                hero = hero,
-                selected = hero == selectedHero,
-                onClick = { onHeroSelected(hero) }
-            )
-        }
+        Text(
+            text = heroTrait,
+            textAlign = TextAlign.Center,
+            fontSize = 14.sp,
+            color = Color(0xFFC0C0C0)
+        )
     }
 }
 
@@ -436,16 +439,17 @@ private fun HeroCardRow(
 private fun HeroSelectionCard(
     hero: HeroOption,
     selected: Boolean,
-    onClick: () -> Unit
+    onClick: () -> Unit,
+    modifier: Modifier = Modifier
 ) {
     val borderColor = if (selected) Color(0xFFFFD700) else Color(0x66FFFFFF)
     Box(
-        modifier = Modifier
-            .width(120.dp)
-            .height(180.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .border(width = if (selected) 3.dp else 1.dp, color = borderColor, shape = RoundedCornerShape(20.dp))
-            .background(Color(0x330B111A))
+        modifier = modifier
+            .border(
+                width = if (selected) 3.dp else 1.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(20.dp)
+            )
             .clickable(onClick = onClick),
         contentAlignment = Alignment.Center
     ) {
@@ -453,7 +457,41 @@ private fun HeroSelectionCard(
             painter = rememberAssetPainter(hero.assetPath),
             contentDescription = stringResource(id = hero.displayNameRes),
             contentScale = ContentScale.Crop,
-            modifier = Modifier.fillMaxSize()
+            modifier = Modifier
+                .fillMaxSize()
+                .clip(RoundedCornerShape(20.dp))
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HeroCarousel(
+    heroes: List<HeroOption>,
+    pagerState: PagerState,
+    selectedIndex: Int,
+    onHeroSelected: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    HorizontalPager(
+        state = pagerState,
+        pageSize = PageSize.Fixed(180.dp),
+        beyondBoundsPageCount = 1,
+        contentPadding = PaddingValues(horizontal = 64.dp),
+        pageSpacing = 20.dp,
+        modifier = modifier
+            .fillMaxWidth()
+            .heightIn(min = 200.dp)
+    ) { page ->
+        val hero = heroes[page]
+        val isSelected = page == selectedIndex
+        HeroSelectionCard(
+            hero = hero,
+            selected = isSelected,
+            onClick = { onHeroSelected(page) },
+            modifier = Modifier
+                .height(220.dp)
+                .width(160.dp)
         )
     }
 }
