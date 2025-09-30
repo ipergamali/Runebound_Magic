@@ -827,7 +827,9 @@ private fun FinalClashScene(
                 earthRunePainter = earthRunePainter,
                 scale = runeScale,
                 alpha = runeAlpha,
-                modifier = Modifier.padding(top = 40.dp, bottom = 48.dp)
+                modifier = Modifier
+                    .padding(top = 40.dp, bottom = 48.dp)
+                    .offset(y = (-32).dp)
             )
             Row(
                 modifier = Modifier.fillMaxWidth(),
