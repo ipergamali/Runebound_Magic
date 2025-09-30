@@ -9,7 +9,11 @@
     <string name="lobby_select_prompt">Επίλεξε έναν ήρωα πριν ξεκινήσεις</string>
     <string name="lobby_confirm_selection">Επιβεβαίωση Ήρωα</string>
     <string name="lobby_confirm_selection_with_choice">Επιβεβαίωση (%1$s)</string>
-    <string name="lobby_selection_saved">%1$s the %2$s αποθηκεύτηκε!</string>
+    <string name="lobby_selection_saved">%1$s – %2$s αποθηκεύτηκε!</string>
+    <string name="lobby_title">Runebound Lobby</string>
+    <string name="lobby_subtitle">Διάλεξε τον ήρωα σου και ξεκίνα την περιπέτεια.</string>
+    <string name="lobby_last_choice">Τελευταία επιλογή: %1$s – %2$s</string>
+    <string name="lobby_last_saved_time">Αποθηκεύτηκε: %1$s</string>
     <string name="select_hero">Επίλεξε τον Ήρωά σου</string>
     <string name="hero_warrior">Warrior</string>
     <string name="hero_mage">Mage</string>

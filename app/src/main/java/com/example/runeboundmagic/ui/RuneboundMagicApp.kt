@@ -10,6 +10,7 @@ import androidx.navigation.compose.rememberNavController
 
 private const val SplashRoute = "splash"
 private const val IntroRoute = "intro"
+private const val LobbyRoute = "lobby"
 
 private val SplashColorScheme = darkColorScheme(
     primary = Color(0xFF38B6FF),
@@ -32,7 +33,16 @@ fun RuneboundMagicApp() {
                 SplashScreen(navController = navController)
             }
             composable(IntroRoute) {
-                IntroScreen()
+                IntroScreen(
+                    onIntroFinished = {
+                        navController.navigate(Routes.Lobby) {
+                            popUpTo(Routes.Splash) { inclusive = true }
+                        }
+                    }
+                )
+            }
+            composable(LobbyRoute) {
+                LobbyScreen()
             }
         }
     }
@@ -41,4 +51,5 @@ fun RuneboundMagicApp() {
 internal object Routes {
     const val Splash = SplashRoute
     const val Intro = IntroRoute
+    const val Lobby = LobbyRoute
 }
