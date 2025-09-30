@@ -125,11 +125,39 @@
 
     </androidx.constraintlayout.widget.ConstraintLayout>
 
+    <com.google.android.material.textfield.TextInputLayout
+        android:id="@+id/heroNameInputLayout"
+        style="@style/Widget.MaterialComponents.TextInputLayout.OutlinedBox"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
+        android:layout_marginEnd="32dp"
+        app:boxBackgroundMode="outline"
+        app:hintEnabled="false"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/heroCarouselContainer">
+
+        <com.google.android.material.textfield.TextInputEditText
+            android:id="@+id/heroNameInput"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:hint="@string/hero_name_hint"
+            android:imeOptions="actionDone"
+            android:inputType="textCapWords"
+            android:maxLines="1"
+            android:textColor="@android:color/white"
+            android:textColorHint="@android:color/white" />
+
+    </com.google.android.material.textfield.TextInputLayout>
+
     <TextView
         android:id="@+id/selectedHeroLabel"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_marginStart="32dp"
+        android:layout_marginTop="16dp"
         android:layout_marginEnd="32dp"
         android:layout_marginBottom="12dp"
         android:gravity="center"
@@ -143,7 +171,8 @@
         app:layout_constraintBottom_toTopOf="@+id/selectHeroButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        tools:text="Ήρωας: Mystical Priestess" />
+        app:layout_constraintTop_toBottomOf="@id/heroNameInputLayout"
+        tools:text="Artheon the Warrior" />
 
     <com.google.android.material.button.MaterialButton
         android:id="@+id/backButton"
@@ -163,7 +192,7 @@
         android:layout_width="300dp"
         android:layout_height="120dp"
         android:layout_marginBottom="16dp"
-        android:text="@string/lobby_select_hero"
+        android:text="@string/lobby_confirm_selection"
         android:textAllCaps="false"
         android:textSize="18sp"
         app:cornerRadius="24dp"

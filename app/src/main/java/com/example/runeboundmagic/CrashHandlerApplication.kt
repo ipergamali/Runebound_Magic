@@ -3,11 +3,13 @@ package com.example.runeboundmagic
 import android.app.Application
 import android.content.Intent
 import android.util.Log
+import com.google.firebase.FirebaseApp
 
 class CrashHandlerApplication : Application() {
 
     override fun onCreate() {
         super.onCreate()
+        FirebaseApp.initializeApp(this)
         val defaultHandler = Thread.getDefaultUncaughtExceptionHandler()
         Thread.setDefaultUncaughtExceptionHandler { thread, throwable ->
             if (!handleUncaughtException(throwable)) {
