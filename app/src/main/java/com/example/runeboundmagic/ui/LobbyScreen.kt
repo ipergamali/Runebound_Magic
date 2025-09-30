@@ -56,7 +56,6 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
-import androidx.compose.ui.text.style.TextOverflow
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
@@ -205,6 +204,7 @@ fun LobbyScreen(
             ) {
                 LobbyHeader(
                     heroName = selectedHeroLabel,
+                    heroTrait = selectedHeroDescription,
                     modifier = Modifier.fillMaxWidth()
                 )
             }
@@ -214,12 +214,12 @@ fun LobbyScreen(
                     .align(Alignment.BottomCenter)
                     .fillMaxWidth()
                     .padding(horizontal = 24.dp)
-                    .padding(bottom = bottomPadding),
+                    .padding(bottom = bottomPadding + 32.dp),
                 horizontalAlignment = Alignment.CenterHorizontally
             ) {
                 HeroCarousel(
                     modifier = Modifier
-                        .fillMaxWidth()
+                        .fillMaxWidth(0.8f)
                         .height(300.dp),
                     heroes = heroes,
                     selectedHero = selectedHero,
@@ -235,28 +235,7 @@ fun LobbyScreen(
                     }
                 )
 
-                Spacer(modifier = Modifier.height(12.dp))
-
-                Text(
-                    text = selectedHeroLabel,
-                    color = Color(0xFFF0C977),
-                    fontWeight = FontWeight.Bold,
-                    fontSize = 20.sp,
-                    textAlign = TextAlign.Center
-                )
-
-                Spacer(modifier = Modifier.height(6.dp))
-
-                Text(
-                    text = selectedHeroDescription,
-                    color = Color(0xFFE8F5FF),
-                    fontSize = 14.sp,
-                    textAlign = TextAlign.Center,
-                    lineHeight = 18.sp,
-                    modifier = Modifier.fillMaxWidth(0.9f)
-                )
-
-                Spacer(modifier = Modifier.height(16.dp))
+                Spacer(modifier = Modifier.height(4.dp))
 
                 OutlinedTextField(
                     value = playerName,
@@ -272,7 +251,7 @@ fun LobbyScreen(
                     placeholder = { Text(text = stringResource(id = R.string.hero_name_hint)) },
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
-                    modifier = Modifier.fillMaxWidth(0.8f),
+                    modifier = Modifier.width(220.dp),
                     colors = TextFieldDefaults.colors(
                         unfocusedIndicatorColor = Color(0xFFE0D299),
                         focusedIndicatorColor = Color(0xFFF0C977),
@@ -283,6 +262,8 @@ fun LobbyScreen(
                         unfocusedLabelColor = Color(0xFFE8F5FF),
                     )
                 )
+
+                Spacer(modifier = Modifier.height(12.dp))
             }
 
             val selectionSignature = remember(selectedHero, playerName) {
@@ -415,6 +396,7 @@ fun LobbyScreen(
 @Composable
 private fun LobbyHeader(
     heroName: String,
+    heroTrait: String,
     modifier: Modifier = Modifier
 ) {
     Column(
@@ -435,7 +417,7 @@ private fun LobbyHeader(
             textAlign = TextAlign.Center
         )
         Text(
-            text = stringResource(id = R.string.lobby_selected_hero, heroName),
+            text = stringResource(id = R.string.lobby_selected_hero_details, heroName, heroTrait),
             color = Color(0xFFFFE7A7),
             fontSize = 18.sp,
             fontWeight = FontWeight.SemiBold,
@@ -522,7 +504,7 @@ private fun HeroCarouselCard(
 ) {
     ElevatedCard(
         modifier = Modifier
-            .width(196.dp)
+            .width(156.dp)
             .height(268.dp)
             .graphicsLayer {
                 scaleX = scale
@@ -536,53 +518,24 @@ private fun HeroCarouselCard(
         ),
         elevation = CardDefaults.elevatedCardElevation(defaultElevation = if (isSelected) 10.dp else 2.dp)
     ) {
-        Column(
+        Box(
             modifier = Modifier
                 .fillMaxSize()
-                .padding(16.dp),
-            horizontalAlignment = Alignment.CenterHorizontally,
-            verticalArrangement = Arrangement.spacedBy(12.dp)
+                .padding(12.dp)
+                .clip(RoundedCornerShape(22.dp))
         ) {
-            Box(
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .weight(1f)
-                    .clip(RoundedCornerShape(22.dp))
-            ) {
-                Crossfade(
-                    targetState = hero.assetPath,
-                    animationSpec = tween(durationMillis = 300),
-                    label = "heroAsset${hero.name}"
-                ) { assetPath ->
-                    Image(
-                        painter = rememberAssetPainter(assetPath),
-                        contentDescription = stringResource(id = hero.displayNameRes),
-                        contentScale = ContentScale.Fit,
-                        modifier = Modifier.fillMaxSize()
-                    )
-                }
+            Crossfade(
+                targetState = hero.assetPath,
+                animationSpec = tween(durationMillis = 300),
+                label = "heroAsset${hero.name}"
+            ) { assetPath ->
+                Image(
+                    painter = rememberAssetPainter(assetPath),
+                    contentDescription = stringResource(id = hero.displayNameRes),
+                    contentScale = ContentScale.Crop,
+                    modifier = Modifier.fillMaxSize()
+                )
             }
-
-            Text(
-                text = stringResource(id = hero.displayNameRes),
-                color = Color(0xFF00FF88),
-                fontWeight = FontWeight.Bold,
-                fontSize = 18.sp,
-                textAlign = TextAlign.Center,
-                modifier = Modifier.fillMaxWidth()
-            )
-            Text(
-                text = stringResource(id = hero.descriptionRes),
-                color = Color.White,
-                fontSize = 13.sp,
-                lineHeight = 16.sp,
-                maxLines = 2,
-                overflow = TextOverflow.Ellipsis,
-                textAlign = TextAlign.Center,
-                modifier = Modifier
-                    .fillMaxWidth()
-                    .padding(horizontal = 8.dp)
-            )
         }
     }
 }
