@@ -1,6 +1,5 @@
 package com.example.runeboundmagic.ui
 
-import android.graphics.Typeface
 import android.media.MediaPlayer
 import androidx.annotation.RawRes
 import androidx.compose.animation.AnimatedVisibility
@@ -21,6 +20,7 @@ import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
+import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
 import androidx.compose.foundation.layout.Row
 import androidx.compose.foundation.layout.aspectRatio
@@ -28,8 +28,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
+import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.Button
@@ -58,6 +60,7 @@ import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
@@ -102,6 +105,7 @@ fun IntroScreen(
     var highlightedWords by remember { mutableStateOf(emptySet<String>()) }
     var runeVisibility by remember { mutableStateOf(RuneVisibility()) }
     var showStartGameButton by rememberSaveable { mutableStateOf(false) }
+    var showRuneLogo by rememberSaveable { mutableStateOf(false) }
 
     val signatureFont = rememberSignatureFont()
 
@@ -150,6 +154,7 @@ fun IntroScreen(
         showStartGameButton = false
         when (currentScene.kind) {
             IntroSceneKind.RUNE_PROLOGUE -> {
+                showRuneLogo = false
                 var visibility = RuneVisibility()
                 var words = emptySet<String>()
                 delay(3_000)
@@ -172,8 +177,10 @@ fun IntroScreen(
                 runeVisibility = visibility
                 words = words + "Earth"
                 highlightedWords = words
+                delay(600)
+                showRuneLogo = true
             }
-            else -> Unit
+            else -> showRuneLogo = true
         }
     }
 
@@ -195,7 +202,8 @@ fun IntroScreen(
                     airRunePainter = airRunePainter,
                     earthRunePainter = earthRunePainter,
                     logoPainter = logoPainter,
-                    runeVisibility = runeVisibility
+                    runeVisibility = runeVisibility,
+                    showLogo = showRuneLogo
                 )
                 1 -> BlackMageScene(
                     magePainter = magePainter
@@ -337,6 +345,7 @@ private fun RunePrologueScene(
     earthRunePainter: Painter,
     logoPainter: Painter,
     runeVisibility: RuneVisibility,
+    showLogo: Boolean,
 ) {
     Box(modifier = Modifier.fillMaxSize()) {
         Image(
@@ -362,7 +371,8 @@ private fun RunePrologueScene(
                 waterRunePainter = waterRunePainter,
                 airRunePainter = airRunePainter,
                 earthRunePainter = earthRunePainter,
-                runeVisibility = runeVisibility
+                runeVisibility = runeVisibility,
+                showLogo = showLogo
             )
         }
     }
@@ -452,6 +462,7 @@ private fun RuneCircle(
     airRunePainter: Painter,
     earthRunePainter: Painter,
     runeVisibility: RuneVisibility,
+    showLogo: Boolean,
     modifier: Modifier = Modifier
 ) {
     Box(
@@ -486,13 +497,19 @@ private fun RuneCircle(
                     )
                 )
         )
-        Image(
-            painter = logoPainter,
-            contentDescription = null,
-            modifier = Modifier
-                .size(136.dp)
-                .graphicsLayer { this.alpha = 0.95f }
-        )
+        AnimatedVisibility(
+            visible = showLogo,
+            enter = fadeIn(animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)),
+            exit = fadeOut(animationSpec = tween(durationMillis = 180))
+        ) {
+            Image(
+                painter = logoPainter,
+                contentDescription = null,
+                modifier = Modifier
+                    .size(136.dp)
+                    .graphicsLayer { this.alpha = 0.95f }
+            )
+        }
         RuneOrb(
             painter = fireRunePainter,
             glowColor = Color(0xFFFF7043),
@@ -855,41 +872,52 @@ private fun HeroCarouselPreview(
         }
     }
 
-    Row(
+    BoxWithConstraints(
         modifier = modifier
             .graphicsLayer { this.alpha = contentAlpha }
-            .padding(horizontal = 24.dp),
-        horizontalArrangement = Arrangement.spacedBy(16.dp),
-        verticalAlignment = Alignment.CenterVertically
+            .fillMaxWidth()
+            .padding(horizontal = 24.dp)
     ) {
-        val heroCount = heroes.size
-        for (offset in -1..1) {
-            key(offset) {
-                val heroIndex = (currentIndex + offset + heroCount) % heroCount
-                val hero = heroes[heroIndex]
-                val style = heroStyleFor(hero)
-                val targetScale = if (offset == 0) 1f else 0.86f
-                val targetAlpha = if (offset == 0) 1f else 0.45f
-                val scale by animateFloatAsState(
-                    targetValue = targetScale,
-                    animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing),
-                    label = "heroCarouselScale$offset"
-                )
-                val alpha by animateFloatAsState(
-                    targetValue = targetAlpha,
-                    animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing),
-                    label = "heroCarouselAlpha$offset"
-                )
+        val spacing = 16.dp
+        val availableWidth = maxWidth
+        val cardWidth = ((availableWidth - spacing * 2) / 3f).coerceIn(140.dp, 240.dp)
 
-                CharacterPortraitCard(
-                    painter = heroPainters.getValue(hero),
-                    contentDescription = null,
-                    glowColor = style.glowColor,
-                    backgroundTint = style.backgroundTint,
-                    scale = scale,
-                    alpha = alpha,
-                    modifier = Modifier.height(320.dp)
-                )
+        Row(
+            modifier = Modifier.fillMaxWidth(),
+            horizontalArrangement = Arrangement.spacedBy(spacing, Alignment.CenterHorizontally),
+            verticalAlignment = Alignment.CenterVertically
+        ) {
+            val heroCount = heroes.size
+            for (offset in -1..1) {
+                key(offset) {
+                    val heroIndex = (currentIndex + offset + heroCount) % heroCount
+                    val hero = heroes[heroIndex]
+                    val style = heroStyleFor(hero)
+                    val targetScale = if (offset == 0) 1f else 0.86f
+                    val targetAlpha = if (offset == 0) 1f else 0.45f
+                    val scale by animateFloatAsState(
+                        targetValue = targetScale,
+                        animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing),
+                        label = "heroCarouselScale$offset"
+                    )
+                    val alpha by animateFloatAsState(
+                        targetValue = targetAlpha,
+                        animationSpec = tween(durationMillis = 480, easing = FastOutSlowInEasing),
+                        label = "heroCarouselAlpha$offset"
+                    )
+
+                    CharacterPortraitCard(
+                        painter = heroPainters.getValue(hero),
+                        contentDescription = null,
+                        glowColor = style.glowColor,
+                        backgroundTint = style.backgroundTint,
+                        scale = scale,
+                        alpha = alpha,
+                        modifier = Modifier
+                            .width(cardWidth)
+                            .heightIn(max = 320.dp)
+                    )
+                }
             }
         }
     }
@@ -985,10 +1013,5 @@ private fun CharacterPortraitCard(
 
 @Composable
 private fun rememberSignatureFont(): FontFamily {
-    val context = LocalContext.current
-    return remember {
-        runCatching {
-            FontFamily(Typeface.createFromAsset(context.assets, "fonts/WhisperingSignature.ttf"))
-        }.getOrElse { FontFamily.Default }
-    }
+    return remember { FontFamily(Font(R.font.whisperingsignature)) }
 }
