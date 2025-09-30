@@ -12,10 +12,12 @@ import androidx.compose.ui.platform.LocalContext
 import com.example.runeboundmagic.CharacterSelectionActivity
 import com.example.runeboundmagic.HeroOption
 import com.example.runeboundmagic.MainActivity
+import com.example.runeboundmagic.codex.CodexScreen
 
 private const val SplashRoute = "splash"
 private const val IntroRoute = "intro"
 private const val LobbyRoute = "lobby"
+private const val CodexRoute = "codex"
 
 private val SplashColorScheme = darkColorScheme(
     primary = Color(0xFF38B6FF),
@@ -60,8 +62,14 @@ fun RuneboundMagicApp() {
                             putExtra(MainActivity.EXTRA_SELECTED_HERO, hero.name)
                         }
                         context.startActivity(intent)
+                    },
+                    onOpenCodex = {
+                        navController.navigate(Routes.Codex)
                     }
                 )
+            }
+            composable(CodexRoute) {
+                CodexScreen(onBack = { navController.popBackStack() })
             }
         }
     }
@@ -71,4 +79,5 @@ internal object Routes {
     const val Splash = SplashRoute
     const val Intro = IntroRoute
     const val Lobby = LobbyRoute
+    const val Codex = CodexRoute
 }

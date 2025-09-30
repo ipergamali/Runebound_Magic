@@ -32,4 +32,16 @@
     <string name="hero_carousel_next">Επόμενος ήρωας</string>
     <string name="hero_name_hint">Όνομα Ήρωα</string>
     <string name="error_empty_hero_name">Δώσε ένα όνομα για τον ήρωα</string>
+    <string name="codex_title">Runebound Codex</string>
+    <string name="codex_search_placeholder">Αναζήτηση σε ήρωες, κάρτες, lore…</string>
+    <string name="codex_all">Όλα</string>
+    <string name="codex_category_heroes">Ήρωες</string>
+    <string name="codex_category_cards">Κάρτες</string>
+    <string name="codex_category_campaigns">Περιπέτειες</string>
+    <string name="codex_category_lore">Ιστορίες</string>
+    <string name="codex_results">%1$d εγγραφές</string>
+    <string name="codex_abilities">Ικανότητες</string>
+    <string name="codex_role">Ρόλος: %1$s</string>
+    <string name="codex_category_label">Κατηγορία: %1$s</string>
+    <string name="codex_open_button">Άνοιγμα Codex</string>
 </resources>
