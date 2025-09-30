@@ -3,7 +3,8 @@
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#FF45533C">
 
     <ImageView
         android:id="@+id/lobbyBackground"
@@ -21,11 +22,42 @@
         android:id="@+id/backgroundScrim"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        android:background="#55000000"
+        android:background="#FF45533C"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/lobbyTitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="32dp"
+        android:layout_marginEnd="32dp"
+        android:gravity="center"
+        android:text="@string/lobby_title"
+        android:textColor="#FF00FF88"
+        android:textSize="24sp"
+        android:textStyle="bold"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent" />
+
+    <TextView
+        android:id="@+id/lobbySubtitle"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="32dp"
+        android:layout_marginTop="8dp"
+        android:layout_marginEnd="32dp"
+        android:gravity="center"
+        android:text="@string/lobby_subtitle"
+        android:textColor="#FFDADADA"
+        android:textSize="14sp"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toBottomOf="@id/lobbyTitle" />
 
     <androidx.constraintlayout.widget.ConstraintLayout
         android:id="@+id/heroCarouselContainer"
@@ -38,8 +70,8 @@
         app:layout_constraintBottom_toTopOf="@+id/selectedHeroLabel"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintVertical_bias="0.4">
+        app:layout_constraintTop_toBottomOf="@id/heroNameInputLayout"
+        app:layout_constraintVertical_bias="0.0">
 
         <androidx.viewpager2.widget.ViewPager2
             android:id="@+id/heroCarousel"
@@ -137,7 +169,7 @@
         app:hintEnabled="false"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/heroCarouselContainer">
+        app:layout_constraintTop_toBottomOf="@id/lobbySubtitle">
 
         <com.google.android.material.textfield.TextInputEditText
             android:id="@+id/heroNameInput"
@@ -171,7 +203,7 @@
         app:layout_constraintBottom_toTopOf="@+id/selectHeroButton"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/heroNameInputLayout"
+        app:layout_constraintTop_toBottomOf="@id/heroCarouselContainer"
         tools:text="Artheon the Warrior" />
 
     <com.google.android.material.button.MaterialButton
