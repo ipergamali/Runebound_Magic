@@ -7,8 +7,8 @@ import androidx.room.RoomDatabase
 import androidx.room.TypeConverters
 
 @Database(
-    entities = [HeroChoiceEntity::class],
-    version = 1,
+    entities = [HeroChoiceEntity::class, LobbyInteractionEntity::class],
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(HeroTypeConverter::class)
@@ -28,7 +28,10 @@ abstract class HeroChoiceDatabase : RoomDatabase() {
                     context.applicationContext,
                     HeroChoiceDatabase::class.java,
                     DATABASE_NAME
-                ).build().also { instance = it }
+                )
+                    .fallbackToDestructiveMigration()
+                    .build()
+                    .also { instance = it }
             }
         }
     }
