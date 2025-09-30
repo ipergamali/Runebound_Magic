@@ -11,6 +11,7 @@ import androidx.compose.animation.scaleIn
 import androidx.compose.animation.core.FastOutSlowInEasing
 import androidx.compose.animation.core.RepeatMode
 import androidx.compose.animation.core.animateFloat
+import androidx.compose.animation.core.animateDpAsState
 import androidx.compose.animation.core.animateFloatAsState
 import androidx.compose.animation.core.infiniteRepeatable
 import androidx.compose.animation.core.rememberInfiniteTransition
@@ -31,6 +32,7 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.shape.CircleShape
@@ -65,6 +67,7 @@ import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
+import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.geometry.Offset
@@ -239,15 +242,9 @@ fun IntroScreen(
             }
         }
 
-        val subtitleModifier = if (isFinalScene) {
-            Modifier
-                .align(Alignment.BottomCenter)
-                .padding(start = 24.dp, end = 24.dp, bottom = 380.dp)
-        } else {
-            Modifier
-                .align(Alignment.TopCenter)
-                .padding(start = 24.dp, end = 24.dp, top = 48.dp)
-        }
+        val subtitleModifier = Modifier
+            .align(Alignment.TopCenter)
+            .padding(start = 24.dp, end = 24.dp, top = 48.dp)
         IntroSubtitleOverlay(
             kind = currentScene.kind,
             subtitle = currentScene.subtitle,
@@ -264,7 +261,7 @@ fun IntroScreen(
             modifier = if (isFinalScene) {
                 Modifier
                     .align(Alignment.BottomCenter)
-                    .padding(bottom = 200.dp)
+                    .padding(bottom = 32.dp)
             } else {
                 Modifier.align(Alignment.Center)
             }
@@ -363,15 +360,15 @@ private fun SceneSubtitleText(
         text = text,
         modifier = modifier
             .clip(RoundedCornerShape(28.dp))
-            .background(Color(0xB0050A12))
+            .background(Color(0x33000000))
             .padding(horizontal = 24.dp, vertical = 16.dp),
         style = androidx.compose.ui.text.TextStyle(
             fontFamily = fontFamily,
-            color = Color(0xFFEAF7FF),
+            color = Color.White,
             fontSize = 24.sp,
             lineHeight = 32.sp,
             textAlign = TextAlign.Center,
-            shadow = Shadow(color = Color(0x99000000), blurRadius = 18f)
+            shadow = Shadow(color = Color(0x66000000), blurRadius = 18f)
         )
     )
 }
@@ -449,8 +446,8 @@ private fun RuneNarrationText(
         fontFamily = fontFamily,
         fontSize = 28.sp,
         lineHeight = 36.sp,
-        color = Color(0xFFE5F3FF),
-        shadow = Shadow(color = Color(0x33000000), blurRadius = 12f)
+        color = Color.White,
+        shadow = Shadow(color = Color(0x66000000), blurRadius = 12f)
     )
 
     val fireStyle = runeSpanStyle(Color(0xFFFF3B30), fireGlow)
@@ -773,6 +770,11 @@ private fun FinalClashScene(
         animationSpec = tween(durationMillis = 520, easing = FastOutSlowInEasing),
         label = "finalAlpha"
     )
+    val cardOffset by animateDpAsState(
+        targetValue = if (visible) 0.dp else 40.dp,
+        animationSpec = tween(durationMillis = 520, easing = FastOutSlowInEasing),
+        label = "finalOffset"
+    )
 
     val pulse = rememberInfiniteTransition(label = "runePulse")
     val runeScale by pulse.animateFloat(
@@ -811,7 +813,8 @@ private fun FinalClashScene(
         Row(
             modifier = Modifier
                 .align(Alignment.BottomCenter)
-                .padding(start = 24.dp, end = 24.dp, bottom = 32.dp),
+                .fillMaxWidth()
+                .padding(start = 24.dp, end = 24.dp, bottom = 112.dp),
             verticalAlignment = Alignment.Bottom,
             horizontalArrangement = Arrangement.spacedBy(24.dp)
         ) {
@@ -822,8 +825,8 @@ private fun FinalClashScene(
                 backgroundTint = Color(0xFF0B0F1F),
                 scale = cardScale,
                 alpha = contentAlpha,
-                modifier = Modifier
-                    .height(320.dp)
+                offsetY = cardOffset,
+                modifier = Modifier.weight(1f)
             )
             CharacterPortraitCard(
                 painter = magePainter,
@@ -832,8 +835,8 @@ private fun FinalClashScene(
                 backgroundTint = Color(0xFF04110A),
                 scale = cardScale,
                 alpha = contentAlpha,
-                modifier = Modifier
-                    .height(320.dp)
+                offsetY = cardOffset,
+                modifier = Modifier.weight(1f)
             )
         }
         RuneCluster(
@@ -914,10 +917,12 @@ private fun CharacterPortraitCard(
     backgroundTint: Color,
     modifier: Modifier = Modifier,
     scale: Float = 1f,
-    alpha: Float = 1f
+    alpha: Float = 1f,
+    offsetY: Dp = 0.dp
 ) {
     Box(
         modifier = modifier
+            .offset(y = offsetY)
             .graphicsLayer {
                 this.alpha = alpha
                 scaleX = scale
