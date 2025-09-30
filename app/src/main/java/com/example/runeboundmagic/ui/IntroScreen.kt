@@ -78,9 +78,11 @@ import kotlinx.coroutines.delay
 @Composable
 fun IntroScreen(
     modifier: Modifier = Modifier,
+    onIntroShown: () -> Unit = {},
     onIntroFinished: () -> Unit = {}
 ) {
     val context = LocalContext.current
+    LaunchedEffect(Unit) { onIntroShown() }
     val scenes = remember {
         listOf(
             IntroSceneDefinition(
