@@ -817,7 +817,7 @@ private fun FinalClashScene(
             modifier = Modifier
                 .fillMaxSize()
                 .align(Alignment.Center)
-                .padding(horizontal = 24.dp, top = 160.dp, bottom = 120.dp),
+                .padding(start = 24.dp, end = 24.dp, top = 160.dp, bottom = 120.dp),
             horizontalAlignment = Alignment.CenterHorizontally
         ) {
             RuneCluster(

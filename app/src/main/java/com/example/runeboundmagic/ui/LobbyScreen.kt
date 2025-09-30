@@ -39,6 +39,7 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
@@ -63,7 +64,6 @@ import com.example.runeboundmagic.toHeroOption
 import com.example.runeboundmagic.toHeroType
 import kotlinx.coroutines.flow.collectLatest
 import kotlinx.coroutines.flow.distinctUntilChanged
-import kotlinx.coroutines.flow.snapshotFlow
 import kotlinx.coroutines.launch
 
 @Composable
@@ -476,7 +476,6 @@ private fun HeroCarousel(
     HorizontalPager(
         state = pagerState,
         pageSize = PageSize.Fixed(180.dp),
-        beyondBoundsPageCount = 1,
         contentPadding = PaddingValues(horizontal = 64.dp),
         pageSpacing = 20.dp,
         modifier = modifier
