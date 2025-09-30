@@ -85,7 +85,7 @@ class CodexViewModel(
         }
     }
 
-    fun saveProgress(heroId: String, level: Int, inventory: List<String>) {
+    fun saveProgress(heroId: String, level: Int, inventory: HeroInventory) {
         viewModelScope.launch {
             val progress = PlayerProgress(
                 id = UUID.randomUUID().toString(),

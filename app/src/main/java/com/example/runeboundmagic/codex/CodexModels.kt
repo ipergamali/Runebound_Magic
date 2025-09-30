@@ -30,6 +30,25 @@ data class CodexEntry(
 )
 
 /**
+ * Αναπαριστά την κάρτα ήρωα που συνδέεται με το inventory.
+ */
+data class HeroCardSlot(
+    val id: String = "",
+    val name: String = "",
+    val lore: String = ""
+)
+
+/**
+ * Inventory ενός ήρωα με προαιρετική κάρτα και λίστα αντικειμένων.
+ */
+data class HeroInventory(
+    val heroCard: HeroCardSlot? = null,
+    val equipment: List<String> = emptyList()
+) {
+    val hasHeroCard: Boolean get() = heroCard != null
+}
+
+/**
  * Καταγραφή προόδου παίκτη η οποία αποθηκεύεται στο Firestore.
  */
 data class PlayerProgress(
@@ -37,7 +56,7 @@ data class PlayerProgress(
     val playerId: String = "",
     val heroId: String = "",
     val level: Int = 1,
-    val inventory: List<String> = emptyList(),
+    val inventory: HeroInventory = HeroInventory(),
     val lastUpdated: Date = Date()
 )
 
