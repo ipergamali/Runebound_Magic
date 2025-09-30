@@ -3,9 +3,13 @@
     <string name="lobby_select_hero">Επιλογή Ήρωα</string>
     <string name="lobby_select_hero_with_choice">Επιλογή Ήρωα (%1$s)</string>
     <string name="lobby_selected_hero">Ήρωας: %1$s</string>
+    <string name="lobby_selected_custom_hero">%1$s the %2$s</string>
     <string name="lobby_back">Πίσω στην εισαγωγή</string>
     <string name="lobby_start_battle">Έναρξη Μάχης</string>
     <string name="lobby_select_prompt">Επίλεξε έναν ήρωα πριν ξεκινήσεις</string>
+    <string name="lobby_confirm_selection">Επιβεβαίωση Ήρωα</string>
+    <string name="lobby_confirm_selection_with_choice">Επιβεβαίωση (%1$s)</string>
+    <string name="lobby_selection_saved">%1$s the %2$s αποθηκεύτηκε!</string>
     <string name="select_hero">Επίλεξε τον Ήρωά σου</string>
     <string name="hero_warrior">Warrior</string>
     <string name="hero_mage">Mage</string>
@@ -22,4 +26,6 @@
     <string name="hero_cancel_selection">Ακύρωση</string>
     <string name="hero_carousel_previous">Προηγούμενος ήρωας</string>
     <string name="hero_carousel_next">Επόμενος ήρωας</string>
+    <string name="hero_name_hint">Όνομα Ήρωα</string>
+    <string name="error_empty_hero_name">Δώσε ένα όνομα για τον ήρωα</string>
 </resources>

@@ -4,29 +4,44 @@ import android.content.Intent
 import android.graphics.Bitmap
 import android.graphics.BitmapFactory
 import android.os.Bundle
-import android.view.View
 import android.widget.ImageView
 import android.widget.TextView
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
+import androidx.core.widget.doAfterTextChanged
+import androidx.lifecycle.Lifecycle
+import androidx.lifecycle.ViewModelProvider
+import androidx.lifecycle.lifecycleScope
+import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
+import com.example.runeboundmagic.data.local.HeroChoiceDatabase
+import com.example.runeboundmagic.data.local.HeroChoiceEntity
+import com.google.android.material.button.MaterialButton
+import com.google.android.material.textfield.TextInputEditText
+import com.google.android.material.textfield.TextInputLayout
+import kotlinx.coroutines.flow.collectLatest
+import kotlinx.coroutines.launch
 
 class StartGameActivity : AppCompatActivity() {
     private var lobbyBackgroundBitmap: Bitmap? = null
     private var selectedHero: HeroOption? = null
     private var currentHeroIndex: Int = 0
+    private var selectedHeroName: String? = null
     private val heroes: List<HeroOption> = HeroOption.values().toList()
-    private lateinit var selectHeroButton: View
-    private lateinit var startBattleButton: View
-    private lateinit var backButton: View
+    private lateinit var heroChoiceViewModel: HeroChoiceViewModel
+    private lateinit var heroNameInputLayout: TextInputLayout
+    private lateinit var heroNameInput: TextInputEditText
+    private lateinit var confirmSelectionButton: MaterialButton
+    private lateinit var startBattleButton: MaterialButton
+    private lateinit var backButton: MaterialButton
     private lateinit var selectedHeroLabel: TextView
     private lateinit var heroNameLabel: TextView
     private lateinit var heroDescriptionLabel: TextView
     private lateinit var heroCarousel: ViewPager2
     private lateinit var heroAdapter: HeroCarouselAdapter
-    private lateinit var nextHeroButton: View
-    private lateinit var previousHeroButton: View
+    private lateinit var nextHeroButton: MaterialButton
+    private lateinit var previousHeroButton: MaterialButton
 
     private val heroBitmaps: MutableMap<HeroOption, Bitmap?> = mutableMapOf()
     private val pageChangeCallback = object : ViewPager2.OnPageChangeCallback() {
@@ -42,6 +57,13 @@ class StartGameActivity : AppCompatActivity() {
         WindowCompat.setDecorFitsSystemWindows(window, false)
         setContentView(R.layout.activity_start_game)
 
+        heroChoiceViewModel = ViewModelProvider(
+            this,
+            HeroChoiceViewModelFactory(
+                HeroChoiceDatabase.getInstance(applicationContext).heroChoiceDao()
+            )
+        )[HeroChoiceViewModel::class.java]
+
         val backgroundView: ImageView = findViewById(R.id.lobbyBackground)
         lobbyBackgroundBitmap = loadLobbyBackground()
         lobbyBackgroundBitmap?.let(backgroundView::setImageBitmap)
@@ -49,7 +71,9 @@ class StartGameActivity : AppCompatActivity() {
         heroNameLabel = findViewById(R.id.heroName)
         heroDescriptionLabel = findViewById(R.id.heroDescription)
         selectedHeroLabel = findViewById(R.id.selectedHeroLabel)
-        selectHeroButton = findViewById(R.id.selectHeroButton)
+        heroNameInputLayout = findViewById(R.id.heroNameInputLayout)
+        heroNameInput = findViewById(R.id.heroNameInput)
+        confirmSelectionButton = findViewById(R.id.selectHeroButton)
         startBattleButton = findViewById(R.id.startBattleButton)
         backButton = findViewById(R.id.backButton)
         heroCarousel = findViewById(R.id.heroCarousel)
@@ -91,15 +115,36 @@ class StartGameActivity : AppCompatActivity() {
         heroCarousel.setCurrentItem(currentHeroIndex, false)
         updateHeroPreview()
 
-        selectedHero = savedInstanceState?.getString(KEY_SELECTED_HERO)?.let(HeroOption::fromName)
-        selectedHero?.let(::setSelectedHero)
+        val restoredHero = savedInstanceState?.getString(KEY_SELECTED_HERO)?.let(HeroOption::fromName)
+        selectedHeroName = savedInstanceState?.getString(KEY_SELECTED_HERO_NAME)
+        if (restoredHero != null && !selectedHeroName.isNullOrBlank()) {
+            setSelectedHero(restoredHero, selectedHeroName!!)
+        }
 
-        selectHeroButton.setOnClickListener {
+        heroNameInput.doAfterTextChanged { text ->
+            if (!text.isNullOrBlank()) {
+                heroNameInputLayout.error = null
+            }
+        }
+
+        confirmSelectionButton.setOnClickListener {
             val hero = heroes[currentHeroIndex]
-            setSelectedHero(hero)
+            val customName = heroNameInput.text?.toString()?.trim().orEmpty()
+            if (customName.isBlank()) {
+                heroNameInputLayout.error = getString(R.string.error_empty_hero_name)
+                return@setOnClickListener
+            }
+
+            setSelectedHero(hero, customName)
+            heroChoiceViewModel.saveHeroChoice(
+                playerName = "Player1",
+                heroType = hero.toHeroType(),
+                heroName = customName
+            )
+
             Toast.makeText(
                 this,
-                getString(R.string.lobby_selected_hero, getString(hero.displayNameRes)),
+                getString(R.string.lobby_selection_saved, customName, getString(hero.displayNameRes)),
                 Toast.LENGTH_SHORT
             ).show()
         }
@@ -118,6 +163,12 @@ class StartGameActivity : AppCompatActivity() {
                 startActivity(intent)
             }
         }
+
+        lifecycleScope.launch {
+            repeatOnLifecycle(Lifecycle.State.STARTED) {
+                heroChoiceViewModel.getLastChoice().collectLatest(::applySavedChoice)
+            }
+        }
     }
 
     override fun onDestroy() {
@@ -132,6 +183,7 @@ class StartGameActivity : AppCompatActivity() {
     override fun onSaveInstanceState(outState: Bundle) {
         super.onSaveInstanceState(outState)
         outState.putString(KEY_SELECTED_HERO, selectedHero?.name)
+        outState.putString(KEY_SELECTED_HERO_NAME, selectedHeroName)
         outState.putInt(KEY_CURRENT_HERO_INDEX, heroCarousel.currentItem)
     }
 
@@ -157,28 +209,56 @@ class StartGameActivity : AppCompatActivity() {
         currentHeroIndex = safeIndex
         heroNameLabel.setText(hero.displayNameRes)
         heroDescriptionLabel.setText(hero.descriptionRes)
-        if (selectHeroButton is TextView) {
-            (selectHeroButton as TextView).text = getString(
-                R.string.lobby_select_hero_with_choice,
-                getString(hero.displayNameRes)
-            )
-        }
+        confirmSelectionButton.text = getString(
+            R.string.lobby_confirm_selection_with_choice,
+            getString(hero.displayNameRes)
+        )
         startBattleButton.isEnabled = selectedHero != null
     }
 
-    private fun setSelectedHero(hero: HeroOption) {
+    private fun setSelectedHero(hero: HeroOption, customName: String) {
         selectedHero = hero
-        selectHeroButton.isEnabled = true
+        selectedHeroName = customName
+        confirmSelectionButton.isEnabled = true
         startBattleButton.isEnabled = true
-        selectedHeroLabel.text = getString(R.string.lobby_selected_hero, getString(hero.displayNameRes))
-        if (selectHeroButton is TextView) {
-            (selectHeroButton as TextView).text = getString(R.string.lobby_select_hero_with_choice, getString(hero.displayNameRes))
+        selectedHeroLabel.text = getString(
+            R.string.lobby_selected_custom_hero,
+            customName,
+            getString(hero.displayNameRes)
+        )
+        if (heroNameInput.text?.toString() != customName) {
+            heroNameInput.setText(customName)
+            heroNameInput.setSelection(customName.length)
         }
+        heroNameInputLayout.error = null
+    }
+
+    private fun applySavedChoice(choice: HeroChoiceEntity?) {
+        if (choice == null) {
+            selectedHeroLabel.text = getString(R.string.lobby_select_prompt)
+            selectedHero = null
+            selectedHeroName = null
+            startBattleButton.isEnabled = false
+            if (heroNameInput.text?.isNotEmpty() == true) {
+                heroNameInput.setText("")
+            }
+            return
+        }
+
+        val heroOption = choice.heroType.toHeroOption()
+        val heroIndex = heroes.indexOf(heroOption)
+        if (heroIndex >= 0 && heroCarousel.currentItem != heroIndex) {
+            heroCarousel.setCurrentItem(heroIndex, false)
+            currentHeroIndex = heroIndex
+            updateHeroPreview()
+        }
+        setSelectedHero(heroOption, choice.heroName)
     }
 
     companion object {
         private const val LOBBY_BACKGROUND_ASSET = "lobby/Game_Lobby.png"
         private const val KEY_SELECTED_HERO = "key_selected_hero"
         private const val KEY_CURRENT_HERO_INDEX = "key_current_hero_index"
+        private const val KEY_SELECTED_HERO_NAME = "key_selected_hero_name"
     }
 }
