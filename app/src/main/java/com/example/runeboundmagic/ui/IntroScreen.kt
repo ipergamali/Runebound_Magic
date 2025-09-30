@@ -3,6 +3,7 @@ package com.example.runeboundmagic.ui
 import android.media.MediaPlayer
 import androidx.annotation.RawRes
 import androidx.compose.animation.AnimatedVisibility
+import androidx.compose.animation.AnimatedContent
 import androidx.compose.animation.Crossfade
 import androidx.compose.animation.fadeIn
 import androidx.compose.animation.fadeOut
@@ -17,6 +18,7 @@ import androidx.compose.animation.core.tween
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
+import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxScope
@@ -59,12 +61,14 @@ import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.SpanStyle
 import androidx.compose.ui.text.buildAnnotatedString
+import androidx.compose.ui.text.font.Font
 import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.text.withStyle
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import androidx.compose.ui.geometry.Offset
+import androidx.compose.animation.togetherWith
 import com.example.runeboundmagic.R
 import kotlinx.coroutines.delay
 
@@ -102,9 +106,11 @@ fun IntroScreen(
     var highlightedWords by remember { mutableStateOf(emptySet<String>()) }
     var runeVisibility by remember { mutableStateOf(RuneVisibility()) }
     var showStartGameButton by rememberSaveable { mutableStateOf(false) }
-    var showRuneLogo by rememberSaveable { mutableStateOf(false) }
+    var introStarted by rememberSaveable { mutableStateOf(false) }
 
-    val signatureFont = FontFamily.Cursive
+    val signatureFont = remember {
+        FontFamily(Font(resId = R.font.whispering_signature))
+    }
 
     val templePainter = rememberAssetPainter("intro/MysticalTempleRuins")
     val magePainter = rememberAssetPainter("characters/black_mage.png")
@@ -118,7 +124,10 @@ fun IntroScreen(
     val currentScene = scenes[currentSceneIndex]
     val isFinalScene = currentScene.kind == IntroSceneKind.FINAL_CONFRONTATION
 
-    DisposableEffect(currentSceneIndex) {
+    DisposableEffect(currentSceneIndex, introStarted) {
+        if (!introStarted) {
+            return@DisposableEffect onDispose { }
+        }
         val player = MediaPlayer.create(context, currentScene.audioRes)
         if (player == null) {
             showStartGameButton = true
@@ -146,13 +155,18 @@ fun IntroScreen(
         }
     }
 
-    LaunchedEffect(currentSceneIndex) {
+    LaunchedEffect(currentSceneIndex, introStarted) {
+        if (!introStarted) {
+            highlightedWords = emptySet()
+            runeVisibility = RuneVisibility()
+            showStartGameButton = false
+            return@LaunchedEffect
+        }
         highlightedWords = emptySet()
         runeVisibility = RuneVisibility()
         showStartGameButton = false
         when (currentScene.kind) {
             IntroSceneKind.RUNE_PROLOGUE -> {
-                showRuneLogo = false
                 var visibility = RuneVisibility()
                 var words = emptySet<String>()
                 delay(3_000)
@@ -175,10 +189,15 @@ fun IntroScreen(
                 runeVisibility = visibility
                 words = words + "Earth"
                 highlightedWords = words
-                delay(600)
-                showRuneLogo = true
             }
-            else -> showRuneLogo = true
+            else -> Unit
+        }
+    }
+
+    LaunchedEffect(Unit) {
+        delay(1_500)
+        if (!introStarted) {
+            introStarted = true
         }
     }
 
@@ -201,7 +220,7 @@ fun IntroScreen(
                     earthRunePainter = earthRunePainter,
                     logoPainter = logoPainter,
                     runeVisibility = runeVisibility,
-                    showLogo = showRuneLogo
+                    showLogo = false
                 )
                 1 -> BlackMageScene(
                     magePainter = magePainter
@@ -268,6 +287,13 @@ fun IntroScreen(
                 )
             }
         }
+
+        if (!introStarted) {
+            IntroLogoOverlay(
+                logoPainter = logoPainter,
+                onStart = { introStarted = true }
+            )
+        }
     }
 }
 
@@ -303,9 +329,12 @@ private fun IntroSubtitleOverlay(
         modifier = modifier.fillMaxWidth(),
         contentAlignment = Alignment.Center
     ) {
-        Crossfade(
+        AnimatedContent(
             targetState = kind,
-            animationSpec = tween(durationMillis = 520, easing = FastOutSlowInEasing),
+            transitionSpec = {
+                fadeIn(animationSpec = tween(durationMillis = 420, easing = FastOutSlowInEasing)) togetherWith
+                    fadeOut(animationSpec = tween(durationMillis = 220, easing = FastOutSlowInEasing))
+            },
             label = "subtitle"
         ) { targetKind ->
             when (targetKind) {
@@ -424,10 +453,10 @@ private fun RuneNarrationText(
         shadow = Shadow(color = Color(0x33000000), blurRadius = 12f)
     )
 
-    val fireStyle = runeSpanStyle(Color(0xFFFF7043), fireGlow)
-    val waterStyle = runeSpanStyle(Color(0xFF4FC3F7), waterGlow)
-    val airStyle = runeSpanStyle(Color(0xFFA5F0FF), airGlow)
-    val earthStyle = runeSpanStyle(Color(0xFF8BC34A), earthGlow)
+    val fireStyle = runeSpanStyle(Color(0xFFFF3B30), fireGlow)
+    val waterStyle = runeSpanStyle(Color(0xFF1E88E5), waterGlow)
+    val airStyle = runeSpanStyle(Color(0xFF4FC3F7), airGlow)
+    val earthStyle = runeSpanStyle(Color(0xFF43A047), earthGlow)
 
     val text = buildAnnotatedString {
         append("The world was once bound by the elemental runes — ")
@@ -544,6 +573,26 @@ private fun RuneCircle(
             glowColor = Color(0xFF8BC34A),
             alignment = Alignment.CenterEnd,
             visible = runeVisibility.earth
+        )
+    }
+}
+
+@Composable
+private fun BoxScope.IntroLogoOverlay(
+    logoPainter: Painter,
+    onStart: () -> Unit
+) {
+    Box(
+        modifier = Modifier
+            .fillMaxSize()
+            .background(Color.Black)
+            .clickable(onClick = onStart),
+        contentAlignment = Alignment.Center
+    ) {
+        Image(
+            painter = logoPainter,
+            contentDescription = null,
+            modifier = Modifier.size(180.dp)
         )
     }
 }
