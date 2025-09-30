@@ -1,7 +1,7 @@
 package com.example.runeboundmagic.ui
 
+import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
-import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.interaction.MutableInteractionSource
@@ -9,7 +9,7 @@ import androidx.compose.foundation.layout.Arrangement
 import androidx.compose.foundation.layout.Box
 import androidx.compose.foundation.layout.BoxWithConstraints
 import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
+import androidx.compose.foundation.layout.PaddingValues
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
@@ -17,6 +17,9 @@ import androidx.compose.foundation.layout.offset
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.pager.HorizontalPager
+import androidx.compose.foundation.pager.PageSize
+import androidx.compose.foundation.pager.rememberPagerState
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.material3.OutlinedTextField
 import androidx.compose.material3.Scaffold
@@ -33,17 +36,17 @@ import androidx.compose.runtime.remember
 import androidx.compose.runtime.rememberCoroutineScope
 import androidx.compose.runtime.saveable.rememberSaveable
 import androidx.compose.runtime.setValue
+import androidx.compose.runtime.snapshotFlow
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.platform.LocalDensity
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.Font
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.text.style.TextAlign
 import androidx.compose.ui.unit.dp
@@ -57,15 +60,19 @@ import com.example.runeboundmagic.R
 import com.example.runeboundmagic.data.local.HeroChoiceDatabase
 import com.example.runeboundmagic.toHeroOption
 import com.example.runeboundmagic.toHeroType
+import kotlinx.coroutines.flow.collect
+import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-
-private val WhisperingSignature = FontFamily(Font(R.font.whispering_signature))
+import androidx.compose.ui.util.lerp
+import kotlin.math.absoluteValue
+import kotlin.OptIn
 
 @Composable
 fun LobbyScreen(
     modifier: Modifier = Modifier,
     onBack: () -> Unit,
     onStartBattle: (HeroOption, String) -> Unit,
+    @Suppress("UNUSED_PARAMETER")
     onOpenCodex: () -> Unit,
     onLobbyShown: () -> Unit = {},
     viewModel: HeroChoiceViewModel = lobbyViewModel(),
@@ -76,12 +83,7 @@ fun LobbyScreen(
 
     LaunchedEffect(Unit) { onLobbyShown() }
 
-    val heroes = remember {
-        listOf(
-            HeroOption.MYSTICAL_PRIESTESS,
-            HeroOption.MAGE
-        )
-    }
+    val heroes = remember { HeroOption.values().toList() }
     var selectedHero by rememberSaveable { mutableStateOf(heroes.first()) }
     var playerName by rememberSaveable { mutableStateOf("") }
     var lastSavedSignature by remember { mutableStateOf<Pair<String, String>?>(null) }
@@ -118,16 +120,12 @@ fun LobbyScreen(
             val selectHeroSize = 220.dp to 60.dp
             val backSize = 120.dp to 50.dp
             val startBattleSize = 140.dp to 50.dp
-            val codexSize = 220.dp to 48.dp
-
             val selectHeroWidthPx = with(density) { selectHeroSize.first.toPx() }
             val selectHeroHeightPx = with(density) { selectHeroSize.second.toPx() }
             val backWidthPx = with(density) { backSize.first.toPx() }
             val backHeightPx = with(density) { backSize.second.toPx() }
             val startBattleWidthPx = with(density) { startBattleSize.first.toPx() }
             val startBattleHeightPx = with(density) { startBattleSize.second.toPx() }
-            val codexWidthPx = with(density) { codexSize.first.toPx() }
-            val codexHeightPx = with(density) { codexSize.second.toPx() }
 
             val selectHeroOffsetX = with(density) {
                 (screenWidthPx * 0.5f - selectHeroWidthPx / 2f).toDp()
@@ -147,12 +145,6 @@ fun LobbyScreen(
             val startBattleOffsetY = with(density) {
                 (screenHeightPx * 0.94f - startBattleHeightPx / 2f).toDp()
             }
-            val codexOffsetX = with(density) {
-                (screenWidthPx * 0.5f - codexWidthPx / 2f).toDp()
-            }
-            val codexOffsetY = with(density) {
-                (screenHeightPx * 0.98f - codexHeightPx / 2f).toDp()
-            }
 
             val extraBottomSpacePx = with(density) { 16.dp.toPx() }
             val selectHeroTopPx = screenHeightPx * 0.87f - selectHeroHeightPx / 2f
@@ -165,19 +157,12 @@ fun LobbyScreen(
             val selectHeroInteraction = remember { MutableInteractionSource() }
             val backInteraction = remember { MutableInteractionSource() }
             val startBattleInteraction = remember { MutableInteractionSource() }
-            val codexInteraction = remember { MutableInteractionSource() }
 
             Image(
                 painter = rememberAssetPainter("lobby/Game_Lobby.png"),
                 contentDescription = null,
                 modifier = Modifier.fillMaxSize(),
                 contentScale = ContentScale.FillBounds
-            )
-
-            Box(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .background(Color(0x880B111A))
             )
 
             Column(
@@ -205,6 +190,24 @@ fun LobbyScreen(
                 horizontalAlignment = Alignment.CenterHorizontally,
                 verticalArrangement = Arrangement.spacedBy(20.dp)
             ) {
+                HeroCarousel(
+                    heroes = heroes,
+                    selectedHero = selectedHero,
+                    onHeroSelected = { hero, fromUser ->
+                        if (selectedHero != hero) {
+                            selectedHero = hero
+                        }
+                        if (fromUser) {
+                            viewModel.logInteraction(
+                                event = LobbyInteractionEvent.HERO_SELECTED,
+                                heroType = hero.toHeroType(),
+                                heroDisplayName = context.getString(hero.displayNameRes),
+                                heroNameInput = playerName
+                            )
+                        }
+                    }
+                )
+
                 OutlinedTextField(
                     value = playerName,
                     onValueChange = { newValue ->
@@ -224,7 +227,7 @@ fun LobbyScreen(
                     },
                     singleLine = true,
                     textStyle = TextStyle(color = Color.White, fontSize = 16.sp),
-                    modifier = Modifier.width(220.dp),
+                    modifier = Modifier.fillMaxWidth(0.65f),
                     colors = TextFieldDefaults.colors(
                         focusedIndicatorColor = Color(0xFFFFD700),
                         unfocusedIndicatorColor = Color(0xB3FFD700),
@@ -236,20 +239,6 @@ fun LobbyScreen(
                         focusedPlaceholderColor = Color.White.copy(alpha = 0.7f),
                         unfocusedPlaceholderColor = Color.White.copy(alpha = 0.7f)
                     )
-                )
-
-                HeroCardRow(
-                    heroes = heroes,
-                    selectedHero = selectedHero,
-                    onHeroSelected = { hero ->
-                        selectedHero = hero
-                        viewModel.logInteraction(
-                            event = LobbyInteractionEvent.HERO_SELECTED,
-                            heroType = hero.toHeroType(),
-                            heroDisplayName = context.getString(hero.displayNameRes),
-                            heroNameInput = playerName
-                        )
-                    }
                 )
             }
 
@@ -356,24 +345,6 @@ fun LobbyScreen(
                         onStartBattle(selectedHero, trimmedName)
                     }
             )
-
-            Box(
-                modifier = Modifier
-                    .offset(x = codexOffsetX, y = codexOffsetY)
-                    .size(codexSize.first, codexSize.second)
-                    .clickable(
-                        indication = null,
-                        interactionSource = codexInteraction
-                    ) {
-                        viewModel.logInteraction(
-                            event = LobbyInteractionEvent.CODEX_CLICKED,
-                            heroType = selectedHero.toHeroType(),
-                            heroDisplayName = selectedHeroLabel,
-                            heroNameInput = playerName
-                        )
-                        onOpenCodex()
-                    }
-            )
         }
     }
 }
@@ -390,63 +361,116 @@ private fun HeroInfoHeader(
         verticalArrangement = Arrangement.spacedBy(16.dp)
     ) {
         Text(
-            text = stringResource(id = R.string.lobby_title),
+            text = heroName,
+            textAlign = TextAlign.Center,
             color = Color(0xFFFFD700),
             fontWeight = FontWeight.SemiBold,
-            fontSize = 20.sp
+            fontSize = 20.sp,
+            modifier = Modifier.fillMaxWidth()
         )
         Text(
-            text = stringResource(id = R.string.lobby_hero_header, heroName, heroTrait),
+            text = heroTrait,
             textAlign = TextAlign.Center,
-            fontSize = 32.sp,
-            color = Color.White,
-            fontFamily = WhisperingSignature,
-            lineHeight = 40.sp,
+            fontSize = 14.sp,
+            color = Color(0xFFC0C0C0),
+            modifier = Modifier.fillMaxWidth()
+        )
+    }
+}
+
+@OptIn(ExperimentalFoundationApi::class)
+@Composable
+private fun HeroCarousel(
+    heroes: List<HeroOption>,
+    selectedHero: HeroOption,
+    onHeroSelected: (hero: HeroOption, fromUser: Boolean) -> Unit
+) {
+    val coroutineScope = rememberCoroutineScope()
+    val initialIndex = remember(selectedHero, heroes) {
+        heroes.indexOf(selectedHero).takeIf { it >= 0 } ?: 0
+    }
+    val pagerState = rememberPagerState(
+        initialPage = initialIndex,
+        pageCount = { heroes.size }
+    )
+    var isSyncingSelection by remember { mutableStateOf(true) }
+
+    LaunchedEffect(selectedHero) {
+        val targetIndex = heroes.indexOf(selectedHero).takeIf { it >= 0 } ?: 0
+        if (pagerState.currentPage != targetIndex) {
+            isSyncingSelection = true
+            pagerState.animateScrollToPage(targetIndex)
+        }
+        isSyncingSelection = false
+    }
+
+    LaunchedEffect(pagerState) {
+        snapshotFlow { pagerState.currentPage }
+            .distinctUntilChanged()
+            .collect { page ->
+                val hero = heroes.getOrNull(page) ?: return@collect
+                if (hero != selectedHero) {
+                    onHeroSelected(hero, !isSyncingSelection)
+                }
+            }
+    }
+
+    HorizontalPager(
+        state = pagerState,
+        pageSize = PageSize.Fixed(180.dp),
+        contentPadding = PaddingValues(horizontal = 72.dp),
+        pageSpacing = 18.dp,
+        modifier = Modifier
+            .fillMaxWidth()
+            .height(240.dp)
+    ) { page ->
+        val hero = heroes[page]
+        val pageOffset = (
+            (pagerState.currentPage - page) + pagerState.currentPageOffsetFraction
+        ).absoluteValue
+        val scale = lerp(0.9f, 1f, 1f - pageOffset.coerceIn(0f, 1f))
+
+        HeroCard(
+            hero = hero,
+            selected = hero == selectedHero,
             modifier = Modifier
-                .fillMaxWidth()
-                .clip(RoundedCornerShape(20.dp))
-                .background(Color(0x330B111A))
-                .padding(horizontal = 16.dp, vertical = 12.dp)
+                .graphicsLayer {
+                    scaleX = scale
+                    scaleY = scale
+                }
+                .clickable(
+                    indication = null,
+                    interactionSource = remember { MutableInteractionSource() }
+                ) {
+                    if (hero == selectedHero) {
+                        onHeroSelected(hero, true)
+                    } else {
+                        coroutineScope.launch {
+                            pagerState.animateScrollToPage(page)
+                        }
+                    }
+                }
         )
     }
 }
 
 @Composable
-private fun HeroCardRow(
-    heroes: List<HeroOption>,
-    selectedHero: HeroOption,
-    onHeroSelected: (HeroOption) -> Unit
-) {
-    Row(
-        modifier = Modifier.fillMaxWidth(),
-        horizontalArrangement = Arrangement.spacedBy(24.dp, Alignment.CenterHorizontally),
-        verticalAlignment = Alignment.CenterVertically
-    ) {
-        heroes.forEach { hero ->
-            HeroSelectionCard(
-                hero = hero,
-                selected = hero == selectedHero,
-                onClick = { onHeroSelected(hero) }
-            )
-        }
-    }
-}
-
-@Composable
-private fun HeroSelectionCard(
+private fun HeroCard(
     hero: HeroOption,
     selected: Boolean,
-    onClick: () -> Unit
+    modifier: Modifier = Modifier
 ) {
     val borderColor = if (selected) Color(0xFFFFD700) else Color(0x66FFFFFF)
     Box(
-        modifier = Modifier
-            .width(120.dp)
-            .height(180.dp)
-            .clip(RoundedCornerShape(20.dp))
-            .border(width = if (selected) 3.dp else 1.dp, color = borderColor, shape = RoundedCornerShape(20.dp))
-            .background(Color(0x330B111A))
-            .clickable(onClick = onClick),
+        modifier = modifier
+            .width(180.dp)
+            .height(240.dp)
+            .clip(RoundedCornerShape(24.dp))
+            .border(
+                width = if (selected) 3.dp else 1.dp,
+                color = borderColor,
+                shape = RoundedCornerShape(24.dp)
+            ),
         contentAlignment = Alignment.Center
     ) {
         Image(
