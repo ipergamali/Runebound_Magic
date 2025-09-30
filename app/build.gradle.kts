@@ -61,6 +61,7 @@ dependencies {
     implementation(libs.material)
     implementation(libs.androidx.games.activity)
     implementation(libs.androidx.viewpager2)
+    implementation("androidx.gridlayout:gridlayout:1.0.0")
 
     implementation(platform(libs.androidx.compose.bom))
     implementation(libs.androidx.compose.ui)
