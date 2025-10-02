@@ -15,6 +15,7 @@ import androidx.lifecycle.ViewModelProvider
 import androidx.lifecycle.lifecycleScope
 import androidx.lifecycle.repeatOnLifecycle
 import androidx.viewpager2.widget.ViewPager2
+import com.example.runeboundmagic.codex.HeroCodexActivity
 import com.example.runeboundmagic.data.local.HeroChoiceDatabase
 import com.example.runeboundmagic.data.local.HeroChoiceEntity
 import com.google.android.material.button.MaterialButton
@@ -34,6 +35,7 @@ class StartGameActivity : AppCompatActivity() {
     private lateinit var heroNameInput: TextInputEditText
     private lateinit var confirmSelectionButton: MaterialButton
     private lateinit var startBattleButton: MaterialButton
+    private lateinit var openCodexButton: MaterialButton
     private lateinit var backButton: MaterialButton
     private lateinit var selectedHeroLabel: TextView
     private lateinit var heroNameLabel: TextView
@@ -75,6 +77,7 @@ class StartGameActivity : AppCompatActivity() {
         heroNameInput = findViewById(R.id.heroNameInput)
         confirmSelectionButton = findViewById(R.id.selectHeroButton)
         startBattleButton = findViewById(R.id.startBattleButton)
+        openCodexButton = findViewById(R.id.openCodexButton)
         backButton = findViewById(R.id.backButton)
         heroCarousel = findViewById(R.id.heroCarousel)
         nextHeroButton = findViewById(R.id.nextHeroButton)
@@ -95,6 +98,8 @@ class StartGameActivity : AppCompatActivity() {
             page.translationX = -page.width * 0.08f * position
         }
         heroCarousel.registerOnPageChangeCallback(pageChangeCallback)
+
+        openCodexButton.isEnabled = false
 
         nextHeroButton.setOnClickListener {
             if (heroAdapter.itemCount == 0) return@setOnClickListener
@@ -147,6 +152,26 @@ class StartGameActivity : AppCompatActivity() {
                 getString(R.string.lobby_selection_saved, customName, getString(hero.displayNameRes)),
                 Toast.LENGTH_SHORT
             ).show()
+        }
+
+        openCodexButton.setOnClickListener {
+            val hero = selectedHero
+            if (hero == null) {
+                Toast.makeText(this, R.string.hero_codex_missing_selection, Toast.LENGTH_SHORT)
+                    .show()
+                return@setOnClickListener
+            }
+
+            val resolvedName = selectedHeroName
+                ?: heroNameInput.text?.toString()?.trim().takeIf { !it.isNullOrEmpty() }
+                ?: getString(hero.displayNameRes)
+
+            val intent = HeroCodexActivity.createIntent(
+                context = this,
+                heroOption = hero,
+                heroName = resolvedName
+            )
+            startActivity(intent)
         }
 
         backButton.setOnClickListener {
@@ -213,7 +238,9 @@ class StartGameActivity : AppCompatActivity() {
             R.string.lobby_confirm_selection_with_choice,
             getString(hero.displayNameRes)
         )
-        startBattleButton.isEnabled = selectedHero != null
+        val hasSelection = selectedHero != null
+        startBattleButton.isEnabled = hasSelection
+        openCodexButton.isEnabled = hasSelection
     }
 
     private fun setSelectedHero(hero: HeroOption, customName: String) {
@@ -221,6 +248,7 @@ class StartGameActivity : AppCompatActivity() {
         selectedHeroName = customName
         confirmSelectionButton.isEnabled = true
         startBattleButton.isEnabled = true
+        openCodexButton.isEnabled = true
         selectedHeroLabel.text = getString(
             R.string.lobby_selected_custom_hero,
             customName,
@@ -239,6 +267,7 @@ class StartGameActivity : AppCompatActivity() {
             selectedHero = null
             selectedHeroName = null
             startBattleButton.isEnabled = false
+            openCodexButton.isEnabled = false
             if (heroNameInput.text?.isNotEmpty() == true) {
                 heroNameInput.setText("")
             }
