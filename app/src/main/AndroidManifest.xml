@@ -20,6 +20,9 @@
             android:name=".CharacterSelectionActivity"
             android:exported="false" />
         <activity
+            android:name=".codex.HeroCodexActivity"
+            android:exported="false" />
+        <activity
             android:name=".StartGameActivity"
             android:exported="false" />
         <activity
