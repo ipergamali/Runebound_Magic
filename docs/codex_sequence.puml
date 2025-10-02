@@ -1,0 +1,22 @@
+@startuml
+actor Player
+participant "Game Engine" as Game
+participant "Hero Card UI" as HeroCard
+participant "Inventory UI" as InventoryUI
+participant "Codex Panel" as Codex
+
+Player -> Game: tap "Start Game"
+Game -> HeroCard: loadHero()
+HeroCard -> HeroCard: renderHeroDetails()
+HeroCard -> Player: display()
+
+Player -> HeroCard: openInventory()
+HeroCard -> InventoryUI: showInventory(hero.inventory)
+InventoryUI -> InventoryUI: listItemsByCategory()
+InventoryUI -> Player: display()
+
+Player -> InventoryUI: openCodexCategory(selectedCategory)
+InventoryUI -> Codex: requestCategory(selectedCategory)
+Codex -> InventoryUI: deliverEntries()
+InventoryUI -> Player: renderCodexEntries()
+@enduml
