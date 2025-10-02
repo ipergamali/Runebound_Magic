@@ -140,7 +140,7 @@ object HeroCodexData {
                 id = "clarity_draught",
                 name = "Draught of Clarity",
                 description = "Προσωρινό +25 Mana και +10% Crit Chance.",
-                icon = "inventory/iventory.png",
+                icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
                 category = ItemCategory.CONSUMABLE
             )
@@ -195,7 +195,7 @@ object HeroCodexData {
                 id = "lunar_coins",
                 name = "Λάμποντα Νομίσματα",
                 description = "Περιέχει 150 χρυσά νομίσματα.",
-                icon = "inventory/iventory.png",
+                icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
                 category = ItemCategory.CURRENCY
             )
@@ -304,7 +304,7 @@ object HeroCodexData {
                 id = "mana_potion",
                 name = "Υπέρτατο Mana Potion",
                 description = "Επαναφέρει αμέσως 120 Mana.",
-                icon = "inventory/iventory.png",
+                icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
                 category = ItemCategory.CONSUMABLE
             ),
@@ -383,7 +383,7 @@ object HeroCodexData {
                 id = "arcane_tokens",
                 name = "Arcane Tokens",
                 description = "Περιέχει 110 χρυσά νομίσματα και 5 arcane σφραγίδες.",
-                icon = "inventory/iventory.png",
+                icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
                 category = ItemCategory.CURRENCY
             )
@@ -492,7 +492,7 @@ object HeroCodexData {
                 id = "rage_draught",
                 name = "Draught of Rage",
                 description = "+30 Attack και lifesteal.",
-                icon = "inventory/iventory.png",
+                icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
                 category = ItemCategory.CONSUMABLE
             )
@@ -538,7 +538,7 @@ object HeroCodexData {
                 id = "battle_tokens",
                 name = "Battle Tokens",
                 description = "Περιέχει 95 χρυσά νομίσματα.",
-                icon = "inventory/iventory.png",
+                icon = "inventory/inventory.png",
                 rarity = Rarity.COMMON,
                 category = ItemCategory.CURRENCY
             )
@@ -638,7 +638,7 @@ object HeroCodexData {
                 id = "agility_draught",
                 name = "Draught of Agility",
                 description = "+20 Evasion για 3 γύρους.",
-                icon = "inventory/iventory.png",
+                icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
                 category = ItemCategory.CONSUMABLE
             )
@@ -693,7 +693,7 @@ object HeroCodexData {
                 id = "hunter_coins",
                 name = "Hunter's Coins",
                 description = "Περιέχει 105 χρυσά νομίσματα.",
-                icon = "inventory/iventory.png",
+                icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
                 category = ItemCategory.CURRENCY
             )
@@ -778,12 +778,12 @@ object HeroCodexData {
         ItemCategory.ARMOR to "armor/chest.png",
         ItemCategory.SHIELD to "armor/helmet.png",
         ItemCategory.ACCESSORY to "armor/gloves.png",
-        ItemCategory.CONSUMABLE to "inventory/iventory.png",
+        ItemCategory.CONSUMABLE to "inventory/inventory.png",
         ItemCategory.SPELL_SCROLL to "characters/mage.png",
         ItemCategory.RUNE_GEM to "puzzle/circle.png",
         ItemCategory.MATERIAL to "armor/chest-women_b.png",
         ItemCategory.QUEST_ITEM to "inventory/backbag.png",
-        ItemCategory.CURRENCY to "inventory/iventory.png"
+        ItemCategory.CURRENCY to "inventory/inventory.png"
     )
 }
 

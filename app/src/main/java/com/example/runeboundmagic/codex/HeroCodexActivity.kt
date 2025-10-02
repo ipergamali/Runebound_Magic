@@ -346,7 +346,7 @@ private fun InventoryShortcut(onClick: () -> Unit, weapon: Item) {
             )
             AsyncImage(
                 model = ImageRequest.Builder(LocalContext.current)
-                    .data(assetUri("inventory/iventory.png"))
+                    .data(assetUri("inventory/inventory.png"))
                     .crossfade(true)
                     .build(),
                 contentDescription = stringResource(id = R.string.hero_codex_inventory_icon_cd),
