@@ -18,7 +18,6 @@ data class BattlePreparationUiState(
     val gold: Int = 0,
     val capacity: Int = 0,
     val categories: List<InventoryCategoryInfo> = emptyList(),
-    val isBackpackOpen: Boolean = false,
     val selectedItem: Item? = null,
     val errorMessage: String? = null
 )

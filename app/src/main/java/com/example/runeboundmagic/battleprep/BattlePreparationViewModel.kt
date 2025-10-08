@@ -43,12 +43,6 @@ class BattlePreparationViewModel(
         preloadData()
     }
 
-    fun toggleBackpack() {
-        _uiState.update { state ->
-            state.copy(isBackpackOpen = !state.isBackpackOpen)
-        }
-    }
-
     fun selectSlot(index: Int) {
         val slot = _uiState.value.inventorySlots.getOrNull(index) ?: return
         _uiState.update { state ->
@@ -94,7 +88,6 @@ class BattlePreparationViewModel(
                         gold = profile.inventory.gold,
                         capacity = profile.inventory.capacity,
                         categories = DefaultCategories,
-                        isBackpackOpen = false,
                         selectedItem = null
                     )
                 }

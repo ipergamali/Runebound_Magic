@@ -74,6 +74,10 @@
     <string name="battle_prep_armor_prof">Πανοπλία: %1$s</string>
     <string name="battle_prep_gold">Χρυσός</string>
     <string name="battle_prep_capacity">Χωρητικότητα</string>
+    <string name="battle_prep_inventory_slots">%1$d / %2$d</string>
+    <string name="battle_prep_equipment_title">Εξοπλισμός</string>
+    <string name="battle_prep_equipment_weapon">Όπλο: %1$s</string>
+    <string name="battle_prep_equipment_armor">Πανοπλία: %1$s</string>
     <string name="battle_prep_inventory_toggle">Άνοιγμα σακιδίου</string>
     <string name="battle_prep_rarity_label">Σπανιότητα: %1$s</string>
     <string name="battle_prep_weapon_damage">Ζημιά: %1$d</string>

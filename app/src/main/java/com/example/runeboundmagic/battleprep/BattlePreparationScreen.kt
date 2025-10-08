@@ -1,11 +1,5 @@
 package com.example.runeboundmagic.battleprep
 
-import androidx.compose.animation.AnimatedVisibility
-import androidx.compose.animation.ExperimentalAnimationApi
-import androidx.compose.animation.fadeIn
-import androidx.compose.animation.fadeOut
-import androidx.compose.animation.slideInVertically
-import androidx.compose.animation.slideOutVertically
 import androidx.compose.foundation.ExperimentalFoundationApi
 import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
@@ -19,6 +13,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -40,7 +35,6 @@ import androidx.compose.material3.Scaffold
 import androidx.compose.material3.Surface
 import androidx.compose.material3.Text
 import androidx.compose.runtime.Composable
-import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.collectAsState
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
@@ -64,7 +58,7 @@ import com.example.runeboundmagic.inventory.Item
 import com.example.runeboundmagic.inventory.WeaponItem
 import com.example.runeboundmagic.ui.rememberAssetPainter
 
-@OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
+@OptIn(ExperimentalFoundationApi::class)
 @Composable
 fun BattlePreparationScreen(
     heroOption: HeroOption,
@@ -78,12 +72,6 @@ fun BattlePreparationScreen(
     val viewModel = battlePreparationViewModel(heroOption, heroName, heroLore)
     val uiState by viewModel.uiState.collectAsState()
     var selectedCategory by rememberSaveable { mutableStateOf<InventoryCategoryInfo?>(null) }
-
-    LaunchedEffect(uiState.isBackpackOpen) {
-        if (!uiState.isBackpackOpen) {
-            selectedCategory = null
-        }
-    }
 
     Scaffold(
         modifier = modifier.fillMaxSize(),
@@ -101,7 +89,7 @@ fun BattlePreparationScreen(
         ) {
             Column(
                 modifier = Modifier
-                    .align(Alignment.TopCenter)
+                    .fillMaxSize()
                     .padding(horizontal = 24.dp, vertical = 32.dp),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
@@ -112,41 +100,23 @@ fun BattlePreparationScreen(
                 )
                 HeroCardSection(uiState = uiState)
                 InventorySummary(uiState = uiState)
-            }
-
-            InventoryToggle(
-                isOpen = uiState.isBackpackOpen,
-                onToggle = viewModel::toggleBackpack,
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 24.dp, end = 24.dp)
-            )
-
-            AnimatedVisibility(
-                visible = uiState.isBackpackOpen,
-                enter = slideInVertically { -it / 2 } + fadeIn(),
-                exit = slideOutVertically { -it / 2 } + fadeOut(),
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .padding(top = 96.dp, end = 24.dp)
-            ) {
-                InventoryOverlay(
+                InventorySection(
                     uiState = uiState,
                     selectedCategory = selectedCategory,
                     onCategorySelected = { selectedCategory = it },
-                    onSlotClick = viewModel::selectSlot
+                    onSlotClick = viewModel::selectSlot,
+                    modifier = Modifier
+                        .fillMaxWidth()
+                        .heightIn(min = 320.dp)
+                )
+                Spacer(modifier = Modifier.weight(1f))
+                StartBattleSection(
+                    heroOption = heroOption,
+                    heroName = uiState.heroCard?.hero?.name ?: heroName.ifBlank { displayName },
+                    onStartBattle = onStartBattle,
+                    modifier = Modifier.align(Alignment.CenterHorizontally)
                 )
             }
-
-            StartBattleSection(
-                heroOption = heroOption,
-                heroName = uiState.heroCard?.hero?.name ?: heroName.ifBlank { displayName },
-                onStartBattle = onStartBattle,
-                modifier = Modifier
-                    .align(Alignment.BottomCenter)
-                    .padding(bottom = 32.dp)
-            )
-
 
             val selectedItem = uiState.selectedItem
             if (selectedItem != null) {
@@ -154,7 +124,12 @@ fun BattlePreparationScreen(
             }
 
             uiState.errorMessage?.let { message ->
-                ErrorMessage(message = message, modifier = Modifier.align(Alignment.BottomStart))
+                ErrorMessage(
+                    message = message,
+                    modifier = Modifier
+                        .align(Alignment.BottomStart)
+                        .padding(24.dp)
+                )
             }
         }
     }
@@ -212,8 +187,11 @@ private fun HeroCardSection(uiState: BattlePreparationUiState) {
                         text = heroCard.heroDescription,
                         style = MaterialTheme.typography.bodyMedium.copy(color = Color(0xFFB0BEC5))
                     )
-                    RarityChip(rarity = heroCard.rarity)
-                    ClassInfo(heroClassMetadata = heroCard.heroClassMetadata)
+                    Row(horizontalArrangement = Arrangement.spacedBy(12.dp), verticalAlignment = Alignment.CenterVertically) {
+                        HeroClassBadge(heroClassMetadata = heroCard.heroClassMetadata)
+                        RarityChip(rarity = heroCard.rarity)
+                    }
+                    EquipmentSummary(heroClassMetadata = heroCard.heroClassMetadata)
                 }
             }
             StatsRow(baseStats = heroCard.baseStats)
@@ -253,16 +231,48 @@ private fun RarityChip(rarity: RarityMetadata) {
 }
 
 @Composable
-private fun ClassInfo(heroClassMetadata: HeroClassMetadata) {
-    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+private fun HeroClassBadge(heroClassMetadata: HeroClassMetadata) {
+    Surface(
+        color = Color(0x332E7DFF),
+        shape = RoundedCornerShape(50),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2E7DFF))
+    ) {
         Text(
-            text = stringResource(id = R.string.battle_prep_weapon_prof, heroClassMetadata.weaponProficiency),
-            color = Color(0xFFCFD8DC),
+            text = heroClassMetadata.name,
+            color = Color(0xFFBBDEFB),
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 4.dp),
             style = MaterialTheme.typography.bodySmall
         )
+    }
+}
+
+@Composable
+private fun EquipmentSummary(heroClassMetadata: HeroClassMetadata) {
+    Column(verticalArrangement = Arrangement.spacedBy(6.dp)) {
         Text(
-            text = stringResource(id = R.string.battle_prep_armor_prof, heroClassMetadata.armorProficiency),
+            text = stringResource(id = R.string.battle_prep_equipment_title),
             color = Color(0xFFCFD8DC),
+            style = MaterialTheme.typography.bodySmall,
+            fontWeight = FontWeight.SemiBold
+        )
+        Row(horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            EquipmentBadge(text = stringResource(id = R.string.battle_prep_equipment_weapon, heroClassMetadata.weaponProficiency))
+            EquipmentBadge(text = stringResource(id = R.string.battle_prep_equipment_armor, heroClassMetadata.armorProficiency))
+        }
+    }
+}
+
+@Composable
+private fun EquipmentBadge(text: String) {
+    Surface(
+        shape = RoundedCornerShape(12.dp),
+        color = Color(0x3320315B),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0x552E7DFF))
+    ) {
+        Text(
+            text = text,
+            color = Color.White,
+            modifier = Modifier.padding(horizontal = 12.dp, vertical = 6.dp),
             style = MaterialTheme.typography.bodySmall
         )
     }
@@ -308,8 +318,12 @@ private fun InventorySummary(uiState: BattlePreparationUiState) {
             modifier = Modifier.padding(horizontal = 20.dp, vertical = 16.dp),
             horizontalArrangement = Arrangement.SpaceBetween
         ) {
+            val usedSlots = uiState.inventorySlots.count { it.item != null }
             SummaryItem(label = stringResource(id = R.string.battle_prep_gold), value = uiState.gold.toString())
-            SummaryItem(label = stringResource(id = R.string.battle_prep_capacity), value = "${uiState.inventorySlots.count { it.item != null }} / ${uiState.capacity}")
+            SummaryItem(
+                label = stringResource(id = R.string.battle_prep_capacity),
+                value = stringResource(id = R.string.battle_prep_inventory_slots, usedSlots, uiState.capacity)
+            )
         }
     }
 }
@@ -322,29 +336,9 @@ private fun SummaryItem(label: String, value: String) {
     }
 }
 
-@Composable
-private fun InventoryToggle(isOpen: Boolean, onToggle: () -> Unit, modifier: Modifier = Modifier) {
-    val painter = rememberAssetPainter(assetPath = "inventory/inventory.png")
-    Box(modifier = modifier.clickable(onClick = onToggle)) {
-        Image(
-            painter = painter,
-            contentDescription = stringResource(id = R.string.battle_prep_inventory_toggle),
-            modifier = Modifier.size(64.dp)
-        )
-        if (isOpen) {
-            Box(
-                modifier = Modifier
-                    .align(Alignment.TopEnd)
-                    .size(12.dp)
-                    .background(Color(0xFF00C853), CircleShape)
-            )
-        }
-    }
-}
-
 @OptIn(ExperimentalFoundationApi::class)
 @Composable
-private fun InventoryOverlay(
+private fun InventorySection(
     uiState: BattlePreparationUiState,
     selectedCategory: InventoryCategoryInfo?,
     onCategorySelected: (InventoryCategoryInfo?) -> Unit,
@@ -354,32 +348,28 @@ private fun InventoryOverlay(
     Surface(
         modifier = modifier,
         shape = RoundedCornerShape(24.dp),
-        tonalElevation = 4.dp,
-        color = Color(0xEE111A3A)
+        tonalElevation = 6.dp,
+        color = Color(0xAA111A3A)
     ) {
-        Row(modifier = Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(
+            modifier = Modifier
+                .fillMaxWidth()
+                .padding(24.dp),
+            horizontalArrangement = Arrangement.spacedBy(24.dp)
+        ) {
             CategoryColumn(
                 categories = uiState.categories,
                 selectedCategory = selectedCategory,
                 onCategorySelected = onCategorySelected
             )
-            Box {
-                Image(
-                    painter = rememberAssetPainter(assetPath = "inventory/backbag.png"),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .width(260.dp)
-                        .height(320.dp)
-                        .padding(end = 8.dp)
-                )
-                InventoryGrid(
-                    slots = uiState.inventorySlots,
-                    onSlotClick = onSlotClick,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 24.dp, vertical = 32.dp)
-                )
-            }
+            InventoryGrid(
+                slots = uiState.inventorySlots,
+                onSlotClick = onSlotClick,
+                modifier = Modifier
+                    .weight(1f)
+                    .fillMaxWidth()
+                    .heightIn(min = 240.dp)
+            )
         }
     }
 }
@@ -425,7 +415,7 @@ private fun InventoryGrid(
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(5),
+        columns = GridCells.Fixed(8),
         verticalArrangement = Arrangement.spacedBy(8.dp),
         horizontalArrangement = Arrangement.spacedBy(8.dp),
         modifier = modifier
