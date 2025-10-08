@@ -1,5 +1,5 @@
 <resources>
-    <string name="app_name">Rounebound Magic</string>
+    <string name="app_name">Runebound Magic</string>
     <string name="lobby_select_hero">Επιλογή Ήρωα</string>
     <string name="lobby_select_hero_with_choice">Επιλογή Ήρωα (%1$s)</string>
     <string name="lobby_selected_hero_details">Ήρωας: %1$s – %2$s</string>
