@@ -8,6 +8,7 @@ import com.example.runeboundmagic.inventory.InventoryItem
 import com.example.runeboundmagic.inventory.ItemCategory
 import com.example.runeboundmagic.inventory.Item
 import com.example.runeboundmagic.inventory.Rarity
+import com.example.runeboundmagic.inventory.WeaponItem
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -111,21 +112,52 @@ private object DefaultEquipmentLoadout {
         return listOf(weapon) + otherCategories
     }
 
-    private fun weaponFor(heroClass: HeroClass, prefix: String): InventoryItem {
-        val (name, icon, rarity) = when (heroClass) {
-            HeroClass.WARRIOR -> Triple("Λεπίδα Εκκίνησης", "weapon/sword.png", Rarity.RARE)
-            HeroClass.RANGER -> Triple("Κυνηγετικό Τόξο", "weapon/crossbow.png", Rarity.RARE)
-            HeroClass.MAGE -> Triple("Ραβδί Πυροφλόγας", "weapon/rod.png", Rarity.EPIC)
-            HeroClass.PRIESTESS -> Triple("Ραβδί Φωτός", "weapon/rod.png", Rarity.RARE)
+    private fun weaponFor(heroClass: HeroClass, prefix: String): WeaponItem {
+        return when (heroClass) {
+            HeroClass.WARRIOR -> WeaponItem(
+                id = "${'$'}prefix_weapon",
+                name = "Βολίδα Μάχης",
+                description = "Ελαφρύ βαλλίστρα που επιτρέπει γρήγορες επιθέσεις πριν τη σύγκρουση.",
+                icon = "weapon/crossbow.png",
+                rarity = Rarity.RARE,
+                damage = 24,
+                element = "PIERCING",
+                attackSpeed = 1.3f
+            )
+
+            HeroClass.RANGER -> WeaponItem(
+                id = "${'$'}prefix_weapon",
+                name = "Κυνηγετικό Τόξο",
+                description = "Αξιόπιστη βαλλίστρα για τους κυνηγούς των Runebound Lands.",
+                icon = "weapon/crossbow.png",
+                rarity = Rarity.RARE,
+                damage = 22,
+                element = "PIERCING",
+                attackSpeed = 1.45f
+            )
+
+            HeroClass.MAGE -> WeaponItem(
+                id = "${'$'}prefix_weapon",
+                name = "Ραβδί Αιθέρα",
+                description = "Μαγεμένο ραβδί με μπλε αύρα που επικαλείται στοιχειακή ενέργεια.",
+                icon = "weapon/rod.png",
+                rarity = Rarity.EPIC,
+                damage = 18,
+                element = "ARCANE",
+                attackSpeed = 1.1f
+            )
+
+            HeroClass.PRIESTESS -> WeaponItem(
+                id = "${'$'}prefix_weapon",
+                name = "Ραβδί Φωτεινών Ρούνων",
+                description = "Ιερό ραβδί με φωτεινά runes που ενισχύει τα ξόρκια θεραπείας.",
+                icon = "weapon/rod.png",
+                rarity = Rarity.RARE,
+                damage = 16,
+                element = "HOLY",
+                attackSpeed = 1.2f
+            )
         }
-        return InventoryItem(
-            id = "${'$'}prefix_weapon",
-            name = name,
-            description = "Αρχικό όπλο που προσαρμόζεται στην κλάση του ήρωα.",
-            icon = icon,
-            rarity = rarity,
-            category = ItemCategory.WEAPON
-        )
     }
 
     private fun defaultItem(category: ItemCategory, prefix: String): InventoryItem? = when (category) {

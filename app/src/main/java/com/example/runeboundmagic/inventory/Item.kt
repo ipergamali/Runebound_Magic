@@ -22,7 +22,7 @@ abstract class Item {
     )
 
     companion object {
-        fun fromFirestore(data: Map<String, Any?>): InventoryItem? {
+        fun fromFirestore(data: Map<String, Any?>): Item? {
             val id = data["id"]?.toString()?.takeIf { it.isNotBlank() } ?: return null
             val name = data["name"]?.toString().orEmpty()
             val description = data["description"]?.toString().orEmpty()
@@ -31,14 +31,30 @@ abstract class Item {
             val categoryName = data["category"]?.toString()?.uppercase() ?: ItemCategory.WEAPON.name
             val rarity = runCatching { Rarity.valueOf(rarityName) }.getOrDefault(Rarity.COMMON)
             val category = runCatching { ItemCategory.valueOf(categoryName) }.getOrDefault(ItemCategory.WEAPON)
-            return InventoryItem(
-                id = id,
-                name = name,
-                description = description,
-                icon = icon,
-                rarity = rarity,
-                category = category
-            )
+            val damage = (data["damage"] as? Number)?.toInt()
+            val attackSpeed = (data["attackSpeed"] as? Number)?.toDouble()?.toFloat()
+            val element = data["element"]?.toString()
+            return if (category == ItemCategory.WEAPON && damage != null && attackSpeed != null && element != null) {
+                WeaponItem(
+                    id = id,
+                    name = name,
+                    description = description,
+                    icon = icon,
+                    rarity = rarity,
+                    damage = damage,
+                    element = element,
+                    attackSpeed = attackSpeed
+                )
+            } else {
+                InventoryItem(
+                    id = id,
+                    name = name,
+                    description = description,
+                    icon = icon,
+                    rarity = rarity,
+                    category = category
+                )
+            }
         }
     }
 }
@@ -53,7 +69,32 @@ data class InventoryItem(
     override val icon: String,
     override val rarity: Rarity,
     override val category: ItemCategory
-) : Item()
+) : Item() {
+    override fun toFirestoreMap(): Map<String, Any> = super.toFirestoreMap() + ("type" to "ITEM")
+}
+
+/**
+ * Εξειδικευμένο όπλο με πρόσθετες ιδιότητες για τη μάχη.
+ */
+data class WeaponItem(
+    override val id: String,
+    override val name: String,
+    override val description: String,
+    override val icon: String,
+    override val rarity: Rarity,
+    val damage: Int,
+    val element: String,
+    val attackSpeed: Float
+) : Item() {
+    override val category: ItemCategory = ItemCategory.WEAPON
+
+    override fun toFirestoreMap(): Map<String, Any> = super.toFirestoreMap() + mapOf(
+        "type" to "WEAPON",
+        "damage" to damage,
+        "element" to element,
+        "attackSpeed" to attackSpeed
+    )
+}
 
 /**
  * Βαθμίδες σπανιότητας για εύκολη ομαδοποίηση αντικειμένων.

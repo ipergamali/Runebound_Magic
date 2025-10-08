@@ -8,6 +8,8 @@ import com.example.runeboundmagic.data.codex.local.HeroWithInventory
 import com.example.runeboundmagic.heroes.Hero
 import com.example.runeboundmagic.inventory.Inventory
 import com.example.runeboundmagic.inventory.InventoryItem
+import com.example.runeboundmagic.inventory.Item
+import com.example.runeboundmagic.inventory.WeaponItem
 
 data class HeroProfile(
     val hero: Hero,
@@ -32,18 +34,7 @@ fun HeroProfile.toInventoryEntity(): CodexInventoryEntity = CodexInventoryEntity
 )
 
 fun HeroProfile.toItemEntities(): List<CodexInventoryItemEntity> = inventory.getAllItems()
-    .mapNotNull { item ->
-        val concreteItem = item as? InventoryItem ?: return@mapNotNull null
-        CodexInventoryItemEntity(
-            inventoryId = inventory.id,
-            itemId = concreteItem.id,
-            name = concreteItem.name,
-            description = concreteItem.description,
-            icon = concreteItem.icon,
-            rarity = concreteItem.rarity,
-            category = concreteItem.category
-        )
-    }
+    .map { item -> item.toEntity(inventoryId = inventory.id) }
 
 fun HeroWithInventory.toDomain(): HeroProfile {
     val heroEntity = hero
@@ -64,14 +55,31 @@ fun HeroWithInventory.toDomain(): HeroProfile {
 
 private fun CodexInventoryWithItems.toDomainInventory(hero: Hero): Inventory {
     val items = items.map { entity ->
-        InventoryItem(
-            id = entity.itemId,
-            name = entity.name,
-            description = entity.description,
-            icon = entity.icon,
-            rarity = entity.rarity,
-            category = entity.category
-        )
+        if (entity.category == com.example.runeboundmagic.inventory.ItemCategory.WEAPON &&
+            entity.damage != null &&
+            entity.attackSpeed != null &&
+            entity.element != null
+        ) {
+            WeaponItem(
+                id = entity.itemId,
+                name = entity.name,
+                description = entity.description,
+                icon = entity.icon,
+                rarity = entity.rarity,
+                damage = entity.damage,
+                element = entity.element,
+                attackSpeed = entity.attackSpeed
+            )
+        } else {
+            InventoryItem(
+                id = entity.itemId,
+                name = entity.name,
+                description = entity.description,
+                icon = entity.icon,
+                rarity = entity.rarity,
+                category = entity.category
+            )
+        }
     }
     return Inventory(
         id = inventory.inventoryId,
@@ -79,5 +87,43 @@ private fun CodexInventoryWithItems.toDomainInventory(hero: Hero): Inventory {
         gold = inventory.gold,
         capacity = inventory.capacity,
         items = items
+    )
+}
+
+private fun Item.toEntity(inventoryId: String): CodexInventoryItemEntity = when (this) {
+    is WeaponItem -> CodexInventoryItemEntity(
+        inventoryId = inventoryId,
+        itemId = id,
+        name = name,
+        description = description,
+        icon = icon,
+        rarity = rarity,
+        category = category,
+        rarityId = rarity.name,
+        damage = damage,
+        element = element,
+        attackSpeed = attackSpeed
+    )
+
+    is InventoryItem -> CodexInventoryItemEntity(
+        inventoryId = inventoryId,
+        itemId = id,
+        name = name,
+        description = description,
+        icon = icon,
+        rarity = rarity,
+        category = category,
+        rarityId = rarity.name
+    )
+
+    else -> CodexInventoryItemEntity(
+        inventoryId = inventoryId,
+        itemId = id,
+        name = name,
+        description = description,
+        icon = icon,
+        rarity = rarity,
+        category = category,
+        rarityId = rarity.name
     )
 }

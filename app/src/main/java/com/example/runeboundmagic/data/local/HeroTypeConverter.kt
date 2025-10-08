@@ -10,5 +10,5 @@ class HeroTypeConverter {
     @TypeConverter
     fun toHeroType(value: String): HeroType = runCatching {
         HeroType.valueOf(value)
-    }.getOrDefault(HeroType.PRIESTESS)
+    }.getOrDefault(HeroType.PRIEST)
 }

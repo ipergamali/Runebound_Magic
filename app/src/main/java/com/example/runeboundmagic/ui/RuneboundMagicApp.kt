@@ -10,6 +10,7 @@ import androidx.navigation.compose.composable
 import androidx.navigation.compose.rememberNavController
 import com.example.runeboundmagic.HeroOption
 import com.example.runeboundmagic.audio.BackgroundMusicController
+import com.example.runeboundmagic.battleprep.BattlePreparationScreen
 import com.example.runeboundmagic.codex.CodexScreen
 
 private const val SplashRoute = "splash"
@@ -17,6 +18,7 @@ private const val IntroRoute = "intro"
 private const val LobbyRoute = "lobby"
 private const val CodexRoute = "codex"
 private const val Match3Route = "match3"
+private const val BattlePreparationRoute = "battle_prep"
 
 private val SplashColorScheme = darkColorScheme(
     primary = Color(0xFF38B6FF),
@@ -54,12 +56,29 @@ fun RuneboundMagicApp(musicController: BackgroundMusicController) {
                     onStartBattle = { hero: HeroOption, heroName ->
                         musicController.stop()
                         val encodedName = Uri.encode(heroName)
-                        navController.navigate("${Routes.Match3}/${hero.name}/$encodedName")
+                        navController.navigate("${Routes.BattlePreparation}/${hero.name}/$encodedName")
                     },
                     onOpenCodex = {
                         navController.navigate(Routes.Codex)
                     },
                     onLobbyShown = { musicController.startOrResume() }
+                )
+            }
+            composable("$BattlePreparationRoute/{hero}/{player}") { backStackEntry ->
+                val heroArg = backStackEntry.arguments?.getString("hero")
+                val playerArg = backStackEntry.arguments?.getString("player") ?: ""
+                val selectedHero = HeroOption.fromName(heroArg)
+                val heroName = Uri.decode(playerArg)
+                BattlePreparationScreen(
+                    heroOption = selectedHero,
+                    heroName = heroName,
+                    onBack = { navController.popBackStack() },
+                    onStartBattle = { heroOption, playerName ->
+                        val encoded = Uri.encode(playerName)
+                        navController.navigate("${Routes.Match3}/${heroOption.name}/$encoded") {
+                            popUpTo(Routes.BattlePreparation) { inclusive = true }
+                        }
+                    }
                 )
             }
             composable("$Match3Route/{hero}/{player}") { backStackEntry ->
@@ -88,5 +107,6 @@ internal object Routes {
     const val Intro = IntroRoute
     const val Lobby = LobbyRoute
     const val Codex = CodexRoute
+    const val BattlePreparation = BattlePreparationRoute
     const val Match3 = Match3Route
 }

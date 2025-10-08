@@ -13,6 +13,10 @@ interface CodexDao {
     @Query("SELECT * FROM codex_heroes WHERE heroId = :heroId")
     suspend fun getHeroWithInventory(heroId: String): HeroWithInventory?
 
+    @Transaction
+    @Query("SELECT * FROM hero_cards WHERE heroId = :heroId LIMIT 1")
+    suspend fun getHeroCard(heroId: String): HeroCardWithMetadata?
+
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertHero(hero: CodexHeroEntity)
 
@@ -21,6 +25,18 @@ interface CodexDao {
 
     @Insert(onConflict = OnConflictStrategy.REPLACE)
     suspend fun upsertItems(items: List<CodexInventoryItemEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertHeroClass(metadata: HeroClassMetadataEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertHeroCard(card: HeroCardEntity)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertRarities(entries: List<RarityEntity>)
+
+    @Insert(onConflict = OnConflictStrategy.REPLACE)
+    suspend fun upsertItemCategories(entries: List<ItemCategoryEntity>)
 
     @Query("DELETE FROM codex_items WHERE inventoryId = :inventoryId")
     suspend fun clearItems(inventoryId: String)
