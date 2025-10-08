@@ -69,9 +69,10 @@ class Inventory(
             val items = (data["items"] as? List<*>)
                 ?.mapNotNull { element ->
                     (element as? Map<String, Any?>)?.let { itemMap ->
+                        val itemIdValue = itemMap["id"]?.toString().orEmpty()
                         runCatching { Item.fromFirestore(itemMap) }
                             .onFailure { error ->
-                                Log.w(TAG, "Αποτυχία φόρτωσης item ${'$'}{itemMap["id"]}: ${'$'}{error.message}")
+                                Log.w(TAG, "Αποτυχία φόρτωσης item ${'$'}itemIdValue: ${'$'}{error.message}")
                             }
                             .getOrNull()
                     }

@@ -10,6 +10,7 @@ import com.example.runeboundmagic.inventory.Inventory
 import com.example.runeboundmagic.inventory.Item
 import com.example.runeboundmagic.inventory.InventoryItem
 import com.example.runeboundmagic.inventory.WeaponStats
+import com.example.runeboundmagic.inventory.icon
 
 data class HeroProfile(
     val hero: Hero,
