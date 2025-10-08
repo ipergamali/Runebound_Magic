@@ -147,6 +147,7 @@ fun BattlePreparationScreen(
                     .padding(bottom = 32.dp)
             )
 
+
             val selectedItem = uiState.selectedItem
             if (selectedItem != null) {
                 ItemDetailsDialog(item = selectedItem, onDismiss = viewModel::dismissItemDetails)

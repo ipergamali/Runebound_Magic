@@ -103,13 +103,16 @@ class CodexManager(
 
 private object DefaultEquipmentLoadout {
 
-    fun loadoutFor(heroClass: HeroClass): List<InventoryItem> {
+    fun loadoutFor(heroClass: HeroClass): List<Item> {
         val prefix = heroClass.name.lowercase()
         val weapon = weaponFor(heroClass, prefix)
         val otherCategories = ItemCategory.values()
             .filter { it != ItemCategory.WEAPON }
             .mapNotNull { category -> defaultItem(category, prefix) }
-        return listOf(weapon) + otherCategories
+        return buildList {
+            add(weapon)
+            addAll(otherCategories)
+        }
     }
 
     private fun weaponFor(heroClass: HeroClass, prefix: String): WeaponItem {
@@ -160,7 +163,7 @@ private object DefaultEquipmentLoadout {
         }
     }
 
-    private fun defaultItem(category: ItemCategory, prefix: String): InventoryItem? = when (category) {
+    private fun defaultItem(category: ItemCategory, prefix: String): Item? = when (category) {
         ItemCategory.ARMOR -> baseItem(
             prefix,
             category,
@@ -245,7 +248,7 @@ private object DefaultEquipmentLoadout {
         description: String,
         icon: String,
         rarity: Rarity = Rarity.COMMON
-    ): InventoryItem = InventoryItem(
+    ): Item = InventoryItem(
         id = "${'$'}prefix_${'$'}{category.name.lowercase()}_01",
         name = name,
         description = description,
