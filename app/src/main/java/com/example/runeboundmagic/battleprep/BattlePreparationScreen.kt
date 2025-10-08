@@ -147,8 +147,8 @@ fun BattlePreparationScreen(
                     .padding(bottom = 32.dp)
             )
 
-            if (uiState.selectedItem != null) {
-                ItemDetailsDialog(item = uiState.selectedItem, onDismiss = viewModel::dismissItemDetails)
+            uiState.selectedItem?.let { item ->
+                ItemDetailsDialog(item = item, onDismiss = viewModel::dismissItemDetails)
             }
 
             uiState.errorMessage?.let { message ->
