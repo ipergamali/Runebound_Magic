@@ -63,6 +63,7 @@ import com.example.runeboundmagic.HeroOption
 import com.example.runeboundmagic.R
 import com.example.runeboundmagic.inventory.Item
 import com.example.runeboundmagic.inventory.Rarity
+import com.example.runeboundmagic.inventory.icon
 
 class HeroCodexActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {

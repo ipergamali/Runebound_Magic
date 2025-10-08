@@ -58,6 +58,7 @@ import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
+import com.example.runeboundmagic.inventory.icon
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.runeboundmagic.HeroOption
 import com.example.runeboundmagic.R
