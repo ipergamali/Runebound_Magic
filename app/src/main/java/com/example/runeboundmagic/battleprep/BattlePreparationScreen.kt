@@ -22,6 +22,7 @@ import androidx.compose.foundation.layout.height
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.layout.widthIn
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -363,23 +364,11 @@ private fun InventoryOverlay(
                 selectedCategory = selectedCategory,
                 onCategorySelected = onCategorySelected
             )
-            Box {
-                Image(
-                    painter = rememberAssetPainter(assetPath = "inventory/backbag.png"),
-                    contentDescription = null,
-                    modifier = Modifier
-                        .width(260.dp)
-                        .height(320.dp)
-                        .padding(end = 8.dp)
-                )
-                InventoryGrid(
-                    slots = uiState.inventorySlots,
-                    onSlotClick = onSlotClick,
-                    modifier = Modifier
-                        .align(Alignment.Center)
-                        .padding(horizontal = 24.dp, vertical = 32.dp)
-                )
-            }
+            InventoryGridPanel(
+                slots = uiState.inventorySlots,
+                onSlotClick = onSlotClick,
+                modifier = Modifier.padding(end = 8.dp)
+            )
         }
     }
 }
@@ -425,9 +414,9 @@ private fun InventoryGrid(
     modifier: Modifier = Modifier
 ) {
     LazyVerticalGrid(
-        columns = GridCells.Fixed(5),
-        verticalArrangement = Arrangement.spacedBy(8.dp),
-        horizontalArrangement = Arrangement.spacedBy(8.dp),
+        columns = GridCells.Fixed(8),
+        verticalArrangement = Arrangement.spacedBy(6.dp),
+        horizontalArrangement = Arrangement.spacedBy(6.dp),
         modifier = modifier
     ) {
         items(slots, key = { it.index }) { slot ->
@@ -445,7 +434,7 @@ private fun InventorySlotCell(slot: InventorySlotUiModel, onClick: () -> Unit) {
     }
     Surface(
         modifier = Modifier
-            .size(48.dp)
+            .size(40.dp)
             .clickable(onClick = onClick),
         shape = RoundedCornerShape(10.dp),
         color = Color(0x5520315B),
@@ -455,7 +444,35 @@ private fun InventorySlotCell(slot: InventorySlotUiModel, onClick: () -> Unit) {
             Image(
                 painter = rememberAssetPainter(assetPath = item.icon),
                 contentDescription = item.name,
-                modifier = Modifier.padding(6.dp)
+                modifier = Modifier.padding(4.dp)
+            )
+        }
+    }
+}
+
+@Composable
+private fun InventoryGridPanel(
+    slots: List<InventorySlotUiModel>,
+    onSlotClick: (Int) -> Unit,
+    modifier: Modifier = Modifier
+) {
+    Surface(
+        modifier = modifier,
+        shape = RoundedCornerShape(20.dp),
+        tonalElevation = 2.dp,
+        color = Color(0x6620315B),
+        border = androidx.compose.foundation.BorderStroke(1.dp, Color(0xFF2E3A6A))
+    ) {
+        Box(
+            modifier = Modifier
+                .background(Color(0x3320315B))
+                .padding(horizontal = 16.dp, vertical = 20.dp)
+        ) {
+            InventoryGrid(
+                slots = slots,
+                onSlotClick = onSlotClick,
+                modifier = Modifier
+                    .widthIn(min = 320.dp)
             )
         }
     }
