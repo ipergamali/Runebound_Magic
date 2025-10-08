@@ -147,8 +147,10 @@ fun BattlePreparationScreen(
                     .padding(bottom = 32.dp)
             )
 
-            uiState.selectedItem?.let { item ->
-                ItemDetailsDialog(item = item, onDismiss = viewModel::dismissItemDetails)
+
+            val selectedItem = uiState.selectedItem
+            if (selectedItem != null) {
+                ItemDetailsDialog(item = selectedItem, onDismiss = viewModel::dismissItemDetails)
             }
 
             uiState.errorMessage?.let { message ->
