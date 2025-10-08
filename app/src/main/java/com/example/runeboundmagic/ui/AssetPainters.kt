@@ -13,17 +13,31 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 
 @Composable
-fun rememberAssetPainter(assetPath: String): Painter {
+fun rememberAssetPainter(assetPath: String, vararg fallbackPaths: String): Painter {
     val context = LocalContext.current
-    val painterState = produceState<Painter>(initialValue = ColorPainter(Color.Transparent), context, assetPath) {
+    val fallbackKey = fallbackPaths.contentHashCode()
+    val painterState = produceState<Painter>(
+        initialValue = ColorPainter(Color.Transparent),
+        context,
+        assetPath,
+        fallbackKey
+    ) {
+        val candidates = buildList {
+            add(assetPath)
+            fallbackPaths.forEach { path ->
+                if (path.isNotBlank()) add(path)
+            }
+        }
         value = withContext(Dispatchers.IO) {
-            runCatching {
-                context.assets.open(assetPath).use { inputStream ->
-                    BitmapFactory.decodeStream(inputStream)?.asImageBitmap()?.let { bitmap ->
-                        BitmapPainter(bitmap)
+            candidates.firstNotNullOfOrNull { path ->
+                runCatching {
+                    context.assets.open(path).use { inputStream ->
+                        BitmapFactory.decodeStream(inputStream)?.asImageBitmap()?.let { bitmap ->
+                            BitmapPainter(bitmap)
+                        }
                     }
-                }
-            }.getOrNull() ?: ColorPainter(Color.Transparent)
+                }.getOrNull()
+            } ?: ColorPainter(Color.Transparent)
         }
     }
     return painterState.value

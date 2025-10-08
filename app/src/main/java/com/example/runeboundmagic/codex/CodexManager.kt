@@ -3,6 +3,7 @@ package com.example.runeboundmagic.codex
 import com.example.runeboundmagic.data.codex.local.CodexDao
 import com.example.runeboundmagic.heroes.Hero
 import com.example.runeboundmagic.heroes.HeroClass
+import com.example.runeboundmagic.inventory.EquipmentSlot
 import com.example.runeboundmagic.inventory.Inventory
 import com.example.runeboundmagic.inventory.InventoryItem
 import com.example.runeboundmagic.inventory.Item
@@ -36,9 +37,11 @@ class CodexManager(
                 else -> localProfile
             }
 
-            persistLocal(profile)
-            syncRemote(profile)
-            profile
+            val ensuredProfile = ensureDefaultWeapon(profile, resolvedHero)
+
+            persistLocal(ensuredProfile)
+            syncRemote(ensuredProfile)
+            ensuredProfile
         }
 
     suspend fun updateInventory(profile: HeroProfile) = withContext(ioDispatcher) {
@@ -90,9 +93,19 @@ class CodexManager(
     }
 
     private fun createDefaultProfile(hero: Hero): HeroProfile {
-        val startingItems = DefaultEquipmentLoadout.loadoutFor(hero.classType)
+        val startingItems = DefaultEquipmentLoadout.loadoutFor(hero)
         val inventory = hero.createInventory(items = startingItems)
         return HeroProfile(hero = hero, inventory = inventory)
+    }
+
+    private fun ensureDefaultWeapon(profile: HeroProfile, hero: Hero): HeroProfile {
+        val inventory = profile.inventory
+        val hasMainHandWeapon = inventory.getItemsByCategory(ItemCategory.WEAPONS)
+            .any { item -> EquipmentSlot.MAIN_HAND in item.allowedSlots }
+        if (!hasMainHandWeapon) {
+            inventory.addItem(DefaultEquipmentLoadout.weaponFor(hero))
+        }
+        return profile
     }
 
     private fun inventoryCollection() = firestore.collection(INVENTORY_COLLECTION)
@@ -104,9 +117,9 @@ class CodexManager(
 
 private object DefaultEquipmentLoadout {
 
-    fun loadoutFor(heroClass: HeroClass): List<Item> {
-        val prefix = heroClass.name.lowercase()
-        val weapon = weaponFor(heroClass, prefix)
+    fun loadoutFor(hero: Hero): List<Item> {
+        val prefix = hero.id.ifBlank { hero.classType.name.lowercase() }
+        val weapon = weaponFor(hero)
         val otherCategories = ItemCategory.values()
             .filter { it != ItemCategory.WEAPONS }
             .mapNotNull { category -> defaultItem(category, prefix) }
@@ -116,47 +129,48 @@ private object DefaultEquipmentLoadout {
         }
     }
 
-    private fun weaponFor(heroClass: HeroClass, prefix: String): Item {
-        return when (heroClass) {
+    fun weaponFor(hero: Hero): Item {
+        val prefix = hero.id.ifBlank { hero.classType.name.lowercase() }
+        return when (hero.classType) {
             HeroClass.WARRIOR -> InventoryItem(
                 id = "${'$'}prefix_weapon",
-                name = "Βολίδα Μάχης",
-                description = "Ελαφρύ βαλλίστρα που επιτρέπει γρήγορες επιθέσεις πριν τη σύγκρουση.",
-                icon = "weapon/crossbow.png",
-                rarity = Rarity.RARE,
+                name = "Ξίφος Τιμής",
+                description = "Ένα αξιόπιστο σπαθί για τους πολεμιστές της πρώτης γραμμής.",
+                icon = "weapon/sword.png",
+                rarity = Rarity.COMMON,
                 category = ItemCategory.WEAPONS,
-                subcategory = ItemSubcategory.CROSSBOW,
-                weaponStats = WeaponStats(damage = 24, element = "PIERCING", attackSpeed = 1.3f)
+                subcategory = ItemSubcategory.SWORD,
+                weaponStats = WeaponStats(damage = 24, element = "SLASHING", attackSpeed = 1.25f)
             )
 
             HeroClass.RANGER -> InventoryItem(
                 id = "${'$'}prefix_weapon",
-                name = "Κυνηγετικό Τόξο",
-                description = "Αξιόπιστη βαλλίστρα για τους κυνηγούς των Runebound Lands.",
+                name = "Ελαφριά Βαλλίστρα",
+                description = "Γρήγορη βαλλίστρα για τους έμπειρους κυνηγούς.",
                 icon = "weapon/crossbow.png",
-                rarity = Rarity.RARE,
+                rarity = Rarity.COMMON,
                 category = ItemCategory.WEAPONS,
                 subcategory = ItemSubcategory.CROSSBOW,
-                weaponStats = WeaponStats(damage = 22, element = "PIERCING", attackSpeed = 1.45f)
+                weaponStats = WeaponStats(damage = 22, element = "PIERCING", attackSpeed = 1.4f)
             )
 
             HeroClass.MAGE -> InventoryItem(
                 id = "${'$'}prefix_weapon",
                 name = "Ραβδί Αιθέρα",
-                description = "Μαγεμένο ραβδί με μπλε αύρα που επικαλείται στοιχειακή ενέργεια.",
+                description = "Μαγεμένο ραβδί που διοχετεύει ενέργεια.",
                 icon = "weapon/rod.png",
-                rarity = Rarity.EPIC,
+                rarity = Rarity.COMMON,
                 category = ItemCategory.WEAPONS,
                 subcategory = ItemSubcategory.ROD,
-                weaponStats = WeaponStats(damage = 18, element = "ARCANE", attackSpeed = 1.1f)
+                weaponStats = WeaponStats(damage = 18, element = "ARCANE", attackSpeed = 1.15f)
             )
 
             HeroClass.PRIESTESS -> InventoryItem(
                 id = "${'$'}prefix_weapon",
-                name = "Ραβδί Φωτεινών Ρούνων",
-                description = "Ιερό ραβδί με φωτεινά runes που ενισχύει τα ξόρκια θεραπείας.",
+                name = "Ραβδί Αγνότητας",
+                description = "Ιερό ραβδί που ενισχύει ξόρκια ίασης.",
                 icon = "weapon/rod.png",
-                rarity = Rarity.RARE,
+                rarity = Rarity.COMMON,
                 category = ItemCategory.WEAPONS,
                 subcategory = ItemSubcategory.ROD,
                 weaponStats = WeaponStats(damage = 16, element = "HOLY", attackSpeed = 1.2f)
