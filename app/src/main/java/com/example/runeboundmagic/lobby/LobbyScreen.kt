@@ -1,5 +1,7 @@
 package com.example.runeboundmagic.lobby
 
+import com.example.runeboundmagic.codex.CodexManager
+import com.example.runeboundmagic.codex.HeroProfile
 import com.example.runeboundmagic.heroes.Hero
 import com.example.runeboundmagic.inventory.Inventory
 
@@ -30,6 +32,12 @@ class LobbyScreen(
             inventory = resolvedHero.createInventory()
         )
     }
+
+    suspend fun startBattleWithCodex(codexManager: CodexManager): HeroProfile? =
+        selectedHero?.let { hero ->
+            val resolvedHero = customName?.let { hero.copy(name = it) } ?: hero
+            codexManager.prepareHeroProfile(resolvedHero, resolvedHero.name)
+        }
 
     data class LobbySelection(
         val hero: Hero,

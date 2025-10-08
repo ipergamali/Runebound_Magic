@@ -1,7 +1,7 @@
 package com.example.runeboundmagic.codex
 
 import com.example.runeboundmagic.HeroOption
-import com.example.runeboundmagic.inventory.Item
+import com.example.runeboundmagic.inventory.InventoryItem
 import com.example.runeboundmagic.inventory.ItemCategory
 import com.example.runeboundmagic.inventory.Rarity
 
@@ -23,7 +23,7 @@ data class InventoryCategoryEntry(
     val title: String,
     val iconAsset: String,
     val description: String,
-    val items: List<Item>
+    val items: List<InventoryItem>
 )
 
 /**
@@ -33,7 +33,7 @@ data class HeroCodexProfile(
     val heroOption: HeroOption,
     val stats: HeroStats,
     val heroCardLore: String,
-    val startingWeapon: Item,
+    val startingWeapon: InventoryItem,
     val inventoryCategories: List<InventoryCategoryEntry>,
     val startingGold: Int
 )
@@ -53,7 +53,7 @@ object HeroCodexData {
     }
 
     private fun priestessProfile(): HeroCodexProfile {
-        val rod = Item(
+        val rod = InventoryItem(
             id = "rod_priestess",
             name = "Moonlit Rod",
             description = "Κοντάρι με ενισχυμένη θεραπευτική αύρα. Damage: 32, Element: Light, Skill: Radiant Nova.",
@@ -63,7 +63,7 @@ object HeroCodexData {
         )
 
         val armor = listOf(
-            Item(
+            InventoryItem(
                 id = "priestess_veil",
                 name = "Veil of Dawn",
                 description = "Κράνος με προστατευτικά glyphs φωτός.",
@@ -71,7 +71,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "priestess_robe",
                 name = "Moonweave Robe",
                 description = "Θώρακας με +20 Mana Regen.",
@@ -79,7 +79,7 @@ object HeroCodexData {
                 rarity = Rarity.EPIC,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "priestess_gloves",
                 name = "Gloves of Mercy",
                 description = "Γάντια που ενισχύουν τις θεραπεύσεις.",
@@ -87,7 +87,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "priestess_boots",
                 name = "Steps of Serenity",
                 description = "Μπότες με +10% ταχύτητα κίνησης.",
@@ -98,7 +98,7 @@ object HeroCodexData {
         )
 
         val shield = listOf(
-            Item(
+            InventoryItem(
                 id = "priestess_barrier",
                 name = "Aegis of Lumina",
                 description = "Μαγικό φράγμα με 35 Block.",
@@ -109,7 +109,7 @@ object HeroCodexData {
         )
 
         val accessories = listOf(
-            Item(
+            InventoryItem(
                 id = "moon_talisman",
                 name = "Moonlit Talisman",
                 description = "Δαχτυλίδι που χαρίζει +15% Healing Power.",
@@ -117,7 +117,7 @@ object HeroCodexData {
                 rarity = Rarity.EPIC,
                 category = ItemCategory.ACCESSORY
             ),
-            Item(
+            InventoryItem(
                 id = "starlit_belt",
                 name = "Starlit Belt",
                 description = "Ζώνη που αποθηκεύει 2 επιπλέον potions.",
@@ -128,7 +128,7 @@ object HeroCodexData {
         )
 
         val consumables = listOf(
-            Item(
+            InventoryItem(
                 id = "major_heal",
                 name = "Μεγάλο Φίλτρο Ζωής",
                 description = "Αποκαθιστά πλήρως την υγεία του συμμάχου.",
@@ -136,7 +136,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.CONSUMABLE
             ),
-            Item(
+            InventoryItem(
                 id = "clarity_draught",
                 name = "Draught of Clarity",
                 description = "Προσωρινό +25 Mana και +10% Crit Chance.",
@@ -147,7 +147,7 @@ object HeroCodexData {
         )
 
         val spells = listOf(
-            Item(
+            InventoryItem(
                 id = "blessing_scroll",
                 name = "Scroll of Dawnburst",
                 description = "Κάλεσμα φωτεινής έκρηξης που καθαρίζει debuffs.",
@@ -158,7 +158,7 @@ object HeroCodexData {
         )
 
         val runes = listOf(
-            Item(
+            InventoryItem(
                 id = "lunar_rune",
                 name = "Lunar Rune",
                 description = "Ρούνος που ενισχύει θεραπείες κατά +12%.",
@@ -169,18 +169,18 @@ object HeroCodexData {
         )
 
         val materials = listOf(
-            Item(
+            InventoryItem(
                 id = "stardust",
                 name = "Stardust Essence",
                 description = "Υλικό craft για μυστικιστικές αναβαθμίσεις.",
                 icon = "armor/chest-women_b.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.MATERIAL
+                category = ItemCategory.CRAFTING_MATERIAL
             )
         )
 
         val questItems = listOf(
-            Item(
+            InventoryItem(
                 id = "oracle_fragment",
                 name = "Oracle Fragment",
                 description = "Κομμάτι κρυστάλλου που ανοίγει αρχαίες πύλες.",
@@ -191,7 +191,7 @@ object HeroCodexData {
         )
 
         val currency = listOf(
-            Item(
+            InventoryItem(
                 id = "lunar_coins",
                 name = "Λάμποντα Νομίσματα",
                 description = "Περιέχει 150 χρυσά νομίσματα.",
@@ -209,7 +209,7 @@ object HeroCodexData {
             ItemCategory.CONSUMABLE to consumables,
             ItemCategory.SPELL_SCROLL to spells,
             ItemCategory.RUNE_GEM to runes,
-            ItemCategory.MATERIAL to materials,
+            ItemCategory.CRAFTING_MATERIAL to materials,
             ItemCategory.QUEST_ITEM to questItems,
             ItemCategory.CURRENCY to currency
         )
@@ -225,7 +225,7 @@ object HeroCodexData {
     }
 
     private fun mageProfile(): HeroCodexProfile {
-        val staff = Item(
+        val staff = InventoryItem(
             id = "mage_staff",
             name = "Arcane Staff",
             description = "Damage: 40, Element: Arcane, Skill: Rune Surge.",
@@ -235,7 +235,7 @@ object HeroCodexData {
         )
 
         val armor = listOf(
-            Item(
+            InventoryItem(
                 id = "mage_hat",
                 name = "Hat of Channels",
                 description = "+25 Mana και +5 Spell Power.",
@@ -243,7 +243,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "mage_robe",
                 name = "Robe of Runic Flow",
                 description = "+18% Rune Damage.",
@@ -251,7 +251,7 @@ object HeroCodexData {
                 rarity = Rarity.EPIC,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "mage_gloves",
                 name = "Casting Gloves",
                 description = "Μειώνουν το κόστος mana κατά 8%.",
@@ -259,7 +259,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "mage_boots",
                 name = "Boots of Phase Step",
                 description = "Επιτρέπουν τηλεμεταφορά μικρής εμβέλειας.",
@@ -270,7 +270,7 @@ object HeroCodexData {
         )
 
         val shield = listOf(
-            Item(
+            InventoryItem(
                 id = "mage_barrier",
                 name = "Chrono Ward",
                 description = "Απορροφά 120 damage και επιβραδύνει εχθρούς.",
@@ -281,7 +281,7 @@ object HeroCodexData {
         )
 
         val accessories = listOf(
-            Item(
+            InventoryItem(
                 id = "arcane_ring",
                 name = "Arcane Ring",
                 description = "+10% Spell Crit και +5 Mana Regen.",
@@ -289,7 +289,7 @@ object HeroCodexData {
                 rarity = Rarity.EPIC,
                 category = ItemCategory.ACCESSORY
             ),
-            Item(
+            InventoryItem(
                 id = "mana_belt",
                 name = "Mana Reservoir Belt",
                 description = "Αποθηκεύει 3 επιπλέον scrolls.",
@@ -300,7 +300,7 @@ object HeroCodexData {
         )
 
         val consumables = listOf(
-            Item(
+            InventoryItem(
                 id = "mana_potion",
                 name = "Υπέρτατο Mana Potion",
                 description = "Επαναφέρει αμέσως 120 Mana.",
@@ -308,7 +308,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.CONSUMABLE
             ),
-            Item(
+            InventoryItem(
                 id = "spell_flux",
                 name = "Spell Flux Phial",
                 description = "Προσωρινό +20% Rune Damage.",
@@ -319,7 +319,7 @@ object HeroCodexData {
         )
 
         val spells = listOf(
-            Item(
+            InventoryItem(
                 id = "meteor_scroll",
                 name = "Meteoric Scroll",
                 description = "Καλεί μετεωρίτες που κάνουν AoE damage.",
@@ -327,7 +327,7 @@ object HeroCodexData {
                 rarity = Rarity.LEGENDARY,
                 category = ItemCategory.SPELL_SCROLL
             ),
-            Item(
+            InventoryItem(
                 id = "ward_scroll",
                 name = "Temporal Seal",
                 description = "Δημιουργεί χρονικό πεδίο άμυνας.",
@@ -338,7 +338,7 @@ object HeroCodexData {
         )
 
         val runes = listOf(
-            Item(
+            InventoryItem(
                 id = "rune_of_flux",
                 name = "Rune of Flux",
                 description = "+2 σε κάθε chain spell.",
@@ -346,7 +346,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.RUNE_GEM
             ),
-            Item(
+            InventoryItem(
                 id = "prismatic_gem",
                 name = "Prismatic Gem",
                 description = "Επιτρέπει αλλαγή στοιχείου στις μαγείες.",
@@ -357,18 +357,18 @@ object HeroCodexData {
         )
 
         val materials = listOf(
-            Item(
+            InventoryItem(
                 id = "arcane_powder",
                 name = "Arcane Powder",
                 description = "Χρησιμοποιείται για crafting μπατών και ράβδων.",
                 icon = "armor/chest.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.MATERIAL
+                category = ItemCategory.CRAFTING_MATERIAL
             )
         )
 
         val questItems = listOf(
-            Item(
+            InventoryItem(
                 id = "rune_tablet",
                 name = "Ancient Rune Tablet",
                 description = "Απαραίτητη για να ξεκλειδώσει το Rune Vault.",
@@ -379,7 +379,7 @@ object HeroCodexData {
         )
 
         val currency = listOf(
-            Item(
+            InventoryItem(
                 id = "arcane_tokens",
                 name = "Arcane Tokens",
                 description = "Περιέχει 110 χρυσά νομίσματα και 5 arcane σφραγίδες.",
@@ -397,7 +397,7 @@ object HeroCodexData {
             ItemCategory.CONSUMABLE to consumables,
             ItemCategory.SPELL_SCROLL to spells,
             ItemCategory.RUNE_GEM to runes,
-            ItemCategory.MATERIAL to materials,
+            ItemCategory.CRAFTING_MATERIAL to materials,
             ItemCategory.QUEST_ITEM to questItems,
             ItemCategory.CURRENCY to currency
         )
@@ -413,7 +413,7 @@ object HeroCodexData {
     }
 
     private fun warriorProfile(): HeroCodexProfile {
-        val sword = Item(
+        val sword = InventoryItem(
             id = "warrior_sword",
             name = "Crimson Blade",
             description = "Damage: 48, Element: Fire, Skill: Blazing Rift.",
@@ -423,7 +423,7 @@ object HeroCodexData {
         )
 
         val armor = listOf(
-            Item(
+            InventoryItem(
                 id = "warrior_helm",
                 name = "Helm of the Vanguard",
                 description = "+40 Defense και +10 Block.",
@@ -431,7 +431,7 @@ object HeroCodexData {
                 rarity = Rarity.EPIC,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "warrior_chest",
                 name = "Plate of Embersteel",
                 description = "Μειώνει το εισερχόμενο damage κατά 12%.",
@@ -439,7 +439,7 @@ object HeroCodexData {
                 rarity = Rarity.EPIC,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "warrior_gloves",
                 name = "Grasp of Fury",
                 description = "+15 Attack και +5 Rage στο combo.",
@@ -447,7 +447,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "warrior_boots",
                 name = "March of Titans",
                 description = "+8% ταχύτητα και +5 Block.",
@@ -458,7 +458,7 @@ object HeroCodexData {
         )
 
         val shield = listOf(
-            Item(
+            InventoryItem(
                 id = "warrior_shield",
                 name = "Bulwark of Ash",
                 description = "Απορροφά 160 damage και αντεπιτίθεται με φωτιά.",
@@ -469,7 +469,7 @@ object HeroCodexData {
         )
 
         val accessories = listOf(
-            Item(
+            InventoryItem(
                 id = "warrior_ring",
                 name = "Signet of Valor",
                 description = "+10% Crit Damage.",
@@ -480,7 +480,7 @@ object HeroCodexData {
         )
 
         val consumables = listOf(
-            Item(
+            InventoryItem(
                 id = "iron_potion",
                 name = "Potion of Ironhide",
                 description = "+25 Defense για 3 γύρους.",
@@ -488,7 +488,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.CONSUMABLE
             ),
-            Item(
+            InventoryItem(
                 id = "rage_draught",
                 name = "Draught of Rage",
                 description = "+30 Attack και lifesteal.",
@@ -498,10 +498,10 @@ object HeroCodexData {
             )
         )
 
-        val spells = emptyList<Item>()
+        val spells = emptyList<InventoryItem>()
 
         val runes = listOf(
-            Item(
+            InventoryItem(
                 id = "ember_gem",
                 name = "Ember Gem",
                 description = "Ενισχύει πυρίνες επιθέσεις κατά +10%.",
@@ -512,18 +512,18 @@ object HeroCodexData {
         )
 
         val materials = listOf(
-            Item(
+            InventoryItem(
                 id = "iron_ingot",
                 name = "Forged Iron Ingot",
                 description = "Βασικό υλικό για αναβαθμίσεις όπλων.",
                 icon = "armor/chest_b.png",
                 rarity = Rarity.COMMON,
-                category = ItemCategory.MATERIAL
+                category = ItemCategory.CRAFTING_MATERIAL
             )
         )
 
         val questItems = listOf(
-            Item(
+            InventoryItem(
                 id = "war_banner",
                 name = "Warbound Banner",
                 description = "Αναγκαίο για το storyline του Warrior.",
@@ -534,7 +534,7 @@ object HeroCodexData {
         )
 
         val currency = listOf(
-            Item(
+            InventoryItem(
                 id = "battle_tokens",
                 name = "Battle Tokens",
                 description = "Περιέχει 95 χρυσά νομίσματα.",
@@ -552,7 +552,7 @@ object HeroCodexData {
             ItemCategory.CONSUMABLE to consumables,
             ItemCategory.SPELL_SCROLL to spells,
             ItemCategory.RUNE_GEM to runes,
-            ItemCategory.MATERIAL to materials,
+            ItemCategory.CRAFTING_MATERIAL to materials,
             ItemCategory.QUEST_ITEM to questItems,
             ItemCategory.CURRENCY to currency
         )
@@ -568,7 +568,7 @@ object HeroCodexData {
     }
 
     private fun rangerProfile(): HeroCodexProfile {
-        val bow = Item(
+        val bow = InventoryItem(
             id = "ranger_bow",
             name = "Sylvan Bow",
             description = "Damage: 36, Element: Wind, Skill: Arrow Storm.",
@@ -578,7 +578,7 @@ object HeroCodexData {
         )
 
         val armor = listOf(
-            Item(
+            InventoryItem(
                 id = "ranger_hood",
                 name = "Windrunner Hood",
                 description = "+12 Evasion.",
@@ -586,7 +586,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "ranger_jacket",
                 name = "Leather of the Glade",
                 description = "+8 Attack και +15 Evasion.",
@@ -594,7 +594,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "ranger_gloves",
                 name = "Gloves of True Aim",
                 description = "Αυξάνει το crit chance κατά 12%.",
@@ -602,7 +602,7 @@ object HeroCodexData {
                 rarity = Rarity.RARE,
                 category = ItemCategory.ARMOR
             ),
-            Item(
+            InventoryItem(
                 id = "ranger_boots",
                 name = "Boots of Silent Step",
                 description = "+15% ταχύτητα και αθόρυβη κίνηση.",
@@ -612,10 +612,10 @@ object HeroCodexData {
             )
         )
 
-        val shield = emptyList<Item>()
+        val shield = emptyList<InventoryItem>()
 
         val accessories = listOf(
-            Item(
+            InventoryItem(
                 id = "ranger_quiver",
                 name = "Quiver of Endless Flight",
                 description = "+5 βέλη ανά μάχη.",
@@ -623,7 +623,7 @@ object HeroCodexData {
                 rarity = Rarity.EPIC,
                 category = ItemCategory.ACCESSORY
             ),
-            Item(
+            InventoryItem(
                 id = "ranger_ring",
                 name = "Ring of Whispering Leaves",
                 description = "Ανίχνευση παγίδων σε μεγαλύτερη ακτίνα.",
@@ -634,7 +634,7 @@ object HeroCodexData {
         )
 
         val consumables = listOf(
-            Item(
+            InventoryItem(
                 id = "agility_draught",
                 name = "Draught of Agility",
                 description = "+20 Evasion για 3 γύρους.",
@@ -645,7 +645,7 @@ object HeroCodexData {
         )
 
         val spells = listOf(
-            Item(
+            InventoryItem(
                 id = "nature_scroll",
                 name = "Scroll of Nature's Grasp",
                 description = "Δένει τους εχθρούς με ρίζες.",
@@ -656,7 +656,7 @@ object HeroCodexData {
         )
 
         val runes = listOf(
-            Item(
+            InventoryItem(
                 id = "wind_rune",
                 name = "Rune of Tailwind",
                 description = "+10% ταχύτητα βολής.",
@@ -667,18 +667,18 @@ object HeroCodexData {
         )
 
         val materials = listOf(
-            Item(
+            InventoryItem(
                 id = "feather_bundle",
                 name = "Bundle of Swift Feathers",
                 description = "Crafting υλικό για βελτιωμένα βέλη.",
                 icon = "armor/chest-women_b.png",
                 rarity = Rarity.COMMON,
-                category = ItemCategory.MATERIAL
+                category = ItemCategory.CRAFTING_MATERIAL
             )
         )
 
         val questItems = listOf(
-            Item(
+            InventoryItem(
                 id = "scout_map",
                 name = "Explorer's Map",
                 description = "Οδηγεί σε κρυφές περιοχές της αποστολής.",
@@ -689,7 +689,7 @@ object HeroCodexData {
         )
 
         val currency = listOf(
-            Item(
+            InventoryItem(
                 id = "hunter_coins",
                 name = "Hunter's Coins",
                 description = "Περιέχει 105 χρυσά νομίσματα.",
@@ -707,7 +707,7 @@ object HeroCodexData {
             ItemCategory.CONSUMABLE to consumables,
             ItemCategory.SPELL_SCROLL to spells,
             ItemCategory.RUNE_GEM to runes,
-            ItemCategory.MATERIAL to materials,
+            ItemCategory.CRAFTING_MATERIAL to materials,
             ItemCategory.QUEST_ITEM to questItems,
             ItemCategory.CURRENCY to currency
         )
@@ -722,7 +722,7 @@ object HeroCodexData {
         )
     }
 
-    private fun buildCategories(items: Map<ItemCategory, List<Item>>): List<InventoryCategoryEntry> {
+    private fun buildCategories(items: Map<ItemCategory, List<InventoryItem>>): List<InventoryCategoryEntry> {
         return CATEGORY_ORDER.map { category ->
             InventoryCategoryEntry(
                 category = category,
@@ -742,7 +742,7 @@ object HeroCodexData {
         ItemCategory.CONSUMABLE,
         ItemCategory.SPELL_SCROLL,
         ItemCategory.RUNE_GEM,
-        ItemCategory.MATERIAL,
+        ItemCategory.CRAFTING_MATERIAL,
         ItemCategory.QUEST_ITEM,
         ItemCategory.CURRENCY
     )
@@ -755,7 +755,7 @@ object HeroCodexData {
         ItemCategory.CONSUMABLE to "Καταναλώσιμα",
         ItemCategory.SPELL_SCROLL to "Μαγείες & Πάπυροι",
         ItemCategory.RUNE_GEM to "Ρούνες & Πολύτιμοι Λίθοι",
-        ItemCategory.MATERIAL to "Υλικά Crafting",
+        ItemCategory.CRAFTING_MATERIAL to "Υλικά Crafting",
         ItemCategory.QUEST_ITEM to "Αντικείμενα Αποστολών",
         ItemCategory.CURRENCY to "Χρυσός & Νομίσματα"
     )
@@ -768,7 +768,7 @@ object HeroCodexData {
         ItemCategory.CONSUMABLE to "Φίλτρα ζωής, mana και προσωρινές ενισχύσεις.",
         ItemCategory.SPELL_SCROLL to "Ξεχωριστές μαγείες ή πάπυροι προς χρήση στη μάχη.",
         ItemCategory.RUNE_GEM to "Ρούνες και πολύτιμοι λίθοι για enchantments.",
-        ItemCategory.MATERIAL to "Υλικά crafting όπως ores, herbs και essences.",
+        ItemCategory.CRAFTING_MATERIAL to "Υλικά crafting όπως ores, herbs και essences.",
         ItemCategory.QUEST_ITEM to "Ειδικά αντικείμενα για αποστολές.",
         ItemCategory.CURRENCY to "Χρυσά νομίσματα και λοιπά νομίσματα." 
     )
@@ -781,7 +781,7 @@ object HeroCodexData {
         ItemCategory.CONSUMABLE to "inventory/inventory.png",
         ItemCategory.SPELL_SCROLL to "characters/mage.png",
         ItemCategory.RUNE_GEM to "puzzle/circle.png",
-        ItemCategory.MATERIAL to "armor/chest-women_b.png",
+        ItemCategory.CRAFTING_MATERIAL to "armor/chest-women_b.png",
         ItemCategory.QUEST_ITEM to "inventory/backbag.png",
         ItemCategory.CURRENCY to "inventory/inventory.png"
     )
