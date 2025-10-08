@@ -19,6 +19,7 @@ import androidx.compose.foundation.layout.Spacer
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.height
+import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
@@ -358,13 +359,23 @@ private fun InventoryOverlay(
     onSlotClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
+    val scrollState = rememberScrollState()
     Surface(
-        modifier = modifier,
+        modifier = modifier
+            .widthIn(min = 360.dp)
+            .heightIn(max = 520.dp),
         shape = RoundedCornerShape(24.dp),
         tonalElevation = 4.dp,
         color = Color(0xEE111A3A)
     ) {
-        Row(modifier = Modifier.padding(20.dp), horizontalArrangement = Arrangement.spacedBy(16.dp)) {
+        Row(
+            modifier = Modifier
+                .padding(20.dp)
+                .fillMaxWidth()
+                .heightIn(max = 480.dp)
+                .verticalScroll(scrollState),
+            horizontalArrangement = Arrangement.spacedBy(16.dp)
+        ) {
             CategoryColumn(
                 categories = uiState.categories,
                 selectedCategory = selectedCategory,

@@ -8,6 +8,7 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.view.WindowCompat
+import androidx.core.view.isVisible
 import com.google.android.material.button.MaterialButton
 import com.google.android.material.card.MaterialCardView
 
@@ -32,10 +33,22 @@ class CharacterSelectionActivity : AppCompatActivity() {
         confirmButton.setOnClickListener { returnSelection() }
         cancelButton.setOnClickListener { finish() }
 
-        setupHeroCard(R.id.cardWarrior, R.id.heroImageWarrior, R.id.heroLabelWarrior, HeroOption.WARRIOR)
-        setupHeroCard(R.id.cardMage, R.id.heroImageMage, R.id.heroLabelMage, HeroOption.MAGE)
-        setupHeroCard(R.id.cardPriestess, R.id.heroImagePriestess, R.id.heroLabelPriestess, HeroOption.MYSTICAL_PRIESTESS)
-        setupHeroCard(R.id.cardRanger, R.id.heroImageRanger, R.id.heroLabelRanger, HeroOption.RANGER)
+        setupHeroCard(
+            cardId = R.id.cardWarrior,
+            imageId = R.id.heroImageWarrior,
+            labelId = R.id.heroLabelWarrior,
+            weaponId = R.id.heroWeaponWarrior,
+            hero = HeroOption.WARRIOR
+        )
+        setupHeroCard(R.id.cardMage, R.id.heroImageMage, R.id.heroLabelMage, null, HeroOption.MAGE)
+        setupHeroCard(
+            R.id.cardPriestess,
+            R.id.heroImagePriestess,
+            R.id.heroLabelPriestess,
+            null,
+            HeroOption.MYSTICAL_PRIESTESS
+        )
+        setupHeroCard(R.id.cardRanger, R.id.heroImageRanger, R.id.heroLabelRanger, null, HeroOption.RANGER)
 
         selectedHero = savedInstanceState?.getString(KEY_SELECTED_HERO)?.let(HeroOption::fromName)
             ?: intent.getStringExtra(EXTRA_SELECTED_HERO)?.let(HeroOption::fromName)
@@ -53,13 +66,30 @@ class CharacterSelectionActivity : AppCompatActivity() {
         heroBitmaps.clear()
     }
 
-    private fun setupHeroCard(cardId: Int, imageId: Int, labelId: Int, hero: HeroOption) {
+    private fun setupHeroCard(
+        cardId: Int,
+        imageId: Int,
+        labelId: Int,
+        weaponId: Int?,
+        hero: HeroOption
+    ) {
         val card: MaterialCardView = findViewById(cardId)
         val heroImage: ImageView = findViewById(imageId)
         val heroLabel: TextView = findViewById(labelId)
+        val heroWeapon: ImageView? = weaponId?.let { id -> findViewById(id) }
 
         heroImage.setImageBitmap(loadBitmap(hero.assetPath))
         heroLabel.text = getString(hero.displayNameRes)
+
+        heroWeapon?.let { imageView ->
+            val weaponPath = hero.weaponAssetPath
+            if (weaponPath.isNullOrBlank()) {
+                imageView.isVisible = false
+            } else {
+                imageView.setImageBitmap(loadBitmap(weaponPath))
+                imageView.isVisible = true
+            }
+        }
 
         card.setOnClickListener {
             highlightSelection(hero)
