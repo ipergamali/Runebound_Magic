@@ -11,7 +11,7 @@ enum class ItemCategory {
     CONSUMABLE,
     SPELL_SCROLL,
     RUNE_GEM,
-    MATERIAL,
+    CRAFTING_MATERIAL,
     QUEST_ITEM,
     CURRENCY
 }
