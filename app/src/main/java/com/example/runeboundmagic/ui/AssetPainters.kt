@@ -16,6 +16,10 @@ import kotlinx.coroutines.withContext
 fun rememberAssetPainter(assetPath: String, vararg fallbackPaths: String): Painter {
     val context = LocalContext.current
     val fallbackKey = fallbackPaths.contentHashCode()
+    fun sanitize(path: String): String {
+        return path.removePrefix("assets/")
+    }
+
     val painterState = produceState<Painter>(
         initialValue = ColorPainter(Color.Transparent),
         context,
@@ -27,7 +31,7 @@ fun rememberAssetPainter(assetPath: String, vararg fallbackPaths: String): Paint
             fallbackPaths.forEach { path ->
                 if (path.isNotBlank()) add(path)
             }
-        }
+        }.map(::sanitize)
         value = withContext(Dispatchers.IO) {
             candidates.firstNotNullOfOrNull { path ->
                 runCatching {

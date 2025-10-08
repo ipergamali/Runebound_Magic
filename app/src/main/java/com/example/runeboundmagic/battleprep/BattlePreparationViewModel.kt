@@ -291,7 +291,7 @@ private fun heroClassMetadataFor(heroType: HeroType): HeroClassMetadata = when (
     HeroType.WARRIOR -> HeroClassMetadata(
         id = HeroClass.WARRIOR,
         name = "Warrior",
-        weaponProficiency = "Crossbows",
+        weaponProficiency = "Swords",
         armorProficiency = "Plate Armor"
     )
 

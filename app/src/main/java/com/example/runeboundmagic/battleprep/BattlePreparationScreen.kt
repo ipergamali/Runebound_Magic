@@ -23,6 +23,8 @@ import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.size
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.layout.widthIn
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.lazy.grid.GridCells
 import androidx.compose.foundation.lazy.grid.LazyVerticalGrid
 import androidx.compose.foundation.lazy.grid.items
@@ -106,7 +108,8 @@ fun BattlePreparationScreen(
             Column(
                 modifier = Modifier
                     .align(Alignment.TopCenter)
-                    .padding(horizontal = 24.dp, vertical = 32.dp),
+                    .padding(horizontal = 24.dp, vertical = 32.dp)
+                    .verticalScroll(rememberScrollState()),
                 verticalArrangement = Arrangement.spacedBy(24.dp)
             ) {
                 HeroHeader(
@@ -486,10 +489,12 @@ private fun InventorySlotCell(slot: InventorySlotUiModel, onClick: () -> Unit) {
         contentAlignment = Alignment.Center
     ) {
         if (item != null) {
-            val painter = if (item.icon == "weapon/sword.png") {
-                rememberAssetPainter(item.icon, "weapon/sword_basic.png")
+            val iconPath = item.icon
+            val normalizedIcon = iconPath.removePrefix("assets/")
+            val painter = if (normalizedIcon == "weapon/sword.png") {
+                rememberAssetPainter(iconPath, "weapon/sword.png", "weapon/sword_basic.png")
             } else {
-                rememberAssetPainter(item.icon)
+                rememberAssetPainter(iconPath)
             }
             Image(
                 painter = painter,
@@ -540,7 +545,19 @@ private fun ItemDetailsDialog(item: Item, onDismiss: () -> Unit) {
         },
         title = { Text(text = item.name) },
         text = {
-            Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
+            Column(verticalArrangement = Arrangement.spacedBy(12.dp)) {
+                val iconPath = item.icon
+                if (iconPath.isNotBlank()) {
+                    Image(
+                        painter = rememberAssetPainter(iconPath),
+                        contentDescription = item.name,
+                        modifier = Modifier
+                            .fillMaxWidth()
+                            .height(160.dp)
+                            .clip(RoundedCornerShape(12.dp)),
+                        contentScale = ContentScale.Fit
+                    )
+                }
                 Text(text = item.description)
                 Text(text = stringResource(id = R.string.battle_prep_rarity_label, item.rarity.name))
                 Text(text = stringResource(id = R.string.battle_prep_item_category, item.category.name))
