@@ -359,7 +359,6 @@ private fun InventoryOverlay(
     onSlotClick: (Int) -> Unit,
     modifier: Modifier = Modifier
 ) {
-    val scrollState = rememberScrollState()
     Surface(
         modifier = modifier
             .widthIn(min = 360.dp)
@@ -372,8 +371,7 @@ private fun InventoryOverlay(
             modifier = Modifier
                 .padding(20.dp)
                 .fillMaxWidth()
-                .heightIn(max = 480.dp)
-                .verticalScroll(scrollState),
+                .heightIn(max = 480.dp),
             horizontalArrangement = Arrangement.spacedBy(16.dp)
         ) {
             CategoryColumn(
@@ -392,7 +390,9 @@ private fun InventoryOverlay(
                     }
                 } ?: uiState.inventorySlots,
                 onSlotClick = onSlotClick,
-                modifier = Modifier.padding(end = 8.dp)
+                modifier = Modifier
+                    .padding(end = 8.dp)
+                    .heightIn(max = 360.dp)
             )
         }
     }
