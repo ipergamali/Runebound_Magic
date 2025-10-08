@@ -53,8 +53,11 @@ import androidx.compose.ui.Modifier
 import androidx.compose.ui.draw.clip
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.layout.ContentScale
 import androidx.compose.ui.platform.LocalContext
 import androidx.compose.ui.res.stringResource
+import androidx.compose.ui.semantics.contentDescription
+import androidx.compose.ui.semantics.semantics
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
@@ -458,33 +461,43 @@ private fun InventoryGrid(
 
 @Composable
 private fun InventorySlotCell(slot: InventorySlotUiModel, onClick: () -> Unit) {
+    val item = slot.item
+    val shape = RoundedCornerShape(10.dp)
     val borderColor = when {
         slot.isSelected -> Color(0xFF4FC3F7)
-        slot.item != null -> Color(0xFF374785)
-        else -> Color(0x552E3A6A)
+        item != null -> Color(0xFF374785)
+        else -> Color(0x33FFFFFF)
     }
-    Surface(
+    val backgroundColor = if (slot.isSelected) Color(0x222E3A6A) else Color(0x11FFFFFF)
+    val semanticsModifier = if (item != null) {
+        Modifier.semantics { contentDescription = item.name }
+    } else {
+        Modifier
+    }
+
+    Box(
         modifier = Modifier
-            .size(40.dp)
-            .clickable(onClick = onClick),
-        shape = RoundedCornerShape(10.dp),
-        color = Color(0x5520315B),
-        border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
+            .size(56.dp)
+            .clip(shape)
+            .background(backgroundColor, shape)
+            .border(width = 1.dp, color = borderColor, shape = shape)
+            .clickable(onClick = onClick)
+            .then(semanticsModifier),
+        contentAlignment = Alignment.Center
     ) {
-        val item = slot.item
-        if (item == null) {
-            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
-                Text(
-                    text = stringResource(id = R.string.battle_prep_empty_slot),
-                    color = Color(0xFF546E7A),
-                    fontSize = 9.sp
-                )
+        if (item != null) {
+            val painter = if (item.icon == "weapon/sword.png") {
+                rememberAssetPainter(item.icon, "weapon/sword_basic.png")
+            } else {
+                rememberAssetPainter(item.icon)
             }
-        } else {
             Image(
-                painter = rememberAssetPainter(assetPath = item.icon),
+                painter = painter,
                 contentDescription = item.name,
-                modifier = Modifier.padding(4.dp)
+                modifier = Modifier
+                    .fillMaxSize()
+                    .padding(4.dp),
+                contentScale = ContentScale.Fit
             )
         }
     }
