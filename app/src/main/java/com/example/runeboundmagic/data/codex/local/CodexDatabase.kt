@@ -10,9 +10,13 @@ import androidx.room.TypeConverters
     entities = [
         CodexHeroEntity::class,
         CodexInventoryEntity::class,
-        CodexInventoryItemEntity::class
+        CodexInventoryItemEntity::class,
+        HeroClassMetadataEntity::class,
+        RarityEntity::class,
+        ItemCategoryEntity::class,
+        HeroCardEntity::class
     ],
-    version = 1,
+    version = 2,
     exportSchema = false
 )
 @TypeConverters(CodexTypeConverters::class)

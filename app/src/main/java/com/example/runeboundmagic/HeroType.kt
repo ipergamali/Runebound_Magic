@@ -7,22 +7,21 @@ package com.example.runeboundmagic
  */
 enum class HeroType {
     WARRIOR,
-    RANGER,
-    PRIESTESS,
+    HUNTER,
     MAGE,
-    BLACK_MAGE
+    PRIEST
 }
 
 fun HeroType.toHeroOption(): HeroOption = when (this) {
     HeroType.WARRIOR -> HeroOption.WARRIOR
-    HeroType.RANGER -> HeroOption.RANGER
-    HeroType.PRIESTESS -> HeroOption.MYSTICAL_PRIESTESS
-    HeroType.MAGE, HeroType.BLACK_MAGE -> HeroOption.MAGE
+    HeroType.HUNTER -> HeroOption.RANGER
+    HeroType.MAGE -> HeroOption.MAGE
+    HeroType.PRIEST -> HeroOption.MYSTICAL_PRIESTESS
 }
 
 fun HeroOption.toHeroType(): HeroType = when (this) {
     HeroOption.WARRIOR -> HeroType.WARRIOR
-    HeroOption.RANGER -> HeroType.RANGER
-    HeroOption.MYSTICAL_PRIESTESS -> HeroType.PRIESTESS
+    HeroOption.RANGER -> HeroType.HUNTER
+    HeroOption.MYSTICAL_PRIESTESS -> HeroType.PRIEST
     HeroOption.MAGE -> HeroType.MAGE
 }

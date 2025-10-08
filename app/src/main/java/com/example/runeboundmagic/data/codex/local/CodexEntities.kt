@@ -21,6 +21,70 @@ data class CodexHeroEntity(
     val inventoryId: String
 )
 
+@Entity(tableName = "hero_classes")
+data class HeroClassMetadataEntity(
+    @PrimaryKey val heroClassId: String,
+    val name: String,
+    val weaponProficiency: String,
+    val armorProficiency: String
+)
+
+@Entity(tableName = "rarities")
+data class RarityEntity(
+    @PrimaryKey val rarityId: String,
+    val displayName: String,
+    val colorHex: String
+)
+
+@Entity(tableName = "item_categories")
+data class ItemCategoryEntity(
+    @PrimaryKey val itemCategoryId: String,
+    val displayName: String,
+    val description: String,
+    val slotType: String
+)
+
+@Entity(
+    tableName = "hero_cards",
+    foreignKeys = [
+        ForeignKey(
+            entity = CodexHeroEntity::class,
+            parentColumns = ["heroId"],
+            childColumns = ["heroId"],
+            onDelete = ForeignKey.CASCADE
+        ),
+        ForeignKey(
+            entity = HeroClassMetadataEntity::class,
+            parentColumns = ["heroClassId"],
+            childColumns = ["heroClassId"],
+            onDelete = ForeignKey.NO_ACTION
+        ),
+        ForeignKey(
+            entity = RarityEntity::class,
+            parentColumns = ["rarityId"],
+            childColumns = ["rarityId"],
+            onDelete = ForeignKey.NO_ACTION
+        )
+    ],
+    indices = [
+        Index("heroId", unique = true),
+        Index("heroClassId"),
+        Index("rarityId")
+    ]
+)
+data class HeroCardEntity(
+    @PrimaryKey val heroCardId: String,
+    val heroId: String,
+    val heroClassId: String,
+    val heroName: String,
+    val cardImage: String,
+    val strength: Int,
+    val agility: Int,
+    val intellect: Int,
+    val faith: Int,
+    val rarityId: String
+)
+
 @Entity(
     tableName = "codex_inventories",
     foreignKeys = [
@@ -60,7 +124,25 @@ data class CodexInventoryItemEntity(
     val description: String,
     val icon: String,
     val rarity: Rarity,
-    val category: ItemCategory
+    val category: ItemCategory,
+    val rarityId: String,
+    val damage: Int? = null,
+    val element: String? = null,
+    val attackSpeed: Float? = null
+)
+
+data class HeroCardWithMetadata(
+    @Embedded val card: HeroCardEntity,
+    @Relation(
+        parentColumn = "heroClassId",
+        entityColumn = "heroClassId"
+    )
+    val heroClass: HeroClassMetadataEntity,
+    @Relation(
+        parentColumn = "rarityId",
+        entityColumn = "rarityId"
+    )
+    val rarity: RarityEntity?
 )
 
 data class CodexInventoryWithItems(
