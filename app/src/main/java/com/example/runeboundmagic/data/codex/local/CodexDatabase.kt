@@ -16,7 +16,7 @@ import androidx.room.TypeConverters
         ItemCategoryEntity::class,
         HeroCardEntity::class
     ],
-    version = 2,
+    version = 3,
     exportSchema = false
 )
 @TypeConverters(CodexTypeConverters::class)

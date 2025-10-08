@@ -7,7 +7,9 @@ import androidx.room.Index
 import androidx.room.PrimaryKey
 import androidx.room.Relation
 import com.example.runeboundmagic.heroes.HeroClass
+import com.example.runeboundmagic.inventory.EquipmentSlot
 import com.example.runeboundmagic.inventory.ItemCategory
+import com.example.runeboundmagic.inventory.ItemSubcategory
 import com.example.runeboundmagic.inventory.Rarity
 
 @Entity(tableName = "codex_heroes")
@@ -125,6 +127,10 @@ data class CodexInventoryItemEntity(
     val icon: String,
     val rarity: Rarity,
     val category: ItemCategory,
+    val subcategory: ItemSubcategory? = null,
+    val stackable: Boolean = false,
+    val quantity: Int = 1,
+    val allowedSlots: List<EquipmentSlot> = emptyList(),
     val rarityId: String,
     val damage: Int? = null,
     val element: String? = null,

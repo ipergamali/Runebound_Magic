@@ -4,14 +4,14 @@ package com.example.runeboundmagic.inventory
  * Όλες οι κατηγορίες αντικειμένων που υποστηρίζει το inventory.
  */
 enum class ItemCategory {
-    WEAPON,
+    WEAPONS,
     ARMOR,
-    SHIELD,
-    ACCESSORY,
-    CONSUMABLE,
-    SPELL_SCROLL,
-    RUNE_GEM,
-    CRAFTING_MATERIAL,
-    QUEST_ITEM,
-    CURRENCY
+    SHIELDS,
+    ACCESSORIES,
+    CONSUMABLES,
+    SPELLS_SCROLLS,
+    RUNES_GEMS,
+    CRAFTING_MATERIALS,
+    QUEST_ITEMS,
+    GOLD_CURRENCY
 }

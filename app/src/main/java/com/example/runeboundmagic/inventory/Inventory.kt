@@ -1,5 +1,7 @@
 package com.example.runeboundmagic.inventory
 
+import android.util.Log
+
 /**
  * Απλό inventory που αντιστοιχίζεται σε συγκεκριμένο ήρωα.
  */
@@ -14,6 +16,14 @@ class Inventory(
     private val items: MutableList<Item> = items.take(capacity).toMutableList()
 
     fun addItem(item: Item): Boolean {
+        if (item.stackable) {
+            val index = items.indexOfFirst { it.id == item.id }
+            if (index >= 0) {
+                val existing = items[index]
+                items[index] = existing.copy(quantity = existing.quantity + item.quantity)
+                return true
+            }
+        }
         if (items.size >= capacity) return false
         items += item
         return true
@@ -58,7 +68,13 @@ class Inventory(
             val capacity = (data["capacity"] as? Number)?.toInt() ?: defaultCapacity
             val items = (data["items"] as? List<*>)
                 ?.mapNotNull { element ->
-                    (element as? Map<String, Any?>)?.let(Item.Companion::fromFirestore)
+                    (element as? Map<String, Any?>)?.let { itemMap ->
+                        runCatching { Item.fromFirestore(itemMap) }
+                            .onFailure { error ->
+                                Log.w(TAG, "Αποτυχία φόρτωσης item ${'$'}{itemMap["id"]}: ${'$'}{error.message}")
+                            }
+                            .getOrNull()
+                    }
                 }
                 ?: emptyList()
             return Inventory(
@@ -71,6 +87,8 @@ class Inventory(
         }
     }
 }
+
+private const val TAG = "Inventory"
 
 data class InventorySnapshot(
     val id: String,
