@@ -5,10 +5,11 @@ import com.example.runeboundmagic.heroes.Hero
 import com.example.runeboundmagic.heroes.HeroClass
 import com.example.runeboundmagic.inventory.Inventory
 import com.example.runeboundmagic.inventory.InventoryItem
-import com.example.runeboundmagic.inventory.ItemCategory
 import com.example.runeboundmagic.inventory.Item
+import com.example.runeboundmagic.inventory.ItemCategory
+import com.example.runeboundmagic.inventory.ItemSubcategory
 import com.example.runeboundmagic.inventory.Rarity
-import com.example.runeboundmagic.inventory.WeaponItem
+import com.example.runeboundmagic.inventory.WeaponStats
 import com.google.firebase.firestore.FirebaseFirestore
 import kotlinx.coroutines.CoroutineDispatcher
 import kotlinx.coroutines.Dispatchers
@@ -107,7 +108,7 @@ private object DefaultEquipmentLoadout {
         val prefix = heroClass.name.lowercase()
         val weapon = weaponFor(heroClass, prefix)
         val otherCategories = ItemCategory.values()
-            .filter { it != ItemCategory.WEAPON }
+            .filter { it != ItemCategory.WEAPONS }
             .mapNotNull { category -> defaultItem(category, prefix) }
         return buildList {
             add(weapon)
@@ -115,50 +116,50 @@ private object DefaultEquipmentLoadout {
         }
     }
 
-    private fun weaponFor(heroClass: HeroClass, prefix: String): WeaponItem {
+    private fun weaponFor(heroClass: HeroClass, prefix: String): Item {
         return when (heroClass) {
-            HeroClass.WARRIOR -> WeaponItem(
+            HeroClass.WARRIOR -> InventoryItem(
                 id = "${'$'}prefix_weapon",
                 name = "Βολίδα Μάχης",
                 description = "Ελαφρύ βαλλίστρα που επιτρέπει γρήγορες επιθέσεις πριν τη σύγκρουση.",
                 icon = "weapon/crossbow.png",
                 rarity = Rarity.RARE,
-                damage = 24,
-                element = "PIERCING",
-                attackSpeed = 1.3f
+                category = ItemCategory.WEAPONS,
+                subcategory = ItemSubcategory.CROSSBOW,
+                weaponStats = WeaponStats(damage = 24, element = "PIERCING", attackSpeed = 1.3f)
             )
 
-            HeroClass.RANGER -> WeaponItem(
+            HeroClass.RANGER -> InventoryItem(
                 id = "${'$'}prefix_weapon",
                 name = "Κυνηγετικό Τόξο",
                 description = "Αξιόπιστη βαλλίστρα για τους κυνηγούς των Runebound Lands.",
                 icon = "weapon/crossbow.png",
                 rarity = Rarity.RARE,
-                damage = 22,
-                element = "PIERCING",
-                attackSpeed = 1.45f
+                category = ItemCategory.WEAPONS,
+                subcategory = ItemSubcategory.CROSSBOW,
+                weaponStats = WeaponStats(damage = 22, element = "PIERCING", attackSpeed = 1.45f)
             )
 
-            HeroClass.MAGE -> WeaponItem(
+            HeroClass.MAGE -> InventoryItem(
                 id = "${'$'}prefix_weapon",
                 name = "Ραβδί Αιθέρα",
                 description = "Μαγεμένο ραβδί με μπλε αύρα που επικαλείται στοιχειακή ενέργεια.",
                 icon = "weapon/rod.png",
                 rarity = Rarity.EPIC,
-                damage = 18,
-                element = "ARCANE",
-                attackSpeed = 1.1f
+                category = ItemCategory.WEAPONS,
+                subcategory = ItemSubcategory.ROD,
+                weaponStats = WeaponStats(damage = 18, element = "ARCANE", attackSpeed = 1.1f)
             )
 
-            HeroClass.PRIESTESS -> WeaponItem(
+            HeroClass.PRIESTESS -> InventoryItem(
                 id = "${'$'}prefix_weapon",
                 name = "Ραβδί Φωτεινών Ρούνων",
                 description = "Ιερό ραβδί με φωτεινά runes που ενισχύει τα ξόρκια θεραπείας.",
                 icon = "weapon/rod.png",
                 rarity = Rarity.RARE,
-                damage = 16,
-                element = "HOLY",
-                attackSpeed = 1.2f
+                category = ItemCategory.WEAPONS,
+                subcategory = ItemSubcategory.ROD,
+                weaponStats = WeaponStats(damage = 16, element = "HOLY", attackSpeed = 1.2f)
             )
         }
     }
@@ -172,7 +173,7 @@ private object DefaultEquipmentLoadout {
             icon = "armor/chest.png"
         )
 
-        ItemCategory.SHIELD -> baseItem(
+        ItemCategory.SHIELDS -> baseItem(
             prefix,
             category,
             name = "Φυλαχτό Άμυνας",
@@ -180,7 +181,7 @@ private object DefaultEquipmentLoadout {
             icon = "armor/helmet.png"
         )
 
-        ItemCategory.ACCESSORY -> baseItem(
+        ItemCategory.ACCESSORIES -> baseItem(
             prefix,
             category,
             name = "Φυλαχτό Ισορροπίας",
@@ -188,7 +189,7 @@ private object DefaultEquipmentLoadout {
             icon = "armor/gloves.png"
         )
 
-        ItemCategory.CONSUMABLE -> baseItem(
+        ItemCategory.CONSUMABLES -> baseItem(
             prefix,
             category,
             name = "Φίλτρο Ζωτικότητας",
@@ -196,7 +197,7 @@ private object DefaultEquipmentLoadout {
             icon = "inventory/backbag.png"
         )
 
-        ItemCategory.SPELL_SCROLL -> baseItem(
+        ItemCategory.SPELLS_SCROLLS -> baseItem(
             prefix,
             category,
             name = "Πάπυρος Σπινθήρα",
@@ -205,7 +206,7 @@ private object DefaultEquipmentLoadout {
             rarity = Rarity.RARE
         )
 
-        ItemCategory.RUNE_GEM -> baseItem(
+        ItemCategory.RUNES_GEMS -> baseItem(
             prefix,
             category,
             name = "Ρούνος Ενδυνάμωσης",
@@ -213,7 +214,7 @@ private object DefaultEquipmentLoadout {
             icon = "puzzle/circle.png"
         )
 
-        ItemCategory.CRAFTING_MATERIAL -> baseItem(
+        ItemCategory.CRAFTING_MATERIALS -> baseItem(
             prefix,
             category,
             name = "Δέμα Υλικών",
@@ -221,7 +222,7 @@ private object DefaultEquipmentLoadout {
             icon = "armor/chest-women_b.png"
         )
 
-        ItemCategory.QUEST_ITEM -> baseItem(
+        ItemCategory.QUEST_ITEMS -> baseItem(
             prefix,
             category,
             name = "Σύμβολο Αποστολής",
@@ -230,7 +231,7 @@ private object DefaultEquipmentLoadout {
             rarity = Rarity.RARE
         )
 
-        ItemCategory.CURRENCY -> baseItem(
+        ItemCategory.GOLD_CURRENCY -> baseItem(
             prefix,
             category,
             name = "Πουγκί Χρυσού",
@@ -238,7 +239,7 @@ private object DefaultEquipmentLoadout {
             icon = "inventory/inventory.png"
         )
 
-        ItemCategory.WEAPON -> null
+        ItemCategory.WEAPONS -> null
     }
 
     private fun baseItem(
@@ -247,16 +248,27 @@ private object DefaultEquipmentLoadout {
         name: String,
         description: String,
         icon: String,
-        rarity: Rarity = Rarity.COMMON
+        rarity: Rarity = Rarity.COMMON,
+        stackable: Boolean = category in STACKABLE_DEFAULTS,
+        quantity: Int = if (stackable) 5 else 1
     ): Item = InventoryItem(
         id = "${'$'}prefix_${'$'}{category.name.lowercase()}_01",
         name = name,
         description = description,
         icon = icon,
         rarity = rarity,
-        category = category
+        category = category,
+        stackable = stackable,
+        quantity = quantity
     )
 }
+
+private val STACKABLE_DEFAULTS = setOf(
+    ItemCategory.CONSUMABLES,
+    ItemCategory.RUNES_GEMS,
+    ItemCategory.CRAFTING_MATERIALS,
+    ItemCategory.GOLD_CURRENCY
+)
 
 private fun HeroProfile.toFirestoreMap(): Map<String, Any> = mapOf(
     "heroId" to hero.id,

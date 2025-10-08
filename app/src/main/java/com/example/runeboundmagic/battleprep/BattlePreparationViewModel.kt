@@ -13,7 +13,6 @@ import com.example.runeboundmagic.heroes.HeroClass
 import com.example.runeboundmagic.inventory.Inventory
 import com.example.runeboundmagic.inventory.Item
 import com.example.runeboundmagic.inventory.ItemCategory
-import com.example.runeboundmagic.inventory.WeaponItem
 import com.example.runeboundmagic.toHeroType
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
@@ -93,7 +92,7 @@ class BattlePreparationViewModel(
                         inventorySlots = inventorySlots,
                         gold = profile.inventory.gold,
                         capacity = profile.inventory.capacity,
-                        categories = DefaultCategories,
+                        categories = buildCategoryOverview(profile.inventory),
                         isBackpackOpen = false,
                         selectedItem = null
                     )
@@ -126,7 +125,7 @@ class BattlePreparationViewModel(
 
     private fun buildInventorySlots(inventory: Inventory): List<InventorySlotUiModel> {
         val orderedItems = inventory.getAllItems()
-            .sortedWith(compareByDescending<Item> { it is WeaponItem }.thenBy { it.name })
+            .sortedWith(compareByDescending<Item> { it.category == ItemCategory.WEAPONS }.thenBy { it.name })
         val slots = MutableList(SLOT_COUNT) { index ->
             InventorySlotUiModel(index = index, item = null, isSelected = false)
         }
@@ -136,6 +135,18 @@ class BattlePreparationViewModel(
             }
         }
         return slots
+    }
+
+    private fun buildCategoryOverview(inventory: Inventory): List<InventoryCategoryInfo> {
+        val categoriesCount = DefaultCategories.size.coerceAtLeast(1)
+        val baseCapacity = inventory.capacity / categoriesCount
+        val remainder = inventory.capacity % categoriesCount
+        return DefaultCategories.mapIndexed { index, info ->
+            val category = runCatching { ItemCategory.valueOf(info.id) }.getOrDefault(ItemCategory.WEAPONS)
+            val owned = inventory.getItemsByCategory(category).size
+            val capacity = baseCapacity + if (index < remainder) 1 else 0
+            info.copy(owned = owned, capacity = capacity)
+        }
     }
 
     private fun createHero(): Hero {
@@ -165,54 +176,64 @@ class BattlePreparationViewModel(
 
         val DefaultCategories: List<InventoryCategoryInfo> = listOf(
             InventoryCategoryInfo(
-                id = ItemCategory.WEAPON.name,
+                id = ItemCategory.WEAPONS.name,
                 title = "Weapons",
-                description = "Όπλα και εργαλεία μάχης."
+                description = "Όπλα και εργαλεία μάχης.",
+                iconAsset = "weapon/rod.png"
             ),
             InventoryCategoryInfo(
                 id = ItemCategory.ARMOR.name,
                 title = "Armor",
-                description = "Κράνη, θώρακες και προστατευτικά."
+                description = "Κράνη, θώρακες και προστατευτικά.",
+                iconAsset = "armor/chest.png"
             ),
             InventoryCategoryInfo(
-                id = ItemCategory.SHIELD.name,
+                id = ItemCategory.SHIELDS.name,
                 title = "Shields",
-                description = "Ασπίδες και αμυντικοί μηχανισμοί."
+                description = "Ασπίδες και αμυντικοί μηχανισμοί.",
+                iconAsset = "armor/helmet.png"
             ),
             InventoryCategoryInfo(
-                id = ItemCategory.ACCESSORY.name,
+                id = ItemCategory.ACCESSORIES.name,
                 title = "Accessories",
-                description = "Δαχτυλίδια και φυλαχτά."
+                description = "Δαχτυλίδια και φυλαχτά.",
+                iconAsset = "armor/gloves.png"
             ),
             InventoryCategoryInfo(
-                id = ItemCategory.CONSUMABLE.name,
+                id = ItemCategory.CONSUMABLES.name,
                 title = "Consumables",
-                description = "Φίλτρα και προμήθειες."
+                description = "Φίλτρα και προμήθειες.",
+                iconAsset = "inventory/inventory.png"
             ),
             InventoryCategoryInfo(
-                id = ItemCategory.SPELL_SCROLL.name,
+                id = ItemCategory.SPELLS_SCROLLS.name,
                 title = "Spells & Scrolls",
-                description = "Μαγικά ξόρκια και πάπυροι."
+                description = "Μαγικά ξόρκια και πάπυροι.",
+                iconAsset = "characters/mage.png"
             ),
             InventoryCategoryInfo(
-                id = ItemCategory.RUNE_GEM.name,
+                id = ItemCategory.RUNES_GEMS.name,
                 title = "Runes & Gems",
-                description = "Μαγικοί λίθοι και ρούνοι."
+                description = "Μαγικοί λίθοι και ρούνοι.",
+                iconAsset = "puzzle/circle.png"
             ),
             InventoryCategoryInfo(
-                id = ItemCategory.CRAFTING_MATERIAL.name,
+                id = ItemCategory.CRAFTING_MATERIALS.name,
                 title = "Crafting Materials",
-                description = "Υλικά κατασκευών."
+                description = "Υλικά κατασκευών.",
+                iconAsset = "armor/chest-women_b.png"
             ),
             InventoryCategoryInfo(
-                id = ItemCategory.QUEST_ITEM.name,
+                id = ItemCategory.QUEST_ITEMS.name,
                 title = "Quest Items",
-                description = "Αντικείμενα αποστολών."
+                description = "Αντικείμενα αποστολών.",
+                iconAsset = "inventory/backbag.png"
             ),
             InventoryCategoryInfo(
-                id = ItemCategory.CURRENCY.name,
+                id = ItemCategory.GOLD_CURRENCY.name,
                 title = "Gold & Currency",
-                description = "Νόμισμα και οικονομία."
+                description = "Νόμισμα και οικονομία.",
+                iconAsset = "inventory/inventory.png"
             ),
         )
 

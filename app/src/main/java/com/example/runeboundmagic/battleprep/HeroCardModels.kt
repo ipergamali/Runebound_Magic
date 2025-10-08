@@ -59,7 +59,10 @@ data class HeroCardDetails(
 data class InventoryCategoryInfo(
     val id: String,
     val title: String,
-    val description: String
+    val description: String,
+    val iconAsset: String,
+    val owned: Int = 0,
+    val capacity: Int = 0
 )
 
 fun HeroClassMetadata.toEntity(): HeroClassMetadataEntity = HeroClassMetadataEntity(

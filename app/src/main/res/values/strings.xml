@@ -80,6 +80,9 @@
     <string name="battle_prep_weapon_element">Στοιχείο: %1$s</string>
     <string name="battle_prep_weapon_speed">Ταχύτητα Επίθεσης: %1$.2f</string>
     <string name="battle_prep_item_category">Κατηγορία: %1$s</string>
+    <string name="battle_prep_item_subcategory">Υποκατηγορία: %1$s</string>
+    <string name="battle_prep_item_stack">Στοίβα: %1$d</string>
+    <string name="battle_prep_empty_slot">Κενή Θέση</string>
     <string name="battle_prep_start_battle">Έναρξη Μάχης</string>
     <string name="close">Κλείσιμο</string>
 </resources>

@@ -59,7 +59,7 @@ object HeroCodexData {
             description = "Κοντάρι με ενισχυμένη θεραπευτική αύρα. Damage: 32, Element: Light, Skill: Radiant Nova.",
             icon = "weapon/rod.png",
             rarity = Rarity.RARE,
-            category = ItemCategory.WEAPON
+            category = ItemCategory.WEAPONS
         )
 
         val armor = listOf(
@@ -104,7 +104,7 @@ object HeroCodexData {
                 description = "Μαγικό φράγμα με 35 Block.",
                 icon = "armor/helmet_b.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.SHIELD
+                category = ItemCategory.SHIELDS
             )
         )
 
@@ -115,7 +115,7 @@ object HeroCodexData {
                 description = "Δαχτυλίδι που χαρίζει +15% Healing Power.",
                 icon = "armor/gloves_b.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.ACCESSORY
+                category = ItemCategory.ACCESSORIES
             ),
             InventoryItem(
                 id = "starlit_belt",
@@ -123,7 +123,7 @@ object HeroCodexData {
                 description = "Ζώνη που αποθηκεύει 2 επιπλέον potions.",
                 icon = "armor/buttos_c.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.ACCESSORY
+                category = ItemCategory.ACCESSORIES
             )
         )
 
@@ -134,7 +134,7 @@ object HeroCodexData {
                 description = "Αποκαθιστά πλήρως την υγεία του συμμάχου.",
                 icon = "inventory/backbag.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CONSUMABLE
+                category = ItemCategory.CONSUMABLES
             ),
             InventoryItem(
                 id = "clarity_draught",
@@ -142,7 +142,7 @@ object HeroCodexData {
                 description = "Προσωρινό +25 Mana και +10% Crit Chance.",
                 icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CONSUMABLE
+                category = ItemCategory.CONSUMABLES
             )
         )
 
@@ -153,7 +153,7 @@ object HeroCodexData {
                 description = "Κάλεσμα φωτεινής έκρηξης που καθαρίζει debuffs.",
                 icon = "characters/mystical_priestess.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.SPELL_SCROLL
+                category = ItemCategory.SPELLS_SCROLLS
             )
         )
 
@@ -164,7 +164,7 @@ object HeroCodexData {
                 description = "Ρούνος που ενισχύει θεραπείες κατά +12%.",
                 icon = "puzzle/circle.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.RUNE_GEM
+                category = ItemCategory.RUNES_GEMS
             )
         )
 
@@ -175,7 +175,7 @@ object HeroCodexData {
                 description = "Υλικό craft για μυστικιστικές αναβαθμίσεις.",
                 icon = "armor/chest-women_b.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CRAFTING_MATERIAL
+                category = ItemCategory.CRAFTING_MATERIALS
             )
         )
 
@@ -186,7 +186,7 @@ object HeroCodexData {
                 description = "Κομμάτι κρυστάλλου που ανοίγει αρχαίες πύλες.",
                 icon = "characters/black_mage.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.QUEST_ITEM
+                category = ItemCategory.QUEST_ITEMS
             )
         )
 
@@ -197,21 +197,21 @@ object HeroCodexData {
                 description = "Περιέχει 150 χρυσά νομίσματα.",
                 icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CURRENCY
+                category = ItemCategory.GOLD_CURRENCY
             )
         )
 
         val heroItems = mapOf(
-            ItemCategory.WEAPON to listOf(rod),
+            ItemCategory.WEAPONS to listOf(rod),
             ItemCategory.ARMOR to armor,
-            ItemCategory.SHIELD to shield,
-            ItemCategory.ACCESSORY to accessories,
-            ItemCategory.CONSUMABLE to consumables,
-            ItemCategory.SPELL_SCROLL to spells,
-            ItemCategory.RUNE_GEM to runes,
-            ItemCategory.CRAFTING_MATERIAL to materials,
-            ItemCategory.QUEST_ITEM to questItems,
-            ItemCategory.CURRENCY to currency
+            ItemCategory.SHIELDS to shield,
+            ItemCategory.ACCESSORIES to accessories,
+            ItemCategory.CONSUMABLES to consumables,
+            ItemCategory.SPELLS_SCROLLS to spells,
+            ItemCategory.RUNES_GEMS to runes,
+            ItemCategory.CRAFTING_MATERIALS to materials,
+            ItemCategory.QUEST_ITEMS to questItems,
+            ItemCategory.GOLD_CURRENCY to currency
         )
 
         return HeroCodexProfile(
@@ -231,7 +231,7 @@ object HeroCodexData {
             description = "Damage: 40, Element: Arcane, Skill: Rune Surge.",
             icon = "weapon/mage_staff.png",
             rarity = Rarity.EPIC,
-            category = ItemCategory.WEAPON
+            category = ItemCategory.WEAPONS
         )
 
         val armor = listOf(
@@ -276,7 +276,7 @@ object HeroCodexData {
                 description = "Απορροφά 120 damage και επιβραδύνει εχθρούς.",
                 icon = "armor/helmet.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.SHIELD
+                category = ItemCategory.SHIELDS
             )
         )
 
@@ -287,7 +287,7 @@ object HeroCodexData {
                 description = "+10% Spell Crit και +5 Mana Regen.",
                 icon = "armor/gloves.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.ACCESSORY
+                category = ItemCategory.ACCESSORIES
             ),
             InventoryItem(
                 id = "mana_belt",
@@ -295,7 +295,7 @@ object HeroCodexData {
                 description = "Αποθηκεύει 3 επιπλέον scrolls.",
                 icon = "armor/buttos_c.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.ACCESSORY
+                category = ItemCategory.ACCESSORIES
             )
         )
 
@@ -306,7 +306,7 @@ object HeroCodexData {
                 description = "Επαναφέρει αμέσως 120 Mana.",
                 icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CONSUMABLE
+                category = ItemCategory.CONSUMABLES
             ),
             InventoryItem(
                 id = "spell_flux",
@@ -314,7 +314,7 @@ object HeroCodexData {
                 description = "Προσωρινό +20% Rune Damage.",
                 icon = "inventory/backbag.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.CONSUMABLE
+                category = ItemCategory.CONSUMABLES
             )
         )
 
@@ -325,7 +325,7 @@ object HeroCodexData {
                 description = "Καλεί μετεωρίτες που κάνουν AoE damage.",
                 icon = "characters/mage.png",
                 rarity = Rarity.LEGENDARY,
-                category = ItemCategory.SPELL_SCROLL
+                category = ItemCategory.SPELLS_SCROLLS
             ),
             InventoryItem(
                 id = "ward_scroll",
@@ -333,7 +333,7 @@ object HeroCodexData {
                 description = "Δημιουργεί χρονικό πεδίο άμυνας.",
                 icon = "characters/mage.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.SPELL_SCROLL
+                category = ItemCategory.SPELLS_SCROLLS
             )
         )
 
@@ -344,7 +344,7 @@ object HeroCodexData {
                 description = "+2 σε κάθε chain spell.",
                 icon = "puzzle/circle.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.RUNE_GEM
+                category = ItemCategory.RUNES_GEMS
             ),
             InventoryItem(
                 id = "prismatic_gem",
@@ -352,7 +352,7 @@ object HeroCodexData {
                 description = "Επιτρέπει αλλαγή στοιχείου στις μαγείες.",
                 icon = "armor/chest-women_b.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.RUNE_GEM
+                category = ItemCategory.RUNES_GEMS
             )
         )
 
@@ -363,7 +363,7 @@ object HeroCodexData {
                 description = "Χρησιμοποιείται για crafting μπατών και ράβδων.",
                 icon = "armor/chest.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CRAFTING_MATERIAL
+                category = ItemCategory.CRAFTING_MATERIALS
             )
         )
 
@@ -374,7 +374,7 @@ object HeroCodexData {
                 description = "Απαραίτητη για να ξεκλειδώσει το Rune Vault.",
                 icon = "characters/black_mage.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.QUEST_ITEM
+                category = ItemCategory.QUEST_ITEMS
             )
         )
 
@@ -385,21 +385,21 @@ object HeroCodexData {
                 description = "Περιέχει 110 χρυσά νομίσματα και 5 arcane σφραγίδες.",
                 icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CURRENCY
+                category = ItemCategory.GOLD_CURRENCY
             )
         )
 
         val heroItems = mapOf(
-            ItemCategory.WEAPON to listOf(staff),
+            ItemCategory.WEAPONS to listOf(staff),
             ItemCategory.ARMOR to armor,
-            ItemCategory.SHIELD to shield,
-            ItemCategory.ACCESSORY to accessories,
-            ItemCategory.CONSUMABLE to consumables,
-            ItemCategory.SPELL_SCROLL to spells,
-            ItemCategory.RUNE_GEM to runes,
-            ItemCategory.CRAFTING_MATERIAL to materials,
-            ItemCategory.QUEST_ITEM to questItems,
-            ItemCategory.CURRENCY to currency
+            ItemCategory.SHIELDS to shield,
+            ItemCategory.ACCESSORIES to accessories,
+            ItemCategory.CONSUMABLES to consumables,
+            ItemCategory.SPELLS_SCROLLS to spells,
+            ItemCategory.RUNES_GEMS to runes,
+            ItemCategory.CRAFTING_MATERIALS to materials,
+            ItemCategory.QUEST_ITEMS to questItems,
+            ItemCategory.GOLD_CURRENCY to currency
         )
 
         return HeroCodexProfile(
@@ -419,7 +419,7 @@ object HeroCodexData {
             description = "Damage: 48, Element: Fire, Skill: Blazing Rift.",
             icon = "weapon/shord.png",
             rarity = Rarity.RARE,
-            category = ItemCategory.WEAPON
+            category = ItemCategory.WEAPONS
         )
 
         val armor = listOf(
@@ -464,7 +464,7 @@ object HeroCodexData {
                 description = "Απορροφά 160 damage και αντεπιτίθεται με φωτιά.",
                 icon = "armor/helmet_b.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.SHIELD
+                category = ItemCategory.SHIELDS
             )
         )
 
@@ -475,7 +475,7 @@ object HeroCodexData {
                 description = "+10% Crit Damage.",
                 icon = "armor/gloves_b.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.ACCESSORY
+                category = ItemCategory.ACCESSORIES
             )
         )
 
@@ -486,7 +486,7 @@ object HeroCodexData {
                 description = "+25 Defense για 3 γύρους.",
                 icon = "inventory/backbag.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CONSUMABLE
+                category = ItemCategory.CONSUMABLES
             ),
             InventoryItem(
                 id = "rage_draught",
@@ -494,7 +494,7 @@ object HeroCodexData {
                 description = "+30 Attack και lifesteal.",
                 icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CONSUMABLE
+                category = ItemCategory.CONSUMABLES
             )
         )
 
@@ -507,7 +507,7 @@ object HeroCodexData {
                 description = "Ενισχύει πυρίνες επιθέσεις κατά +10%.",
                 icon = "puzzle/circle.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.RUNE_GEM
+                category = ItemCategory.RUNES_GEMS
             )
         )
 
@@ -518,7 +518,7 @@ object HeroCodexData {
                 description = "Βασικό υλικό για αναβαθμίσεις όπλων.",
                 icon = "armor/chest_b.png",
                 rarity = Rarity.COMMON,
-                category = ItemCategory.CRAFTING_MATERIAL
+                category = ItemCategory.CRAFTING_MATERIALS
             )
         )
 
@@ -529,7 +529,7 @@ object HeroCodexData {
                 description = "Αναγκαίο για το storyline του Warrior.",
                 icon = "characters/warrior.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.QUEST_ITEM
+                category = ItemCategory.QUEST_ITEMS
             )
         )
 
@@ -540,21 +540,21 @@ object HeroCodexData {
                 description = "Περιέχει 95 χρυσά νομίσματα.",
                 icon = "inventory/inventory.png",
                 rarity = Rarity.COMMON,
-                category = ItemCategory.CURRENCY
+                category = ItemCategory.GOLD_CURRENCY
             )
         )
 
         val heroItems = mapOf(
-            ItemCategory.WEAPON to listOf(sword),
+            ItemCategory.WEAPONS to listOf(sword),
             ItemCategory.ARMOR to armor,
-            ItemCategory.SHIELD to shield,
-            ItemCategory.ACCESSORY to accessories,
-            ItemCategory.CONSUMABLE to consumables,
-            ItemCategory.SPELL_SCROLL to spells,
-            ItemCategory.RUNE_GEM to runes,
-            ItemCategory.CRAFTING_MATERIAL to materials,
-            ItemCategory.QUEST_ITEM to questItems,
-            ItemCategory.CURRENCY to currency
+            ItemCategory.SHIELDS to shield,
+            ItemCategory.ACCESSORIES to accessories,
+            ItemCategory.CONSUMABLES to consumables,
+            ItemCategory.SPELLS_SCROLLS to spells,
+            ItemCategory.RUNES_GEMS to runes,
+            ItemCategory.CRAFTING_MATERIALS to materials,
+            ItemCategory.QUEST_ITEMS to questItems,
+            ItemCategory.GOLD_CURRENCY to currency
         )
 
         return HeroCodexProfile(
@@ -574,7 +574,7 @@ object HeroCodexData {
             description = "Damage: 36, Element: Wind, Skill: Arrow Storm.",
             icon = "weapon/crossbow.png",
             rarity = Rarity.RARE,
-            category = ItemCategory.WEAPON
+            category = ItemCategory.WEAPONS
         )
 
         val armor = listOf(
@@ -621,7 +621,7 @@ object HeroCodexData {
                 description = "+5 βέλη ανά μάχη.",
                 icon = "armor/buttos_c.png",
                 rarity = Rarity.EPIC,
-                category = ItemCategory.ACCESSORY
+                category = ItemCategory.ACCESSORIES
             ),
             InventoryItem(
                 id = "ranger_ring",
@@ -629,7 +629,7 @@ object HeroCodexData {
                 description = "Ανίχνευση παγίδων σε μεγαλύτερη ακτίνα.",
                 icon = "armor/gloves_b.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.ACCESSORY
+                category = ItemCategory.ACCESSORIES
             )
         )
 
@@ -640,7 +640,7 @@ object HeroCodexData {
                 description = "+20 Evasion για 3 γύρους.",
                 icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CONSUMABLE
+                category = ItemCategory.CONSUMABLES
             )
         )
 
@@ -651,7 +651,7 @@ object HeroCodexData {
                 description = "Δένει τους εχθρούς με ρίζες.",
                 icon = "characters/ranger.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.SPELL_SCROLL
+                category = ItemCategory.SPELLS_SCROLLS
             )
         )
 
@@ -662,7 +662,7 @@ object HeroCodexData {
                 description = "+10% ταχύτητα βολής.",
                 icon = "puzzle/circle.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.RUNE_GEM
+                category = ItemCategory.RUNES_GEMS
             )
         )
 
@@ -673,7 +673,7 @@ object HeroCodexData {
                 description = "Crafting υλικό για βελτιωμένα βέλη.",
                 icon = "armor/chest-women_b.png",
                 rarity = Rarity.COMMON,
-                category = ItemCategory.CRAFTING_MATERIAL
+                category = ItemCategory.CRAFTING_MATERIALS
             )
         )
 
@@ -684,7 +684,7 @@ object HeroCodexData {
                 description = "Οδηγεί σε κρυφές περιοχές της αποστολής.",
                 icon = "characters/ranger.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.QUEST_ITEM
+                category = ItemCategory.QUEST_ITEMS
             )
         )
 
@@ -695,21 +695,21 @@ object HeroCodexData {
                 description = "Περιέχει 105 χρυσά νομίσματα.",
                 icon = "inventory/inventory.png",
                 rarity = Rarity.RARE,
-                category = ItemCategory.CURRENCY
+                category = ItemCategory.GOLD_CURRENCY
             )
         )
 
         val heroItems = mapOf(
-            ItemCategory.WEAPON to listOf(bow),
+            ItemCategory.WEAPONS to listOf(bow),
             ItemCategory.ARMOR to armor,
-            ItemCategory.SHIELD to shield,
-            ItemCategory.ACCESSORY to accessories,
-            ItemCategory.CONSUMABLE to consumables,
-            ItemCategory.SPELL_SCROLL to spells,
-            ItemCategory.RUNE_GEM to runes,
-            ItemCategory.CRAFTING_MATERIAL to materials,
-            ItemCategory.QUEST_ITEM to questItems,
-            ItemCategory.CURRENCY to currency
+            ItemCategory.SHIELDS to shield,
+            ItemCategory.ACCESSORIES to accessories,
+            ItemCategory.CONSUMABLES to consumables,
+            ItemCategory.SPELLS_SCROLLS to spells,
+            ItemCategory.RUNES_GEMS to runes,
+            ItemCategory.CRAFTING_MATERIALS to materials,
+            ItemCategory.QUEST_ITEMS to questItems,
+            ItemCategory.GOLD_CURRENCY to currency
         )
 
         return HeroCodexProfile(
@@ -735,55 +735,55 @@ object HeroCodexData {
     }
 
     private val CATEGORY_ORDER = listOf(
-        ItemCategory.WEAPON,
+        ItemCategory.WEAPONS,
         ItemCategory.ARMOR,
-        ItemCategory.SHIELD,
-        ItemCategory.ACCESSORY,
-        ItemCategory.CONSUMABLE,
-        ItemCategory.SPELL_SCROLL,
-        ItemCategory.RUNE_GEM,
-        ItemCategory.CRAFTING_MATERIAL,
-        ItemCategory.QUEST_ITEM,
-        ItemCategory.CURRENCY
+        ItemCategory.SHIELDS,
+        ItemCategory.ACCESSORIES,
+        ItemCategory.CONSUMABLES,
+        ItemCategory.SPELLS_SCROLLS,
+        ItemCategory.RUNES_GEMS,
+        ItemCategory.CRAFTING_MATERIALS,
+        ItemCategory.QUEST_ITEMS,
+        ItemCategory.GOLD_CURRENCY
     )
 
     private val CATEGORY_TITLES = mapOf(
-        ItemCategory.WEAPON to "Όπλα",
+        ItemCategory.WEAPONS to "Όπλα",
         ItemCategory.ARMOR to "Πανοπλία",
-        ItemCategory.SHIELD to "Ασπίδες",
-        ItemCategory.ACCESSORY to "Αξεσουάρ",
-        ItemCategory.CONSUMABLE to "Καταναλώσιμα",
-        ItemCategory.SPELL_SCROLL to "Μαγείες & Πάπυροι",
-        ItemCategory.RUNE_GEM to "Ρούνες & Πολύτιμοι Λίθοι",
-        ItemCategory.CRAFTING_MATERIAL to "Υλικά Crafting",
-        ItemCategory.QUEST_ITEM to "Αντικείμενα Αποστολών",
-        ItemCategory.CURRENCY to "Χρυσός & Νομίσματα"
+        ItemCategory.SHIELDS to "Ασπίδες",
+        ItemCategory.ACCESSORIES to "Αξεσουάρ",
+        ItemCategory.CONSUMABLES to "Καταναλώσιμα",
+        ItemCategory.SPELLS_SCROLLS to "Μαγείες & Πάπυροι",
+        ItemCategory.RUNES_GEMS to "Ρούνες & Πολύτιμοι Λίθοι",
+        ItemCategory.CRAFTING_MATERIALS to "Υλικά Crafting",
+        ItemCategory.QUEST_ITEMS to "Αντικείμενα Αποστολών",
+        ItemCategory.GOLD_CURRENCY to "Χρυσός & Νομίσματα"
     )
 
     private val CATEGORY_DESCRIPTIONS = mapOf(
-        ItemCategory.WEAPON to "Όλα τα επιθετικά εργαλεία και τα ειδικά όπλα του ήρωα.",
+        ItemCategory.WEAPONS to "Όλα τα επιθετικά εργαλεία και τα ειδικά όπλα του ήρωα.",
         ItemCategory.ARMOR to "Πανοπλίες και ενισχύσεις για κάθε slot.",
-        ItemCategory.SHIELD to "Ασπίδες και μαγικά φράγματα για άμυνα.",
-        ItemCategory.ACCESSORY to "Δαχτυλίδια, φυλαχτά και ζώνες με buffs.",
-        ItemCategory.CONSUMABLE to "Φίλτρα ζωής, mana και προσωρινές ενισχύσεις.",
-        ItemCategory.SPELL_SCROLL to "Ξεχωριστές μαγείες ή πάπυροι προς χρήση στη μάχη.",
-        ItemCategory.RUNE_GEM to "Ρούνες και πολύτιμοι λίθοι για enchantments.",
-        ItemCategory.CRAFTING_MATERIAL to "Υλικά crafting όπως ores, herbs και essences.",
-        ItemCategory.QUEST_ITEM to "Ειδικά αντικείμενα για αποστολές.",
-        ItemCategory.CURRENCY to "Χρυσά νομίσματα και λοιπά νομίσματα." 
+        ItemCategory.SHIELDS to "Ασπίδες και μαγικά φράγματα για άμυνα.",
+        ItemCategory.ACCESSORIES to "Δαχτυλίδια, φυλαχτά και ζώνες με buffs.",
+        ItemCategory.CONSUMABLES to "Φίλτρα ζωής, mana και προσωρινές ενισχύσεις.",
+        ItemCategory.SPELLS_SCROLLS to "Ξεχωριστές μαγείες ή πάπυροι προς χρήση στη μάχη.",
+        ItemCategory.RUNES_GEMS to "Ρούνες και πολύτιμοι λίθοι για enchantments.",
+        ItemCategory.CRAFTING_MATERIALS to "Υλικά crafting όπως ores, herbs και essences.",
+        ItemCategory.QUEST_ITEMS to "Ειδικά αντικείμενα για αποστολές.",
+        ItemCategory.GOLD_CURRENCY to "Χρυσά νομίσματα και λοιπά νομίσματα." 
     )
 
     private val CATEGORY_ICONS = mapOf(
-        ItemCategory.WEAPON to "weapon/rod.png",
+        ItemCategory.WEAPONS to "weapon/rod.png",
         ItemCategory.ARMOR to "armor/chest.png",
-        ItemCategory.SHIELD to "armor/helmet.png",
-        ItemCategory.ACCESSORY to "armor/gloves.png",
-        ItemCategory.CONSUMABLE to "inventory/inventory.png",
-        ItemCategory.SPELL_SCROLL to "characters/mage.png",
-        ItemCategory.RUNE_GEM to "puzzle/circle.png",
-        ItemCategory.CRAFTING_MATERIAL to "armor/chest-women_b.png",
-        ItemCategory.QUEST_ITEM to "inventory/backbag.png",
-        ItemCategory.CURRENCY to "inventory/inventory.png"
+        ItemCategory.SHIELDS to "armor/helmet.png",
+        ItemCategory.ACCESSORIES to "armor/gloves.png",
+        ItemCategory.CONSUMABLES to "inventory/inventory.png",
+        ItemCategory.SPELLS_SCROLLS to "characters/mage.png",
+        ItemCategory.RUNES_GEMS to "puzzle/circle.png",
+        ItemCategory.CRAFTING_MATERIALS to "armor/chest-women_b.png",
+        ItemCategory.QUEST_ITEMS to "inventory/backbag.png",
+        ItemCategory.GOLD_CURRENCY to "inventory/inventory.png"
     )
 }
 

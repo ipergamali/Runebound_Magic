@@ -60,9 +60,7 @@ import androidx.compose.ui.unit.sp
 import androidx.lifecycle.viewmodel.compose.viewModel
 import com.example.runeboundmagic.HeroOption
 import com.example.runeboundmagic.R
-import com.example.runeboundmagic.inventory.InventoryItem
 import com.example.runeboundmagic.inventory.Item
-import com.example.runeboundmagic.inventory.WeaponItem
 import com.example.runeboundmagic.ui.rememberAssetPainter
 
 @OptIn(ExperimentalAnimationApi::class, ExperimentalFoundationApi::class)
@@ -365,7 +363,15 @@ private fun InventoryOverlay(
                 onCategorySelected = onCategorySelected
             )
             InventoryGridPanel(
-                slots = uiState.inventorySlots,
+                slots = selectedCategory?.let { category ->
+                    uiState.inventorySlots.map { slot ->
+                        if (slot.item?.category?.name == category.id) {
+                            slot
+                        } else {
+                            slot.copy(item = null, isSelected = false)
+                        }
+                    }
+                } ?: uiState.inventorySlots,
                 onSlotClick = onSlotClick,
                 modifier = Modifier.padding(end = 8.dp)
             )
@@ -389,17 +395,40 @@ private fun CategoryColumn(
                 color = if (isSelected) Color(0x332E7DFF) else Color.Transparent,
                 shape = RoundedCornerShape(12.dp)
             ) {
-                Column(modifier = Modifier.padding(horizontal = 12.dp, vertical = 10.dp)) {
-                    Text(
-                        text = category.title,
-                        color = Color.White,
-                        fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                Row(
+                    modifier = Modifier.padding(horizontal = 10.dp, vertical = 8.dp),
+                    horizontalArrangement = Arrangement.spacedBy(10.dp),
+                    verticalAlignment = Alignment.CenterVertically
+                ) {
+                    Image(
+                        painter = rememberAssetPainter(assetPath = category.iconAsset),
+                        contentDescription = null,
+                        modifier = Modifier
+                            .size(36.dp)
+                            .clip(RoundedCornerShape(8.dp))
                     )
-                    Text(
-                        text = category.description,
-                        color = Color(0xFF90A4AE),
-                        fontSize = 12.sp
-                    )
+                    Column(verticalArrangement = Arrangement.spacedBy(4.dp)) {
+                        Text(
+                            text = category.title,
+                            color = Color.White,
+                            fontWeight = if (isSelected) FontWeight.Bold else FontWeight.Normal
+                        )
+                        Text(
+                            text = category.description,
+                            color = Color(0xFF90A4AE),
+                            fontSize = 11.sp
+                        )
+                        val capacityLabel = if (category.capacity > 0) {
+                            "${category.owned} / ${category.capacity}"
+                        } else {
+                            category.owned.toString()
+                        }
+                        Text(
+                            text = capacityLabel,
+                            color = Color(0xFF6F7BCC),
+                            fontSize = 10.sp
+                        )
+                    }
                 }
             }
         }
@@ -440,7 +469,16 @@ private fun InventorySlotCell(slot: InventorySlotUiModel, onClick: () -> Unit) {
         color = Color(0x5520315B),
         border = androidx.compose.foundation.BorderStroke(1.dp, borderColor)
     ) {
-        slot.item?.let { item ->
+        val item = slot.item
+        if (item == null) {
+            Box(modifier = Modifier.fillMaxSize(), contentAlignment = Alignment.Center) {
+                Text(
+                    text = stringResource(id = R.string.battle_prep_empty_slot),
+                    color = Color(0xFF546E7A),
+                    fontSize = 9.sp
+                )
+            }
+        } else {
             Image(
                 painter = rememberAssetPainter(assetPath = item.icon),
                 contentDescription = item.name,
@@ -490,18 +528,17 @@ private fun ItemDetailsDialog(item: Item, onDismiss: () -> Unit) {
             Column(verticalArrangement = Arrangement.spacedBy(8.dp)) {
                 Text(text = item.description)
                 Text(text = stringResource(id = R.string.battle_prep_rarity_label, item.rarity.name))
-                when (item) {
-                    is WeaponItem -> {
-                        Text(text = stringResource(id = R.string.battle_prep_weapon_damage, item.damage))
-                        Text(text = stringResource(id = R.string.battle_prep_weapon_element, item.element))
-                        Text(text = stringResource(id = R.string.battle_prep_weapon_speed, item.attackSpeed))
-                    }
-
-                    is InventoryItem -> {
-                        Text(text = stringResource(id = R.string.battle_prep_item_category, item.category.name))
-                    }
-
-                    else -> {}
+                Text(text = stringResource(id = R.string.battle_prep_item_category, item.category.name))
+                item.subcategory?.let { subcategory ->
+                    Text(text = stringResource(id = R.string.battle_prep_item_subcategory, subcategory.name))
+                }
+                item.weaponStats?.let { stats ->
+                    Text(text = stringResource(id = R.string.battle_prep_weapon_damage, stats.damage))
+                    Text(text = stringResource(id = R.string.battle_prep_weapon_element, stats.element))
+                    Text(text = stringResource(id = R.string.battle_prep_weapon_speed, stats.attackSpeed))
+                }
+                if (item.stackable) {
+                    Text(text = stringResource(id = R.string.battle_prep_item_stack, item.quantity))
                 }
             }
         }
