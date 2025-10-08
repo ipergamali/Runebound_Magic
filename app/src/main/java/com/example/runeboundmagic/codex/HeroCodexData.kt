@@ -417,7 +417,7 @@ object HeroCodexData {
             id = "warrior_sword",
             name = "Crimson Blade",
             description = "Damage: 48, Element: Fire, Skill: Blazing Rift.",
-            icon = "weapon/sword.png",
+            icon = "assets/weapon/sword.png",
             rarity = Rarity.RARE,
             category = ItemCategory.WEAPONS
         )

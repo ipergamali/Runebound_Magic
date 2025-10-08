@@ -136,7 +136,7 @@ private object DefaultEquipmentLoadout {
                 id = "${'$'}prefix_weapon",
                 name = "Ξίφος Τιμής",
                 description = "Ένα αξιόπιστο σπαθί για τους πολεμιστές της πρώτης γραμμής.",
-                icon = "weapon/sword.png",
+                icon = "assets/weapon/sword.png",
                 rarity = Rarity.COMMON,
                 category = ItemCategory.WEAPONS,
                 subcategory = ItemSubcategory.SWORD,
